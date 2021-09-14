@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.meread.selenium.bean.AssignSessionIdStatus;
 import com.meread.selenium.bean.JDOpResultBean;
 import com.meread.selenium.bean.JDScreenBean;
+import com.meread.selenium.bean.QLConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -176,7 +177,7 @@ public class HelloController {
             return -1;
         }
         try {
-            if (factory.getQlLoginType() == WebDriverFactory.QLLoginType.TOKEN) {
+            if (factory.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
                 return service.uploadQingLongWithToken(ck, phone, factory.getQlToken().getToken());
             } else {
                 return service.uploadQingLong(sessionId, ck, phone);

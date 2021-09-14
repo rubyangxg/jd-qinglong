@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.JDScreenBean;
 import com.meread.selenium.bean.MyChrome;
+import com.meread.selenium.bean.QLConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -381,7 +382,7 @@ public class JDService {
         headers.add("Accept-Encoding", "gzip, deflate");
         headers.add("Accept-Language", "zh-CN,zh;q=0.9");
 
-        ResponseEntity<String> exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == WebDriverFactory.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + remark + "&t=" + System.currentTimeMillis()
+        ResponseEntity<String> exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + remark + "&t=" + System.currentTimeMillis()
                 , HttpMethod.GET, new HttpEntity<>(headers), String.class);
         boolean update = false;
         String updateId = "";
@@ -413,7 +414,7 @@ public class JDService {
             }
             jsonArray.add(jsonObject);
             HttpEntity<?> request = new HttpEntity<>(jsonArray.toJSONString(), headers);
-            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == WebDriverFactory.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
+            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
                     , HttpMethod.POST, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
@@ -428,7 +429,7 @@ public class JDService {
             }
             jsonObject.put("_id", updateId);
             HttpEntity<?> request = new HttpEntity<>(jsonObject.toJSONString(), headers);
-            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == WebDriverFactory.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
+            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
                     , HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());

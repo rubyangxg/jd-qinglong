@@ -29,7 +29,9 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -62,22 +64,15 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public static final String CLIENT_SESSION_ID_KEY = "client:session";
 
+    private List<QLConfig> qlConfigs;
+
     private String qlUrl;
     private String qlUsername;
     private String qlPassword;
-
     private String qlClientID;
     private String qlClientSecret;
-
     private QLToken qlToken;
-
-    public enum QLLoginType {
-        USERNAME_PASSWORD,
-        TOKEN;
-    }
-
-    private QLLoginType qlLoginType;
-
+    private QLConfig.QLLoginType qlLoginType;
 
     private static int capacity = 0;
 
@@ -239,6 +234,7 @@ public class WebDriverFactory implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws MalformedURLException {
+        //老的逻辑，只支持单个青龙
         qlUrl = System.getenv("ql.url");
         qlUsername = System.getenv("ql.username");
         qlPassword = System.getenv("ql.password");
@@ -248,6 +244,10 @@ public class WebDriverFactory implements CommandLineRunner {
         boolean verify1 = !StringUtils.isEmpty(qlUrl);
         boolean verify2 = verify1 && !StringUtils.isEmpty(qlUsername) && !StringUtils.isEmpty(qlPassword);
         boolean verify3 = !StringUtils.isEmpty(qlClientID) && !StringUtils.isEmpty(qlClientSecret);
+
+        //老的逻辑，支持多个青龙
+        List<QLConfig> qlConfigs = parseMultiQLConfig();
+
         if (!verify1) {
             log.warn("请配置青龙面板地址!");
             throw new RuntimeException("请配置青龙面板地址!");
@@ -256,9 +256,9 @@ public class WebDriverFactory implements CommandLineRunner {
             log.warn("请配置青龙面板用户名密码或openapi参数!");
             throw new RuntimeException("请配置青龙面板用户名密码或openapi参数!");
         }
-        qlLoginType = verify2 ? QLLoginType.USERNAME_PASSWORD : QLLoginType.TOKEN;
+        qlLoginType = verify2 ? QLConfig.QLLoginType.USERNAME_PASSWORD : QLConfig.QLLoginType.TOKEN;
 
-        if (qlLoginType.equals(QLLoginType.TOKEN)) {
+        if (qlLoginType.equals(QLConfig.QLLoginType.TOKEN)) {
             boolean success = getToken(qlClientID, qlClientSecret);
             if (!success) {
                 log.warn("获取token失败!");
@@ -330,6 +330,44 @@ public class WebDriverFactory implements CommandLineRunner {
         inflate(chromes, getGridStatus());
         log.info("启动成功!");
         stopSchedule = false;
+    }
+
+    private List<QLConfig> parseMultiQLConfig() {
+        List<QLConfig> qlConfigs = new ArrayList<>();
+        File file = new File("/data/env.properties");
+        if (file.exists()) {
+            try (InputStream input = new FileInputStream(file)) {
+                Properties props = new Properties();
+                props.load(input);
+                Set<String> keys = props.stringPropertyNames();
+                for (int i = 1; i <= 5; i++) {
+                    QLConfig config = new QLConfig();
+                    for (String key : keys) {
+                        String value = props.getProperty(key);
+                        if (key.equals("QL_USERNAME_" + i)) {
+                            config.setQlUsername(value);
+                        } else if (key.equals("QL_URL_" + i)) {
+                            config.setQlUrl(value);
+                        } else if (key.equals("QL_PASSWORD_" + i)) {
+                            config.setQlPassword(value);
+                        } else if (key.equals("QL_CLIENTID_" + i)) {
+                            config.setQlClientID(value);
+                        } else if (key.equals("QL_SECRET_" + i)) {
+                            config.setQlClientSecret(value);
+                        }
+                    }
+                    if (config.isValid()) {
+                        qlConfigs.add(config);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            log.info("/data/env.properties不存在，不解析多套青龙配置");
+        }
+        log.info("成功解析" + qlConfigs.size() + "套配置");
+        return qlConfigs;
     }
 
     private boolean getToken(String qlClientID, String qlClientSecret) throws MalformedURLException {
@@ -553,7 +591,7 @@ public class WebDriverFactory implements CommandLineRunner {
         return qlToken;
     }
 
-    public QLLoginType getQlLoginType() {
+    public QLConfig.QLLoginType getQlLoginType() {
         return qlLoginType;
     }
 }
