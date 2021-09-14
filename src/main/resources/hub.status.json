@@ -1,0 +1,166 @@
+{
+    "value": {
+        "ready": true,
+        "message": "Selenium Grid ready.",
+        "nodes": [
+            {
+                "id": "11de17a6-c587-46df-9336-a425b33304b8",
+                "uri": "http://172.177.0.3:5555",
+                "maxSessions": 1,
+                "osInfo": {
+                    "arch": "amd64",
+                    "name": "Linux",
+                    "version": "5.10.47-linuxkit"
+                },
+                "heartbeatPeriod": 60000,
+                "availability": "UP",
+                "version": "4.0.0-rc-2 (revision db2bb9ed96)",
+                "slots": [
+                    {
+                        "lastStarted": "2021-09-08T10:32:13.009829Z",
+                        "session": null,
+                        "id": {
+                            "hostId": "11de17a6-c587-46df-9336-a425b33304b8",
+                            "id": "7fba7864-f219-4b5a-92a0-c393fc84af20"
+                        },
+                        "stereotype": {
+                            "browserName": "chrome",
+                            "browserVersion": "93.0",
+                            "platformName": "Linux",
+                            "se:vncEnabled": true
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "5357dbc2-d902-439f-b6ab-eedf44f13ffc",
+                "uri": "http://172.177.0.5:5555",
+                "maxSessions": 1,
+                "osInfo": {
+                    "arch": "amd64",
+                    "name": "Linux",
+                    "version": "5.10.47-linuxkit"
+                },
+                "heartbeatPeriod": 60000,
+                "availability": "UP",
+                "version": "4.0.0-rc-2 (revision db2bb9ed96)",
+                "slots": [
+                    {
+                        "lastStarted": "2021-09-08T10:32:18.044707Z",
+                        "session": null,
+                        "id": {
+                            "hostId": "5357dbc2-d902-439f-b6ab-eedf44f13ffc",
+                            "id": "64e0b00f-b563-4c06-8701-70318c0d1056"
+                        },
+                        "stereotype": {
+                            "browserName": "chrome",
+                            "browserVersion": "93.0",
+                            "platformName": "Linux",
+                            "se:vncEnabled": true
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "818b16bb-8a26-44ec-9708-f7854b374522",
+                "uri": "http://172.177.0.6:5555",
+                "maxSessions": 1,
+                "osInfo": {
+                    "arch": "amd64",
+                    "name": "Linux",
+                    "version": "5.10.47-linuxkit"
+                },
+                "heartbeatPeriod": 60000,
+                "availability": "UP",
+                "version": "4.0.0-rc-2 (revision db2bb9ed96)",
+                "slots": [
+                    {
+                        "lastStarted": "2021-09-09T02:56:23.804616Z",
+                        "session": {
+                            "capabilities": {
+                                "acceptInsecureCerts": false,
+                                "browserName": "chrome",
+                                "browserVersion": "93.0.4577.63",
+                                "chrome": {
+                                    "chromedriverVersion": "93.0.4577.15 (660fc11082ba57405eca2e8c49c3e1af756fbfae-refs/branch-heads/4577@{#203})",
+                                    "userDataDir": "/tmp/.com.google.Chrome.4pPRM5"
+                                },
+                                "goog:chromeOptions": {
+                                    "debuggerAddress": "localhost:39833"
+                                },
+                                "networkConnectionEnabled": false,
+                                "pageLoadStrategy": "normal",
+                                "platformName": "linux",
+                                "proxy": {},
+                                "se:cdp": "ws://172.177.0.6:5555/session/88c720c2ab9d7abe965b13eb8563319c/se/cdp",
+                                "se:cdpVersion": "93.0.4577.63",
+                                "se:vnc": "ws://172.177.0.6:5555/session/88c720c2ab9d7abe965b13eb8563319c/se/vnc",
+                                "se:vncEnabled": true,
+                                "se:vncLocalAddress": "ws://localhost:7900/websockify",
+                                "setWindowRect": true,
+                                "strictFileInteractability": false,
+                                "timeouts": {
+                                    "implicit": 0,
+                                    "pageLoad": 300000,
+                                    "script": 30000
+                                },
+                                "unhandledPromptBehavior": "dismiss and notify",
+                                "webauthn:extension:credBlob": true,
+                                "webauthn:extension:largeBlob": true,
+                                "webauthn:virtualAuthenticators": true
+                            },
+                            "sessionId": "88c720c2ab9d7abe965b13eb8563319c",
+                            "start": "2021-09-09T02:56:23.804616Z",
+                            "stereotype": {
+                                "browserName": "chrome",
+                                "browserVersion": "93.0",
+                                "platformName": "Linux",
+                                "se:vncEnabled": true
+                            },
+                            "uri": "http://172.177.0.6:5555"
+                        },
+                        "id": {
+                            "hostId": "818b16bb-8a26-44ec-9708-f7854b374522",
+                            "id": "257719ff-a8ac-4871-9f0d-3c9dd47a0f20"
+                        },
+                        "stereotype": {
+                            "browserName": "chrome",
+                            "browserVersion": "93.0",
+                            "platformName": "Linux",
+                            "se:vncEnabled": true
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "8a5cabe5-9b8d-4c9e-9caf-7adfd7eee512",
+                "uri": "http://172.177.0.4:5555",
+                "maxSessions": 1,
+                "osInfo": {
+                    "arch": "amd64",
+                    "name": "Linux",
+                    "version": "5.10.47-linuxkit"
+                },
+                "heartbeatPeriod": 60000,
+                "availability": "UP",
+                "version": "4.0.0-rc-2 (revision db2bb9ed96)",
+                "slots": [
+                    {
+                        "lastStarted": "2021-09-08T10:32:07.987686Z",
+                        "session": null,
+                        "id": {
+                            "hostId": "8a5cabe5-9b8d-4c9e-9caf-7adfd7eee512",
+                            "id": "a065c907-8460-42a6-ba6e-3630f1dbbbfd"
+                        },
+                        "stereotype": {
+                            "browserName": "chrome",
+                            "browserVersion": "93.0",
+                            "platformName": "Linux",
+                            "se:vncEnabled": true
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
