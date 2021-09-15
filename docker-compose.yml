@@ -1,6 +1,8 @@
 version: "3"
 services:
   chrome:
+    env_file:
+      - env.properties
     container_name: chrome
     image: selenium/node-chrome:4.0.0-rc-2-prerelease-20210908
     shm_size: 2gb
@@ -43,6 +45,8 @@ services:
     privileged: true
 
   webapp:
+    env_file:
+      - env.properties
     container_name: webapp
     image: rubyangxg/jd-qinglong:latest
     environment:
