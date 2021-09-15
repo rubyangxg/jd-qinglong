@@ -24,7 +24,6 @@
 * arm的设备不用试了，没时间测试和解决遇到的问题
 * 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
 * 选择Openid方式登录的，确保青龙版本>=2.9，并且创建了应用。
-* 碰到docker-compose运行无反应，提示`Define and run multi-container applications with Docker`，麻烦升级一下docker-compose版本
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 * 查看日志的命令有三个，具体含义自行学习：
  1. `docker-compose --env-file env.properties logs -f webapp`
@@ -57,3 +56,5 @@
 **A：如果长时间占用浏览器，不关闭，会导致浏览器资源迅速掏空，其他人就不能用了，所以操作时限3分钟强制释放占用的浏览器或者获取ck后强制释放**
 5. _Q: 提示对不起，当前浏览器sessionId过期怎么办？_  
 **A：隔几秒多刷几次就可以了，因为浏览器资源释放和创建需要时间**
+6. _Q: 碰到docker-compose运行无反应怎么办？_  
+**A:`Define and run multi-container applications with Docker`，麻烦升级一下docker-compose版本**
