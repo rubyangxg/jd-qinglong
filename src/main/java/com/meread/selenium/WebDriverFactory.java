@@ -319,7 +319,6 @@ public class WebDriverFactory implements CommandLineRunner {
                 qlConfigs.add(config);
             }
         }
-        log.info("成功解析" + qlConfigs.size() + "套配置");
 
         //兼容老的逻辑，只支持单个青龙
         QLConfig config = new QLConfig();
@@ -332,6 +331,8 @@ public class WebDriverFactory implements CommandLineRunner {
         if (config.isValid()) {
             qlConfigs.add(config);
         }
+
+        log.info("成功解析" + qlConfigs.size() + "套配置");
 
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
