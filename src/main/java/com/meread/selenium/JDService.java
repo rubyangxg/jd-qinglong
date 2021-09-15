@@ -53,6 +53,9 @@ public class JDService {
     @Autowired
     private WebDriverFactory driverFactory;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -110,9 +113,14 @@ public class JDService {
 
     private JDScreenBean getScreenInner(String sessionId) throws IOException, InterruptedException {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        //创建全屏截图
-        byte[] screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
-        String screenBase64 = Base64Utils.encodeToString(screen);
+
+        String screenBase64 = null;
+        byte[] screen = null;
+        if (!"docker".equals(activeProfile)) {
+            //创建全屏截图
+            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
+            screenBase64 = Base64Utils.encodeToString(screen);
+        }
 
         //是否空白页面
         String currentUrl = webDriver.getCurrentUrl();
@@ -177,6 +185,9 @@ public class JDService {
         WebElement chapter_element;
         //需要输入验证码
         if (pageText.contains("安全验证") && !pageText.contains("验证成功")) {
+            //创建全屏截图
+            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
+            screenBase64 = Base64Utils.encodeToString(screen);
             chapter_element = webDriver.findElement(By.id("captcha_modal"));
             if (chapter_element != null) {
                 element = chapter_element;

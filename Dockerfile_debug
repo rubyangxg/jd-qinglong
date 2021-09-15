@@ -1,7 +1,0 @@
-FROM openjdk:8-jdk-alpine
-VOLUME /tmp
-COPY ./target/jd-qinglong-1.0.jar app.jar
-EXPOSE 8080
-
-#this part for debug is moved into compose file, into "command":
-#ENTRYPOINT [ "sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -jar -Dserver.port=8080 app.jar"]

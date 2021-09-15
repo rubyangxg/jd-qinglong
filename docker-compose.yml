@@ -52,6 +52,7 @@ services:
       - "ql.password=${QL_PASSWORD}"
       - "ql.clientId=${QL_CLIENTID}"
       - "ql.clientSecret=${QL_SECRET}"
+      - "ql.label=${QL_LABEL}"
     ports:
       - "5701:8080"
     depends_on:
