@@ -33,6 +33,7 @@ sudo docker-compose --env-file env.properties logs -f
 ```bash
 #停止阿东应用
 sudo docker-compose --env-file env.properties stop webapp
+sudo docker rm webapp && sudo docker rmi rubyangxg/jd-qinglong
 #此操作不要轻易执行
 #sudo docker-compose --env-file env.properties down
 #下载最新阿东镜像

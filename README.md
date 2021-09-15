@@ -32,7 +32,6 @@
 
 ## 更新历史
 * 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties) 里面的注释
-* 2021-09-15 docker-compose启动时，可以不指定--env-file但需确保env.properties文件存在
 
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)

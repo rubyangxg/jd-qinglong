@@ -472,7 +472,7 @@ public class WebDriverFactory implements CommandLineRunner {
     }
 
     public MyChrome getMyChromeBySessionId(String sessionId) {
-        if (chromes != null) {
+        if (chromes != null && chromes.size() > 0) {
             for (MyChrome myChrome : chromes) {
                 if (myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                     return myChrome;

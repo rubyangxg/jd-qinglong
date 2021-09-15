@@ -69,6 +69,7 @@ drwxr-xr-x 8 root root 4.0K  8月 30 01:30 data
 cd jd-qinglong
 #停止阿东应用
 sudo docker-compose --env-file env.properties stop webapp
+sudo docker rm webapp && sudo docker rmi rubyangxg/jd-qinglong
 #此操作不要轻易执行
 #sudo docker-compose --env-file env.properties down
 #下载最新阿东镜像
