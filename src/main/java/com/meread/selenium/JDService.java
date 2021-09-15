@@ -53,7 +53,7 @@ public class JDService {
     @Autowired
     private WebDriverFactory driverFactory;
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
     @Autowired
