@@ -114,6 +114,7 @@
 
             var clientSessionId = "${clientSessionId}";
             var phone;
+            var qlUploadDirect = "${qlUploadDirect}";
 
             function copy1() {
                 var clipboard = new ClipboardJS('#copyBtn');
@@ -127,30 +128,34 @@
             }
 
             function chooseQingLong() {
-                $.ajax({
-                    type: "POST",
-                    url: "/chooseQingLong",
-                    async: false,
-                    data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone},
-                    dataType: "json",
-                    success: function (data) {
-                        if (data.status === 1) {
-                            layer.open({
-                                type: 1,
-                                skin: 'layui-layer-rim', //加上边框
-                                area: ['600px', '400px'], //宽高
-                                content: data.html,
-                                btn: ['确定'],
-                                yes: function (index, layero) {
-                                    layer.close(index);
-                                    uploadQingLong();
-                                }
-                            });
-                        } else if (data.status <= 0) {
-                            layer.alert("无法读取青龙配置，请手动复制");
+                if (qlUploadDirect === 1) {
+                    uploadQingLong();
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: "/chooseQingLong",
+                        async: false,
+                        data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone},
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.status === 1) {
+                                layer.open({
+                                    type: 1,
+                                    skin: 'layui-layer-rim', //加上边框
+                                    area: ['600px', '400px'], //宽高
+                                    content: data.html,
+                                    btn: ['确定'],
+                                    yes: function (index, layero) {
+                                        layer.close(index);
+                                        uploadQingLong();
+                                    }
+                                });
+                            } else if (data.status <= 0) {
+                                layer.alert("无法读取青龙配置，请手动复制");
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             function uploadQingLong() {
@@ -361,7 +366,7 @@
                 $("#reset").bind("click", function (event) {
                     $.ajax({
                         type: "get",
-                        url: '/?reset=1&clientSessionId='+clientSessionId,
+                        url: '/?reset=1&clientSessionId=' + clientSessionId,
                         async: false,
                         success: function (data) {
                             window.location.reload();
@@ -381,7 +386,7 @@
                     sendingAuthCode = true;
                     $.ajax({
                         type: "get",
-                        url: '/sendAuthCode?clientSessionId='+clientSessionId,
+                        url: '/sendAuthCode?clientSessionId=' + clientSessionId,
                         async: false,
                         success: function (data) {
                             var success = data.success;

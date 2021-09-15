@@ -113,6 +113,15 @@ public class HelloController {
         String debug = httpRequest.getParameter("debug");
         String servletSessionId = httpRequest.getSession().getId();
         model.addAttribute("debug", this.debug);
+        String ql_upload_direct = System.getenv("QL_UPLOAD_DIRECT");
+        int qlUploadDirect = 0;
+        if (!StringUtils.isEmpty(ql_upload_direct)) {
+            try {
+                qlUploadDirect = Integer.parseInt(ql_upload_direct);
+            } catch (NumberFormatException e) {
+            }
+        }
+        model.addAttribute("qlUploadDirect", qlUploadDirect);
         if (!StringUtils.isEmpty(debug)) {
             int i = Integer.parseInt(debug);
             model.addAttribute("debug", i == 1);
