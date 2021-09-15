@@ -31,7 +31,11 @@ sudo docker-compose --env-file env.properties logs -f
 请直接pull最新的docker镜像即可
 
 ```bash
-sudo docker-compose --env-file env.properties down
+#停止阿东应用
+sudo docker-compose --env-file env.properties stop webapp
+#此操作不要轻易执行
+#sudo docker-compose --env-file env.properties down
+#下载最新阿东镜像
 sudo docker pull rubyangxg/jd-qinglong:latest
 sudo docker-compose --env-file env.properties up -d
 ```
