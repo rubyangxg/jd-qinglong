@@ -1,10 +1,11 @@
 package com.meread.selenium;
 
 import com.alibaba.fastjson.JSON;
-import com.meread.selenium.bean.AssignSessionIdStatus;
-import com.meread.selenium.bean.JDOpResultBean;
-import com.meread.selenium.bean.JDScreenBean;
-import com.meread.selenium.bean.QLConfig;
+import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.bean.*;
+import com.meread.selenium.util.FreemarkerUtils;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +37,9 @@ public class HelloController {
 
     @Autowired
     private WebDriverFactory factory;
+
+    @Autowired
+    private FreeMarkerConfigurer freeMarkerConfigurer;
 
     @GetMapping(value = "/getScreen")
     @ResponseBody
@@ -170,36 +176,79 @@ public class HelloController {
 
     @PostMapping({"/uploadQingLong"})
     @ResponseBody
-    public int uploadQingLong(@RequestParam("clientSessionId") String clientSessionId, @RequestParam("phone") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
+    public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId, @RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "无手机号") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("status", 0);
+
         // 在session中保存用户信息
         String sessionId = factory.assignSessionId(clientSessionId, false, null).getAssignSessionId();
         if (sessionId == null) {
-            return -1;
+            return jsonObject;
         }
-        try {
-            if (factory.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                return service.uploadQingLongWithToken(ck, phone, factory.getQlToken().getToken());
-            } else {
-                return service.uploadQingLong(sessionId, ck, phone);
+
+        if (chooseQLId != null && chooseQLId.size() > 0) {
+            List<QLUploadStatus> uploadStatuses = new ArrayList<>();
+            try {
+                if (factory.getQlConfigs() != null) {
+                    for (QLConfig qlConfig : factory.getQlConfigs()) {
+                        if (chooseQLId.contains(qlConfig.getId())) {
+                            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+                                int i = service.uploadQingLongWithToken(ck, phone, qlConfig);
+                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0));
+                            }
+                            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                                int i = service.uploadQingLong(sessionId, ck, phone, qlConfig);
+                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0));
+                            }
+                        }
+                    }
+                }
+            } finally {
+                factory.releaseWebDriver(sessionId);
             }
-        } finally {
-            factory.releaseWebDriver(sessionId);
+            Map<String, Object> map = new HashMap<>();
+            map.put("uploadStatuses", uploadStatuses);
+            try {
+                Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/uploadRes.ftl");
+                String process = FreemarkerUtils.process(template, map);
+                log.debug(process);
+                jsonObject.put("html", process);
+                jsonObject.put("status", 1);
+            } catch (IOException | TemplateException e) {
+                e.printStackTrace();
+            }
+        } else {
+            jsonObject.put("status", 0);
         }
+
+
+
+
+        return jsonObject;
     }
 
-    @PostMapping({"/uploadQingLongWithToken"})
+    @PostMapping({"/chooseQingLong"})
     @ResponseBody
-    public int uploadQingLongWithToken(@RequestParam("clientSessionId") String clientSessionId, @RequestParam("phone") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
-        // 在session中保存用户信息
-        String sessionId = factory.assignSessionId(clientSessionId, false, null).getAssignSessionId();
-        if (sessionId == null) {
-            return -1;
+    public JSONObject chooseQingLong(@RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "无手机号") String phone, @RequestParam("ck") String ck) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("status", 0);
+        Map<String, Object> map = new HashMap<>();
+        if (factory.getQlConfigs() != null && !factory.getQlConfigs().isEmpty()) {
+            map.put("qlConfigs", factory.getQlConfigs());
+            map.put("clientSessionId", clientSessionId);
+            map.put("phone", phone);
+            map.put("ck", ck);
+            try {
+                Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/chooseQL.ftl");
+                String process = FreemarkerUtils.process(template, map);
+                log.debug(process);
+                jsonObject.put("html", process);
+                jsonObject.put("status", 1);
+            } catch (IOException | TemplateException e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            return service.uploadQingLong(sessionId, ck, phone);
-        } finally {
-            factory.releaseWebDriver(sessionId);
-        }
+        return jsonObject;
     }
 
     @GetMapping({"/releaseSession"})

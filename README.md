@@ -20,6 +20,10 @@
   <img width="49%" src="/public/images/home.png">
 </p>
 
+## 提醒一下
+* arm的设备不用试了，没时间测试和解决遇到的问题
+* 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
+
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * 已经安装好青龙的: [INSTALL1.md](INSTALL1.md)

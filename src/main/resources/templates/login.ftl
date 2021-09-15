@@ -126,23 +126,56 @@
                 });
             }
 
+            function chooseQingLong() {
+                $.ajax({
+                    type: "POST",
+                    url: "/chooseQingLong",
+                    async: false,
+                    data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone},
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.status === 1) {
+                            layer.open({
+                                type: 1,
+                                skin: 'layui-layer-rim', //加上边框
+                                area: ['600px', '400px'], //宽高
+                                content: data.html,
+                                btn: ['确定'],
+                                yes: function (index, layero) {
+                                    layer.close(index);
+                                    uploadQingLong();
+                                }
+                            });
+                        } else if (data.status <= 0) {
+                            layer.alert("无法读取青龙配置，请手动复制");
+                        }
+                    }
+                });
+            }
+
             function uploadQingLong() {
                 $.ajax({
                     type: "POST",
                     url: "/uploadQingLong",
-                    data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone},
+                    async: false,
+                    data: $("#chooseQL_form").serialize(),
                     dataType: "json",
                     success: function (data) {
-                        if (data === 1) {
-                            layer.alert("上传青龙成功!");
-                        } else if (data === -1) {
-                            layer.alert("请手动复制!");
-                        } else if (data === 0) {
-                            layer.alert("无法登陆青龙!请手动复制");
-                        } else if (data === -1) {
-                            layer.alert("请求有误!", function (index) {
-                                window.location.reload();
+                        if (data.status === 1) {
+                            layer.open({
+                                type: 1,
+                                skin: 'layui-layer-rim', //加上边框
+                                area: ['600px', '400px'], //宽高
+                                content: data.html,
+                                btn: ['确定'],
+                                yes: function (index, layero) {
+                                    layer.close(index);
+                                }
                             });
+                        } else if (data.status === -1) {
+                            layer.alert("请手动复制!");
+                        } else if (data.status === 0) {
+                            layer.alert("没有选择青龙，请手动复制!");
                         }
                     }
                 });
@@ -153,6 +186,7 @@
                     $.ajax({
                         type: "post",
                         url: "/jdLogin",
+                        async: false,
                         data: $("#mainForm").serialize(), // 序列化form表单里面的数据传到后台
                         //dataType: "json", // 指定后台传过来的数据是json格式
                         success: function (data) {
@@ -216,8 +250,9 @@
                                 clearInterval(timeoutTimer);
                                 layer.confirm('是否上传青龙面板？', {
                                     btn: ['上传', '不上传'] //按钮
-                                }, function () {
-                                    uploadQingLong();
+                                }, function (index) {
+                                    layer.close(index);
+                                    chooseQingLong();
                                 }, function () {
                                     layer.msg('请手动复制');
                                     $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {

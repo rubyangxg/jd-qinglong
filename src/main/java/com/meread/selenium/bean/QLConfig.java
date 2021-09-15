@@ -1,10 +1,8 @@
 package com.meread.selenium.bean;
 
-import com.meread.selenium.WebDriverFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 import org.springframework.util.StringUtils;
 
 /**
@@ -15,6 +13,8 @@ import org.springframework.util.StringUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QLConfig {
+    private int id;
+    private String label;
     private String qlUrl;
     private String qlUsername;
     private String qlPassword;
@@ -28,13 +28,22 @@ public class QLConfig {
         boolean verify1 = !StringUtils.isEmpty(qlUrl);
         boolean verify2 = verify1 && !StringUtils.isEmpty(qlUsername) && !StringUtils.isEmpty(qlPassword);
         boolean verify3 = !StringUtils.isEmpty(qlClientID) && !StringUtils.isEmpty(qlClientSecret);
+        qlLoginType = verify2 ? QLConfig.QLLoginType.USERNAME_PASSWORD : QLConfig.QLLoginType.TOKEN;
         return verify1 && (verify2 || verify3);
     }
 
     public enum QLLoginType {
+        /*
+            用户名密码登录
+         */
         USERNAME_PASSWORD,
+        /*
+            OpenApi登录
+         */
         TOKEN;
     }
 
     private QLConfig.QLLoginType qlLoginType;
+
+
 }

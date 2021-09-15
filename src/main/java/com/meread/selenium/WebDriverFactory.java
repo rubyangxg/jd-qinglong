@@ -29,9 +29,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -66,20 +64,14 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private List<QLConfig> qlConfigs;
 
-    private String qlUrl;
-    private String qlUsername;
-    private String qlPassword;
-    private String qlClientID;
-    private String qlClientSecret;
-    private QLToken qlToken;
-    private QLConfig.QLLoginType qlLoginType;
-
     private static int capacity = 0;
 
     public volatile boolean stopSchedule = false;
     public volatile boolean runningSchedule = false;
 
     private List<MyChrome> chromes;
+
+    private List<String> startupErrorMessage = new ArrayList<>();
 
     public List<MyChrome> getChromes() {
         return chromes;
@@ -234,48 +226,13 @@ public class WebDriverFactory implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws MalformedURLException {
-        //老的逻辑，只支持单个青龙
-        qlUrl = System.getenv("ql.url");
-        qlUsername = System.getenv("ql.username");
-        qlPassword = System.getenv("ql.password");
-        qlClientID = System.getenv("ql.clientId");
-        qlClientSecret = System.getenv("ql.clientSecret");
-
-        boolean verify1 = !StringUtils.isEmpty(qlUrl);
-        boolean verify2 = verify1 && !StringUtils.isEmpty(qlUsername) && !StringUtils.isEmpty(qlPassword);
-        boolean verify3 = !StringUtils.isEmpty(qlClientID) && !StringUtils.isEmpty(qlClientSecret);
-
-        //老的逻辑，支持多个青龙
-        List<QLConfig> qlConfigs = parseMultiQLConfig();
-
-        if (!verify1) {
-            log.warn("请配置青龙面板地址!");
-            throw new RuntimeException("请配置青龙面板地址!");
-        }
-        if (!verify2 && !verify3) {
-            log.warn("请配置青龙面板用户名密码或openapi参数!");
-            throw new RuntimeException("请配置青龙面板用户名密码或openapi参数!");
-        }
-        qlLoginType = verify2 ? QLConfig.QLLoginType.USERNAME_PASSWORD : QLConfig.QLLoginType.TOKEN;
-
-        if (qlLoginType.equals(QLConfig.QLLoginType.TOKEN)) {
-            boolean success = getToken(qlClientID, qlClientSecret);
-            if (!success) {
-                log.warn("获取token失败!");
-                throw new RuntimeException("获取token失败!");
-            }
-        }
-
-        if (qlUrl.endsWith("/")) {
-            qlUrl = qlUrl.substring(0, qlUrl.length() - 1);
-        }
-
-        int result = initQingLong();
-        log.info("初始化青龙面板" + (result == 1 ? "成功" : "失败"));
-        log.info("青龙用户名：" + qlUsername);
-        log.info("青龙密码：" + qlPassword);
-
         stopSchedule = true;
+
+        qlConfigs = parseMultiQLConfig();
+        if (qlConfigs.isEmpty()) {
+            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
+        }
+
 
         ChromeOptions chromeOptions = getChromeOptions();
         chromes = Collections.synchronizedList(new ArrayList<>());
@@ -334,79 +291,115 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private List<QLConfig> parseMultiQLConfig() {
         List<QLConfig> qlConfigs = new ArrayList<>();
-        File file = new File("/data/env.properties");
-        if (file.exists()) {
-            try (InputStream input = new FileInputStream(file)) {
-                Properties props = new Properties();
-                props.load(input);
-                Set<String> keys = props.stringPropertyNames();
-                for (int i = 1; i <= 5; i++) {
-                    QLConfig config = new QLConfig();
-                    for (String key : keys) {
-                        String value = props.getProperty(key);
-                        if (key.equals("QL_USERNAME_" + i)) {
-                            config.setQlUsername(value);
-                        } else if (key.equals("QL_URL_" + i)) {
-                            config.setQlUrl(value);
-                        } else if (key.equals("QL_PASSWORD_" + i)) {
-                            config.setQlPassword(value);
-                        } else if (key.equals("QL_CLIENTID_" + i)) {
-                            config.setQlClientID(value);
-                        } else if (key.equals("QL_SECRET_" + i)) {
-                            config.setQlClientSecret(value);
-                        }
+        Map<String, String> env = System.getenv();
+        for (int i = 1; i <= 5; i++) {
+            QLConfig config = new QLConfig();
+            config.setId(i);
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (key.equals("QL_USERNAME_" + i)) {
+                    config.setQlUsername(value);
+                } else if (key.equals("QL_URL_" + i)) {
+                    if (value.endsWith("/")) {
+                        value = value.substring(0, value.length() - 1);
                     }
-                    if (config.isValid()) {
-                        qlConfigs.add(config);
-                    }
+                    config.setQlUrl(value);
+                } else if (key.equals("QL_PASSWORD_" + i)) {
+                    config.setQlPassword(value);
+                } else if (key.equals("QL_CLIENTID_" + i)) {
+                    config.setQlClientID(value);
+                } else if (key.equals("QL_SECRET_" + i)) {
+                    config.setQlClientSecret(value);
+                } else if (key.equals("QL_LABEL_" + i)) {
+                    config.setLabel(value);
                 }
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
-        } else {
-            log.info("/data/env.properties不存在，不解析多套青龙配置");
+            if (config.isValid()) {
+                qlConfigs.add(config);
+            }
         }
         log.info("成功解析" + qlConfigs.size() + "套配置");
+
+        //兼容老的逻辑，只支持单个青龙
+        QLConfig config = new QLConfig();
+        config.setQlUrl(System.getenv("ql.url"));
+        config.setQlUsername(System.getenv("ql.username"));
+        config.setQlPassword(System.getenv("ql.password"));
+        config.setQlClientID(System.getenv("ql.clientId"));
+        config.setQlClientSecret(System.getenv("ql.clientSecret"));
+        config.setLabel(System.getenv("ql.label"));
+        if (config.isValid()) {
+            qlConfigs.add(config);
+        }
+
+        Iterator<QLConfig> iterator = qlConfigs.iterator();
+        while (iterator.hasNext()) {
+            QLConfig qlConfig = iterator.next();
+            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+                boolean success = getToken(qlConfig);
+                if (!success) {
+                    log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
+                    iterator.remove();
+                }
+            }
+            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                int result = 0;
+                try {
+                    result = initQingLong(qlConfig);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (result <= 0) {
+                    iterator.remove();
+                }
+                log.info("初始化青龙面板" + qlConfig.getQlUrl() + (result == 1 ? "成功" : "登录失败, 获取到的ck无法上传，已忽略"));
+            }
+        }
         return qlConfigs;
     }
 
-    private boolean getToken(String qlClientID, String qlClientSecret) throws MalformedURLException {
-        ResponseEntity<String> entity = restTemplate.getForEntity(qlUrl + "/open/auth/token?client_id=" + qlClientID + "&client_secret=" + qlClientSecret, String.class);
-        if (entity.getStatusCodeValue() == 200) {
-            String body = entity.getBody();
-            //{
-            //    "code": 200,
-            //    "data": {
-            //        "token": "f02afc91-24a1-40d6-b316-cf09a3d5ddd8",
-            //        "token_type": "Bearer",
-            //        "expiration": 1634203177
-            //    }
-            //}
-            log.info("获取token " + body);
-            JSONObject jsonObject = JSON.parseObject(body);
-            Integer code = jsonObject.getInteger("code");
-            if (code == 200) {
-                JSONObject data = jsonObject.getJSONObject("data");
-                String token = data.getString("token");
-                String tokenType = data.getString("token_type");
-                long expiration = data.getLong("expiration");
-                log.info("获取token成功 " + token);
-                log.info("获取tokenType成功 " + tokenType);
-                log.info("获取expiration成功 " + expiration);
-                qlToken = new QLToken(token, tokenType, expiration);
-                return true;
+    private boolean getToken(QLConfig qlConfig) {
+        String qlUrl = qlConfig.getQlUrl();
+        String qlClientID = qlConfig.getQlClientID();
+        String qlClientSecret = qlConfig.getQlClientSecret();
+        try {
+            ResponseEntity<String> entity = restTemplate.getForEntity(qlUrl + "/open/auth/token?client_id=" + qlClientID + "&client_secret=" + qlClientSecret, String.class);
+            if (entity.getStatusCodeValue() == 200) {
+                String body = entity.getBody();
+                log.info("获取token " + body);
+                JSONObject jsonObject = JSON.parseObject(body);
+                Integer code = jsonObject.getInteger("code");
+                if (code == 200) {
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    String token = data.getString("token");
+                    String tokenType = data.getString("token_type");
+                    long expiration = data.getLong("expiration");
+                    log.info(qlUrl + "获取token成功 " + token);
+                    log.info(qlUrl + "获取tokenType成功 " + tokenType);
+                    log.info(qlUrl + "获取expiration成功 " + expiration);
+                    qlConfig.setQlToken(new QLToken(token, tokenType, expiration));
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            log.error(qlUrl + "获取token失败，请检查配置");
         }
         return false;
     }
 
-    public int initQingLong() throws MalformedURLException {
+    public int initQingLong(QLConfig qlConfig) throws MalformedURLException {
+        String qlUrl = qlConfig.getQlUrl();
+        String qlUsername = qlConfig.getQlUsername();
+        String qlPassword = qlConfig.getQlPassword();
         RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getChromeOptions());
         try {
-            webDriver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
             webDriver.get(qlUrl + "/login");
             log.info("initQingLong start : " + qlUrl + "/login");
-            if (readPassword()) return 1;
+            if (readPassword(qlConfig)) {
+                return 1;
+            }
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
                 webDriver.findElement(By.id("username")).sendKeys(qlUsername);
@@ -420,18 +413,20 @@ public class WebDriverFactory implements CommandLineRunner {
                     LocalStorage storage = webStorage.getLocalStorage();
                     String token = storage.getItem("token");
                     log.info("qinglong token " + token);
-                    if (readPassword()) return 1;
+                    if (readPassword(qlConfig)) {
+                        return 1;
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(qlUrl + "测试登录失败，请检查配置");
         } finally {
             webDriver.quit();
         }
         return -1;
     }
 
-    private boolean readPassword() throws IOException {
+    private boolean readPassword(QLConfig qlConfig) throws IOException {
         File file = new File("/data/config/auth.json");
         if (file.exists()) {
             String s = FileUtils.readFileToString(file, "utf-8");
@@ -439,8 +434,8 @@ public class WebDriverFactory implements CommandLineRunner {
             String username = jsonObject.getString("username");
             String password = jsonObject.getString("password");
             if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password) && !"adminadmin".equals(password)) {
-                this.qlUsername = username;
-                this.qlPassword = password;
+                qlConfig.setQlUsername(username);
+                qlConfig.setQlPassword(password);
                 return true;
             }
         }
@@ -567,31 +562,7 @@ public class WebDriverFactory implements CommandLineRunner {
         }
     }
 
-    public String getQlUrl() {
-        return qlUrl;
-    }
-
-    public String getQlUsername() {
-        return qlUsername;
-    }
-
-    public String getQlPassword() {
-        return qlPassword;
-    }
-
-    public String getQlClientID() {
-        return qlClientID;
-    }
-
-    public String getQlClientSecret() {
-        return qlClientSecret;
-    }
-
-    public QLToken getQlToken() {
-        return qlToken;
-    }
-
-    public QLConfig.QLLoginType getQlLoginType() {
-        return qlLoginType;
+    public List<QLConfig> getQlConfigs() {
+        return qlConfigs;
     }
 }

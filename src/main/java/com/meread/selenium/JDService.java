@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.JDScreenBean;
 import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.QLConfig;
+import com.meread.selenium.bean.QLToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -16,6 +17,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -75,6 +77,11 @@ public class JDService {
 //    cURL --request GET 'http://<node-URL>/se/grid/node/owner/<session-id>' --header 'X-REGISTRATION-SECRET;'
 
     public String getJDCookies(String chromeSessionId) {
+        String mockCookie = System.getenv("mockCookie");
+        if ("1".equals(mockCookie)) {
+            String uuid = UUID.randomUUID().toString().replace("-", "");
+            return "pt_key=test_" + uuid + ";pt_pin=" + uuid;
+        }
         StringBuilder sb = new StringBuilder();
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(chromeSessionId);
         if (webDriver != null) {
@@ -345,13 +352,13 @@ public class JDService {
         return bean;
     }
 
-    public int uploadQingLong(String sessionId, String ck, String remark) {
+    public int uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        webDriver.get(driverFactory.getQlUrl() + "/login");
+        webDriver.get(qlConfig.getQlUrl() + "/login");
         boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
         if (b) {
-            webDriver.findElement(By.id("username")).sendKeys(driverFactory.getQlUsername());
-            webDriver.findElement(By.id("password")).sendKeys(driverFactory.getQlPassword());
+            webDriver.findElement(By.id("username")).sendKeys(qlConfig.getQlUsername());
+            webDriver.findElement(By.id("password")).sendKeys(qlConfig.getQlPassword());
             webDriver.findElement(By.xpath("//button[@type='submit']")).click();
             try {
                 Thread.sleep(1000);
@@ -365,7 +372,10 @@ public class JDService {
                 LocalStorage storage = webStorage.getLocalStorage();
                 String token = storage.getItem("token");
                 if (token != null) {
-                    return uploadQingLongWithToken(ck, remark, token);
+                    QLConfig tmpConfig = new QLConfig();
+                    BeanUtils.copyProperties(qlConfig, tmpConfig);
+                    tmpConfig.setQlToken(new QLToken(token));
+                    return uploadQingLongWithToken(ck, remark, tmpConfig);
                 } else {
                     return 0;
                 }
@@ -374,16 +384,17 @@ public class JDService {
         return -1;
     }
 
-    public int uploadQingLongWithToken(String ck, String remark, String token) {
+    public int uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
+        headers.add("Authorization", "Bearer " + qlConfig.getQlToken().getToken());
         headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36");
         headers.add("Content-Type", "application/json;charset=UTF-8");
         headers.add("Accept-Encoding", "gzip, deflate");
         headers.add("Accept-Language", "zh-CN,zh;q=0.9");
 
-        ResponseEntity<String> exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + remark + "&t=" + System.currentTimeMillis()
-                , HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + remark + "&t=" + System.currentTimeMillis();
+        log.info("开始获取当前ck列表" + url);
+        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
         boolean update = false;
         String updateId = "";
         if (exchange.getStatusCode().is2xxSuccessful()) {
@@ -404,6 +415,7 @@ public class JDService {
             }
         }
 
+        url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis();
         if (!update) {
             JSONArray jsonArray = new JSONArray();
             JSONObject jsonObject = new JSONObject();
@@ -414,8 +426,8 @@ public class JDService {
             }
             jsonArray.add(jsonObject);
             HttpEntity<?> request = new HttpEntity<>(jsonArray.toJSONString(), headers);
-            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
-                    , HttpMethod.POST, request, String.class);
+            log.info("开始上传ck" + url);
+            exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
                 return 1;
@@ -429,8 +441,8 @@ public class JDService {
             }
             jsonObject.put("_id", updateId);
             HttpEntity<?> request = new HttpEntity<>(jsonObject.toJSONString(), headers);
-            exchange = restTemplate.exchange(driverFactory.getQlUrl() + "/" + (driverFactory.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis()
-                    , HttpMethod.PUT, request, String.class);
+            log.info("开始更新ck" + url);
+            exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
                 return 1;

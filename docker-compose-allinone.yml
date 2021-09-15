@@ -54,11 +54,12 @@ services:
       - "ql.password=${QL_PASSWORD}"
       - "ql.clientId=${QL_CLIENTID}"
       - "ql.clientSecret=${QL_SECRET}"
+      - "ql.label=${QL_LABEL}"
     ports:
       - "5701:8080"
     volumes:
       - ./data:/data
-      - ./env.properties:/env.properties
+      - ./env.properties:/data/env.properties
     depends_on:
       - redis
       - chrome
@@ -81,3 +82,9 @@ services:
       - ENABLE_WEB_PANEL=true
     restart: always
 
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.177.0.0/16
