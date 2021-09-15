@@ -1,6 +1,6 @@
 #!/bin/bash
 cd ..
-git pull
+git pull --allow-unrelated-histories
 mvn clean package -Dmaven.test.skip=true
 cp target/jd-qinglong-*.jar docker/
 cd docker
