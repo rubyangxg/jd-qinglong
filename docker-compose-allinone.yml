@@ -64,7 +64,6 @@ services:
       - redis
       - chrome
       - qinglong
-    restart: always
 
   qinglong:
     container_name: qinglong
