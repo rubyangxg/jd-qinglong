@@ -25,7 +25,7 @@
 * 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
 
 ## 更新历史
-* 2021-09-15 更新上传多青龙支持，升级后请仔细阅读 [env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties) 里面的注释
+* 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties) 里面的注释
 
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
