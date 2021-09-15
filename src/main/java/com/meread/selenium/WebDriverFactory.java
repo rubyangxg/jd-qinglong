@@ -337,24 +337,39 @@ public class WebDriverFactory implements CommandLineRunner {
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
             QLConfig qlConfig = iterator.next();
-            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+
+            boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
+            boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
+            boolean verify3 = verify1 && !StringUtils.isEmpty(qlConfig.getQlClientID()) && !StringUtils.isEmpty(qlConfig.getQlClientSecret());
+
+            boolean result_token = false;
+            boolean result_usernamepassword = false;
+            if (verify3) {
                 boolean success = getToken(qlConfig);
-                if (!success) {
+                if (success) {
+                    result_token = true;
+                    qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
+                } else {
                     log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
-                    iterator.remove();
                 }
             }
-            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+            if (verify2) {
                 int result = 0;
                 try {
-                    result = initQingLong(qlConfig);
+                    result = initInnerQingLong(qlConfig);
+                    qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                if (result <= 0) {
-                    iterator.remove();
+                if (result > 0) {
+                    result_usernamepassword = true;
+                } else {
+                    log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
                 }
-                log.info("初始化青龙面板" + qlConfig.getQlUrl() + (result == 1 ? "成功" : "登录失败, 获取到的ck无法上传，已忽略"));
+            }
+
+            if (!result_token && !result_usernamepassword) {
+                iterator.remove();
             }
         }
         return qlConfigs;
@@ -389,7 +404,7 @@ public class WebDriverFactory implements CommandLineRunner {
         return false;
     }
 
-    public int initQingLong(QLConfig qlConfig) throws MalformedURLException {
+    public int initInnerQingLong(QLConfig qlConfig) throws MalformedURLException {
         String qlUrl = qlConfig.getQlUrl();
         String qlUsername = qlConfig.getQlUsername();
         String qlPassword = qlConfig.getQlPassword();
@@ -414,7 +429,7 @@ public class WebDriverFactory implements CommandLineRunner {
                     LocalStorage storage = webStorage.getLocalStorage();
                     String token = storage.getItem("token");
                     log.info("qinglong token " + token);
-                    if (readPassword(qlConfig)) {
+                    if (readPassword(qlConfig) || !StringUtils.isEmpty(token)) {
                         return 1;
                     }
                 }

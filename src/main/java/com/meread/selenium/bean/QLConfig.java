@@ -27,8 +27,7 @@ public class QLConfig {
     public boolean isValid() {
         boolean verify1 = !StringUtils.isEmpty(qlUrl);
         boolean verify2 = verify1 && !StringUtils.isEmpty(qlUsername) && !StringUtils.isEmpty(qlPassword);
-        boolean verify3 = !StringUtils.isEmpty(qlClientID) && !StringUtils.isEmpty(qlClientSecret);
-        qlLoginType = verify2 ? QLConfig.QLLoginType.USERNAME_PASSWORD : QLConfig.QLLoginType.TOKEN;
+        boolean verify3 = verify1 && !StringUtils.isEmpty(qlClientID) && !StringUtils.isEmpty(qlClientSecret);
         return verify1 && (verify2 || verify3);
     }
 
