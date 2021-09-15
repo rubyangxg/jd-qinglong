@@ -25,6 +25,7 @@
 * 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
 * 选择Openid方式登录的，确保青龙版本>=2.9，并且创建了应用。
 * 碰到docker-compose运行无反应，提示`Define and run multi-container applications with Docker`，麻烦升级一下docker-compose版本
+* 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 * 查看日志的命令有三个，具体含义自行学习：
  1. `docker-compose --env-file env.properties logs -f webapp`
  2. `docker-compose --env-file env.properties logs -f`
