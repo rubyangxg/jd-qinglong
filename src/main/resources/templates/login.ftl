@@ -114,7 +114,7 @@
 
             var clientSessionId = "${clientSessionId}";
             var phone;
-            var qlUploadDirect = "${qlUploadDirect}";
+            var qlUploadDirect = ${qlUploadDirect};
 
             function copy1() {
                 var clipboard = new ClipboardJS('#copyBtn');
@@ -129,7 +129,7 @@
 
             function chooseQingLong() {
                 if (qlUploadDirect === 1) {
-                    uploadQingLong();
+                    uploadQingLong(qlUploadDirect);
                 } else {
                     $.ajax({
                         type: "POST",
@@ -147,7 +147,7 @@
                                     btn: ['确定'],
                                     yes: function (index, layero) {
                                         layer.close(index);
-                                        uploadQingLong();
+                                        uploadQingLong(qlUploadDirect);
                                     }
                                 });
                             } else if (data.status <= 0) {
@@ -158,12 +158,16 @@
                 }
             }
 
-            function uploadQingLong() {
+            function uploadQingLong(qlUploadDirect) {
+                var data = $("#chooseQL_form").serialize();
+                if (qlUploadDirect) {
+                    data = {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone};
+                }
                 $.ajax({
                     type: "POST",
                     url: "/uploadQingLong",
                     async: false,
-                    data: $("#chooseQL_form").serialize(),
+                    data: data,
                     dataType: "json",
                     success: function (data) {
                         if (data.status === 1) {
@@ -181,6 +185,8 @@
                             layer.alert("请手动复制!");
                         } else if (data.status === 0) {
                             layer.alert("没有选择青龙，请手动复制!");
+                        } else if (data.status === 2) {
+                            layer.alert("上传成功");
                         }
                     }
                 });

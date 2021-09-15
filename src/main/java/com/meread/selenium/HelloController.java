@@ -113,14 +113,7 @@ public class HelloController {
         String debug = httpRequest.getParameter("debug");
         String servletSessionId = httpRequest.getSession().getId();
         model.addAttribute("debug", this.debug);
-        String ql_upload_direct = System.getenv("QL_UPLOAD_DIRECT");
-        int qlUploadDirect = 0;
-        if (!StringUtils.isEmpty(ql_upload_direct)) {
-            try {
-                qlUploadDirect = Integer.parseInt(ql_upload_direct);
-            } catch (NumberFormatException e) {
-            }
-        }
+        int qlUploadDirect = qlUploadDirect();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         if (!StringUtils.isEmpty(debug)) {
             int i = Integer.parseInt(debug);
@@ -165,6 +158,18 @@ public class HelloController {
         return "login";
     }
 
+    private int qlUploadDirect() {
+        String ql_upload_direct = System.getenv("QL_UPLOAD_DIRECT");
+        int qlUploadDirect = 0;
+        if (!StringUtils.isEmpty(ql_upload_direct)) {
+            try {
+                qlUploadDirect = Integer.parseInt(ql_upload_direct);
+            } catch (NumberFormatException e) {
+            }
+        }
+        return qlUploadDirect;
+    }
+
     @PostMapping({"/jdLogin"})
     @ResponseBody
     public String login(@RequestParam("clientSessionId") String clientSessionId, HttpServletResponse response, @RequestParam("phone") String phone,
@@ -194,13 +199,14 @@ public class HelloController {
         if (sessionId == null) {
             return jsonObject;
         }
+        int qlUploadDirect = qlUploadDirect();
 
-        if (chooseQLId != null && chooseQLId.size() > 0) {
+        if ((chooseQLId != null && chooseQLId.size() > 0) || qlUploadDirect == 1) {
             List<QLUploadStatus> uploadStatuses = new ArrayList<>();
             try {
                 if (factory.getQlConfigs() != null) {
                     for (QLConfig qlConfig : factory.getQlConfigs()) {
-                        if (chooseQLId.contains(qlConfig.getId())) {
+                        if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
                             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
                                 int i = service.uploadQingLongWithToken(ck, phone, qlConfig);
                                 uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0));
@@ -215,24 +221,26 @@ public class HelloController {
             } finally {
                 factory.releaseWebDriver(sessionId);
             }
-            Map<String, Object> map = new HashMap<>();
-            map.put("uploadStatuses", uploadStatuses);
-            try {
-                Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/uploadRes.ftl");
-                String process = FreemarkerUtils.process(template, map);
-                log.debug(process);
-                jsonObject.put("html", process);
-                jsonObject.put("status", 1);
-            } catch (IOException | TemplateException e) {
-                e.printStackTrace();
+
+            if (qlUploadDirect != 1) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("uploadStatuses", uploadStatuses);
+                try {
+                    Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/uploadRes.ftl");
+                    String process = FreemarkerUtils.process(template, map);
+                    log.debug(process);
+                    jsonObject.put("html", process);
+                    jsonObject.put("status", 1);
+                } catch (IOException | TemplateException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                jsonObject.put("status", 2);
             }
+
         } else {
             jsonObject.put("status", 0);
         }
-
-
-
-
         return jsonObject;
     }
 
