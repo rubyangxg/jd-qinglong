@@ -75,9 +75,3 @@ services:
 #      - ENABLE_WEB_PANEL=true
 #    restart: always
 
-networks:
-  default:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.177.0.0/16
