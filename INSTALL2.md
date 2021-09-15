@@ -29,8 +29,9 @@ wget -O docker-compose.yml https://raw.githubusercontent.com/rubyangxg/jd-qinglo
 wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
 # 启动 -d表示后台静默启动
 # 使用从0搭建的，不需要修改env.properties中的青龙配置
+# 非root用户请执行，root用户请去掉sudo，可能会出现command not found
 sudo docker-compose --env-file env.properties up -d
-# 查看日志
+# 非root用户请执行，root用户请去掉sudo，可能会出现command not found
 sudo docker-compose --env-file env.properties logs -f
 ```
 青龙面板默认端口5700
