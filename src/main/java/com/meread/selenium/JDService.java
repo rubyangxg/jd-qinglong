@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import sun.misc.BASE64Decoder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -238,9 +237,8 @@ public class JDService {
                 smallImageBase64 = matcher.group(1);
             }
             if (bigImageBase64 != null && smallImageBase64 != null) {
-                BASE64Decoder decoder = new BASE64Decoder();
-                byte[] bgBytes = decoder.decodeBuffer(bigImageBase64);
-                byte[] bgSmallBytes = decoder.decodeBuffer(smallImageBase64);
+                byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
+                byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
                 UUID uuid = UUID.randomUUID();
                 File file1 = new File(uuid + "_captcha.jpg");
                 File file2 = new File(uuid + "_captcha_small.jpg");
