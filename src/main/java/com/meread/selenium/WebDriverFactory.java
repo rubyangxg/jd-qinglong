@@ -361,7 +361,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 }
             }
             if (verify2) {
-                int result = 0;
+                boolean result = false;
                 try {
                     result = initInnerQingLong(qlConfig);
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
@@ -372,7 +372,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                if (result > 0) {
+                if (result) {
                     result_usernamepassword = true;
                 } else {
                     log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
@@ -417,31 +417,37 @@ public class WebDriverFactory implements CommandLineRunner {
         return false;
     }
 
-    public int initInnerQingLong(QLConfig qlConfig) throws MalformedURLException {
+    public boolean initInnerQingLong(QLConfig qlConfig) throws MalformedURLException {
         String qlUrl = qlConfig.getQlUrl();
-        String qlUsername = qlConfig.getQlUsername();
-        String qlPassword = qlConfig.getQlPassword();
         RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getChromeOptions());
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         try {
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-            webDriver.get(qlUrl + "/login");
-            log.info("initQingLong start : " + qlUrl + "/login");
-            boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
-            if (b) {
-                webDriver.findElement(By.id("username")).sendKeys(qlUsername);
-                webDriver.findElement(By.id("password")).sendKeys(qlPassword);
-                webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                Thread.sleep(2000);
-                b = WebDriverUtil.waitForJStoLoad(webDriver);
+            String token = null;
+            int retry = 0;
+            while (StringUtils.isEmpty(token)) {
+                retry++;
+                if (retry > 2) {
+                    break;
+                }
+                String qlUsername = qlConfig.getQlUsername();
+                String qlPassword = qlConfig.getQlPassword();
+                webDriver.get(qlUrl + "/login");
+                log.info("initQingLong start : " + qlUrl + "/login");
+                boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
                 if (b) {
-                    RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
-                    RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
-                    LocalStorage storage = webStorage.getLocalStorage();
-                    String token = storage.getItem("token");
-                    log.info("qinglong token " + token);
-                    qlConfig.setQlToken(new QLToken(token));
-                    if (readPassword(qlConfig) || !StringUtils.isEmpty(token)) {
-                        return 1;
+                    webDriver.findElement(By.id("username")).sendKeys(qlUsername);
+                    webDriver.findElement(By.id("password")).sendKeys(qlPassword);
+                    webDriver.findElement(By.xpath("//button[@type='submit']")).click();
+                    Thread.sleep(2000);
+                    b = WebDriverUtil.waitForJStoLoad(webDriver);
+                    if (b) {
+                        RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
+                        RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
+                        LocalStorage storage = webStorage.getLocalStorage();
+                        token = storage.getItem("token");
+                        log.info("qinglong token " + token);
+                        qlConfig.setQlToken(new QLToken(token));
+                        readPassword(qlConfig);
                     }
                 }
             }
@@ -450,7 +456,7 @@ public class WebDriverFactory implements CommandLineRunner {
         } finally {
             webDriver.quit();
         }
-        return -1;
+        return qlConfig.getQlToken() != null && qlConfig.getQlToken().getToken() != null;
     }
 
     private boolean readPassword(QLConfig qlConfig) throws IOException {

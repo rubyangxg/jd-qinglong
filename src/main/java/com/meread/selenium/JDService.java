@@ -373,7 +373,7 @@ public class JDService {
             webDriver.findElement(By.id("password")).sendKeys(qlConfig.getQlPassword());
             webDriver.findElement(By.xpath("//button[@type='submit']")).click();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
