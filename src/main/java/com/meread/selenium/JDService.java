@@ -364,6 +364,9 @@ public class JDService {
     }
 
     public int uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
+        if (qlConfig.getRemain() <= 0) {
+            return -1;
+        }
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
         webDriver.get(qlConfig.getQlUrl() + "/login");
         boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
@@ -395,38 +398,40 @@ public class JDService {
         return -1;
     }
 
-    public int uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + qlConfig.getQlToken().getToken());
-        headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36");
-        headers.add("Content-Type", "application/json;charset=UTF-8");
-        headers.add("Accept-Encoding", "gzip, deflate");
-        headers.add("Accept-Language", "zh-CN,zh;q=0.9");
-
-        String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + remark + "&t=" + System.currentTimeMillis();
+    public JSONArray getCurrentCKS(QLConfig qlConfig, String searchValue) {
+        String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + searchValue + "&t=" + System.currentTimeMillis();
         log.info("开始获取当前ck列表" + url);
+        HttpHeaders headers = getHttpHeaders(qlConfig);
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-        boolean update = false;
-        String updateId = "";
         if (exchange.getStatusCode().is2xxSuccessful()) {
             String body = exchange.getBody();
-            log.info("body = " + body);
-            JSONArray data = JSON.parseObject(body).getJSONArray("data");
-            if (data != null && data.size() > 0) {
-                for (int i = 0; i < data.size(); i++) {
-                    JSONObject jsonObject = data.getJSONObject(i);
-                    String remarks = jsonObject.getString("remarks");
-                    String _id = jsonObject.getString("_id");
-                    if (!StringUtils.isEmpty(remark) && remark.equals(remarks)) {
-                        update = true;
-                        updateId = _id;
-                        break;
-                    }
+            return JSON.parseObject(body).getJSONArray("data");
+        }
+        return null;
+    }
+
+    public int uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
+        if (qlConfig.getRemain() <= 0) {
+            return -1;
+        }
+        HttpHeaders headers = getHttpHeaders(qlConfig);
+        boolean update = false;
+        String updateId = "";
+        JSONArray data = getCurrentCKS(qlConfig, remark);
+        if (data != null && data.size() > 0) {
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject jsonObject = data.getJSONObject(i);
+                String remarks = jsonObject.getString("remarks");
+                String _id = jsonObject.getString("_id");
+                if (!StringUtils.isEmpty(remark) && remark.equals(remarks)) {
+                    update = true;
+                    updateId = _id;
+                    break;
                 }
             }
         }
 
-        url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis();
+        String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis();
         if (!update) {
             JSONArray jsonArray = new JSONArray();
             JSONObject jsonObject = new JSONObject();
@@ -438,9 +443,10 @@ public class JDService {
             jsonArray.add(jsonObject);
             HttpEntity<?> request = new HttpEntity<>(jsonArray.toJSONString(), headers);
             log.info("开始上传ck" + url);
-            exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+            ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
+                updateRemain(qlConfig);
                 return 1;
             }
         } else {
@@ -453,13 +459,27 @@ public class JDService {
             jsonObject.put("_id", updateId);
             HttpEntity<?> request = new HttpEntity<>(jsonObject.toJSONString(), headers);
             log.info("开始更新ck" + url);
-            exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+            ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
                 return 1;
             }
         }
         return -1;
+    }
+
+    private void updateRemain(QLConfig qlConfig) {
+        qlConfig.setRemain(qlConfig.getRemain() - 1);
+    }
+
+    private HttpHeaders getHttpHeaders(QLConfig qlConfig) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + qlConfig.getQlToken().getToken());
+        headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36");
+        headers.add("Content-Type", "application/json;charset=UTF-8");
+        headers.add("Accept-Encoding", "gzip, deflate");
+        headers.add("Accept-Language", "zh-CN,zh;q=0.9");
+        return headers;
     }
 
 }

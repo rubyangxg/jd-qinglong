@@ -13,4 +13,5 @@ import lombok.Data;
 public class QLUploadStatus {
     private QLConfig qlConfig;
     private boolean uploadStatus;
+    private boolean isFull;
 }

@@ -51,6 +51,9 @@ public class WebDriverFactory implements CommandLineRunner {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private JDService jdService;
+
     @Value("${selenium.hub.url}")
     private String seleniumHubUrl;
 
@@ -70,8 +73,6 @@ public class WebDriverFactory implements CommandLineRunner {
     public volatile boolean runningSchedule = false;
 
     private List<MyChrome> chromes;
-
-    private List<String> startupErrorMessage = new ArrayList<>();
 
     public List<MyChrome> getChromes() {
         return chromes;
@@ -313,6 +314,8 @@ public class WebDriverFactory implements CommandLineRunner {
                     config.setQlClientSecret(value);
                 } else if (key.equals("QL_LABEL_" + i)) {
                     config.setLabel(value);
+                } else if (key.equals("QL_CAPACITY_" + i)) {
+                    config.setCapacity(Integer.parseInt(value.trim()));
                 }
             }
             if (config.isValid()) {
@@ -332,7 +335,7 @@ public class WebDriverFactory implements CommandLineRunner {
             qlConfigs.add(config);
         }
 
-        log.info("成功解析" + qlConfigs.size() + "套配置");
+        log.info("解析" + qlConfigs.size() + "套配置");
 
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
@@ -349,6 +352,10 @@ public class WebDriverFactory implements CommandLineRunner {
                 if (success) {
                     result_token = true;
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
+                    JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
+                    if (currentCKS != null) {
+                        qlConfig.setRemain(qlConfig.getCapacity() - currentCKS.size());
+                    }
                 } else {
                     log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
                 }
@@ -358,6 +365,10 @@ public class WebDriverFactory implements CommandLineRunner {
                 try {
                     result = initInnerQingLong(qlConfig);
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
+                    JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
+                    if (currentCKS != null) {
+                        qlConfig.setRemain(qlConfig.getCapacity() - currentCKS.size());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -372,6 +383,8 @@ public class WebDriverFactory implements CommandLineRunner {
                 iterator.remove();
             }
         }
+
+        log.info("成功添加" + qlConfigs.size() + "套配置");
         return qlConfigs;
     }
 
@@ -429,6 +442,7 @@ public class WebDriverFactory implements CommandLineRunner {
                     LocalStorage storage = webStorage.getLocalStorage();
                     String token = storage.getItem("token");
                     log.info("qinglong token " + token);
+                    qlConfig.setQlToken(new QLToken(token));
                     if (readPassword(qlConfig) || !StringUtils.isEmpty(token)) {
                         return 1;
                     }

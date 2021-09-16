@@ -142,7 +142,7 @@
                                 layer.open({
                                     type: 1,
                                     skin: 'layui-layer-rim', //加上边框
-                                    area: ['600px', '400px'], //宽高
+                                    area: screen() < 2 ? ['50%', '30%'] : ['600px', '400px'], //宽高
                                     content: data.html,
                                     btn: ['确定'],
                                     yes: function (index, layero) {
@@ -174,7 +174,7 @@
                             layer.open({
                                 type: 1,
                                 skin: 'layui-layer-rim', //加上边框
-                                area: ['600px', '400px'], //宽高
+                                area: screen() < 2 ? ['50%', '30%'] : ['600px', '400px'], //宽高
                                 content: data.html,
                                 btn: ['确定'],
                                 yes: function (index, layero) {
@@ -187,6 +187,10 @@
                             layer.alert("没有选择青龙，请手动复制!");
                         } else if (data.status === 2) {
                             layer.alert("上传成功");
+                        } else if (data.status === -2) {
+                            layer.alert(data.html, {
+                                icon: 2,
+                            })
                         }
                     }
                 });
@@ -420,6 +424,30 @@
 
         </script>
     </div>
+    <#if qlConfigs?has_content>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">青龙</th>
+                <th scope="col">可用容量</th>
+            </tr>
+            </thead>
+            <tbody>
+            <#list qlConfigs as s>
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.label!(s.qlUrl)}</td>
+                    <td><span style="color: red">${s.remain!(0)}</span></td>
+                </tr>
+            </#list>
+            </tbody>
+        </table>
+    <#else>
+        <div class="alert alert-primary" role="alert">
+            无青龙配置
+        </div>
+    </#if>
     <div class="row">
         <div class="col-sm-10 col-md-4 col-lg-4 col-xl-4 mx-auto text-center">
             <img id="jd-screen" class="carousel-inner img-responsive img-rounded">

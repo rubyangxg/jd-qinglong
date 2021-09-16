@@ -23,6 +23,10 @@ public class QLConfig {
     private String qlClientSecret;
 
     private QLToken qlToken;
+    //最大容量
+    private int capacity;
+    //当前剩余多少
+    private int remain;
 
     public boolean isValid() {
         boolean verify1 = !StringUtils.isEmpty(qlUrl);
@@ -42,7 +46,7 @@ public class QLConfig {
         TOKEN;
     }
 
-    private QLConfig.QLLoginType qlLoginType;
+    private QLLoginType qlLoginType;
 
 
 }
