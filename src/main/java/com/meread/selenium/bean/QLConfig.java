@@ -26,7 +26,7 @@ public class QLConfig {
     //最大容量
     private int capacity;
     //当前剩余多少
-    private int remain;
+    private int remain = 99;
 
     public boolean isValid() {
         boolean verify1 = !StringUtils.isEmpty(qlUrl);
