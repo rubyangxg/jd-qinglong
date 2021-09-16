@@ -53,12 +53,6 @@ services:
     image: rubyangxg/jd-qinglong:latest
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
-      - "ql.url=${QL_URL}"
-      - "ql.username=${QL_USERNAME}"
-      - "ql.password=${QL_PASSWORD}"
-      - "ql.clientId=${QL_CLIENTID}"
-      - "ql.clientSecret=${QL_SECRET}"
-      - "ql.label=${QL_LABEL}"
     ports:
       - "5701:8080"
     volumes:
