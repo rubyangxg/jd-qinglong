@@ -45,5 +45,5 @@ sudo docker rm webapp && sudo docker rmi rubyangxg/jd-qinglong
 #sudo docker-compose --env-file env.properties down
 #下载最新阿东镜像
 sudo docker pull rubyangxg/jd-qinglong:latest
-sudo docker-compose --env-file env.properties up -d
+sudo docker-compose --env-file env.properties restart
 ```
