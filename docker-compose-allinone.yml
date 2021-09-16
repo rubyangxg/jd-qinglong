@@ -4,53 +4,22 @@ services:
     env_file:
       - env.properties
     container_name: chrome
-    image: selenium/node-chrome:4.0.0-rc-2-prerelease-20210908
+    image: selenium/standalone-chrome:4.0.0-rc-2-prerelease-20210915
     shm_size: 2gb
-    depends_on:
-      - selenium-hub
     environment:
-      - SE_EVENT_BUS_HOST=selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_NODE_SESSION_TIMEOUT=300
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
       - SE_NODE_MAX_SESSIONS=${MAX_SESSION}
       - START_XVFB=false
     ports:
-      - "6901:5900"
-      - "5556:5555"
-    restart: always
-
-  selenium-hub:
-    image: selenium/hub:4.0.0-rc-2-prerelease-20210908
-    container_name: selenium-hub
-    environment:
-      - SE_SESSION_REQUEST_TIMEOUT=20
-    ports:
-      - "4442:4442"
-      - "4443:4443"
       - "4444:4444"
     restart: always
-
-  redis:
-    container_name: redis
-    image: redis:latest
-    restart: always
-    environment:
-      TZ: Asia/Shanghai
-    ports:
-      - "6389:6389"
-#    volumes:
-#      - ./redis.conf:/etc/redis/redis.conf
-#      - ./data:/data
-    command: redis-server --bind 0.0.0.0 --port 6389 --appendonly yes
-    privileged: true
 
   webapp:
     env_file:
       - env.properties
     container_name: webapp
-    image: rubyangxg/jd-qinglong:latest
+    image: rubyangxg/jd-qinglong:1.0
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
     ports:
@@ -58,7 +27,6 @@ services:
     volumes:
       - ./data:/data
     depends_on:
-      - redis
       - chrome
       - qinglong
 
