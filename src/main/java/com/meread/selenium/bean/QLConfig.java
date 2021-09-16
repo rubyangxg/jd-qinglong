@@ -24,7 +24,7 @@ public class QLConfig {
 
     private QLToken qlToken;
     //最大容量
-    private int capacity;
+    private int capacity = 99;
     //当前剩余多少
     private int remain = 99;
 
