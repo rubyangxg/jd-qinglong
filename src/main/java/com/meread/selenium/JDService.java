@@ -116,7 +116,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (!"docker".equals(activeProfile)) {
+        if (!"docker".equals(activeProfile) && !"debug".equals(activeProfile)) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);

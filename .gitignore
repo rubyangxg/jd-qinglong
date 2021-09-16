@@ -163,3 +163,4 @@ target
 
 env.properties
 docker-compose-debug.yml
+src/main/resources/application-debug.properties
