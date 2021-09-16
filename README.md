@@ -31,7 +31,7 @@
  3. `docker logs -f webapp`
 
 ## 更新历史
-* 2021-09-17 优化性能，缩减镜像依赖3变1，升级的话只修改docker-compose.yml即可
+* 2021-09-17 推出1.0版本，优化性能，缩减镜像依赖3变1，升级的话只修改docker-compose.yml即可
 * 2021-09-16 bug fix 解决了卡验证码问题，请务必pull最新镜像
 * 2021-09-16 增加实验功能：支持配置最多上传ck容量
 * 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties) 里面的注释
