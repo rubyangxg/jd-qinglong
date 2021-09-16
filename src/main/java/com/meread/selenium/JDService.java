@@ -53,11 +53,11 @@ public class JDService {
     @Autowired
     private WebDriverFactory driverFactory;
 
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
-
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Value("${jd.debug}")
+    private boolean debug;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -116,7 +116,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (!"docker".equals(activeProfile) && !"debug".equals(activeProfile)) {
+        if (debug) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);

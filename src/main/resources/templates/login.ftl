@@ -115,6 +115,7 @@
             var clientSessionId = "${clientSessionId}";
             var phone;
             var qlUploadDirect = ${qlUploadDirect};
+            var debug =
 
             function copy1() {
                 var clipboard = new ClipboardJS('#copyBtn');

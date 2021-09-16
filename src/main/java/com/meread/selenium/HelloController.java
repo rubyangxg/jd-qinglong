@@ -7,12 +7,10 @@ import com.meread.selenium.util.FreemarkerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.guieffect.qual.UIPackage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -170,7 +168,7 @@ public class HelloController {
             } catch (NumberFormatException e) {
             }
         }
-        if (factory.getQlConfigs().size() <= 1) {
+        if (factory.getQlConfigs() != null && factory.getQlConfigs().size() <= 1) {
             return 1;
         }
         return qlUploadDirect;
@@ -215,11 +213,11 @@ public class HelloController {
                         if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
                             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
                                 int i = service.uploadQingLongWithToken(ck, phone, qlConfig);
-                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0,qlConfig.getRemain() <= 0));
+                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0, qlConfig.getRemain() <= 0));
                             }
                             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
                                 int i = service.uploadQingLong(sessionId, ck, phone, qlConfig);
-                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0,qlConfig.getRemain() <= 0));
+                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0, qlConfig.getRemain() <= 0));
                             }
                         }
                     }
@@ -243,7 +241,7 @@ public class HelloController {
             } else {
                 StringBuilder msg = new StringBuilder();
                 for (QLUploadStatus uploadStatus : uploadStatuses) {
-                    if (!uploadStatus.isUploadStatus() ) {
+                    if (!uploadStatus.isUploadStatus()) {
                         msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId()).append("上传失败<br/>");
                     }
                     if (uploadStatus.isFull()) {
