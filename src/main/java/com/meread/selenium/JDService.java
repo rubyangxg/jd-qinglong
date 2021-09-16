@@ -7,6 +7,7 @@ import com.meread.selenium.bean.JDScreenBean;
 import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.QLConfig;
 import com.meread.selenium.bean.QLToken;
+import com.meread.selenium.util.CacheUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -210,7 +211,8 @@ public class JDService {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.VERIFY_FAILED_MAX);
         }
 
-        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+//        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = CacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         JDScreenBean bean = new JDScreenBean(screenBase64, jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
         if (!StringUtils.isEmpty(jdCookies)) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
@@ -347,7 +349,8 @@ public class JDService {
             e.printStackTrace();
             return null;
         }
-        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+//        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = CacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         bean.setSessionTimeOut(expire);
         List<MyChrome> chromes = driverFactory.getChromes();
         int availChrome = 0;
@@ -401,7 +404,7 @@ public class JDService {
             return null;
         }
         String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + searchValue + "&t=" + System.currentTimeMillis();
-        log.info("开始获取当前ck列表" + url);
+        log.info("开始获取当前ck数量" + url);
         HttpHeaders headers = getHttpHeaders(qlConfig);
         ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
         if (exchange.getStatusCode().is2xxSuccessful()) {
