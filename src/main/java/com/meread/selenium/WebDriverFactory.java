@@ -426,9 +426,6 @@ public class WebDriverFactory implements CommandLineRunner {
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
             webDriver.get(qlUrl + "/login");
             log.info("initQingLong start : " + qlUrl + "/login");
-            if (readPassword(qlConfig)) {
-                return 1;
-            }
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
                 webDriver.findElement(By.id("username")).sendKeys(qlUsername);

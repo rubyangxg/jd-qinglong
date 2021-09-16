@@ -399,6 +399,9 @@ public class JDService {
     }
 
     public JSONArray getCurrentCKS(QLConfig qlConfig, String searchValue) {
+        if (qlConfig.getQlToken() == null) {
+            return null;
+        }
         String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + searchValue + "&t=" + System.currentTimeMillis();
         log.info("开始获取当前ck列表" + url);
         HttpHeaders headers = getHttpHeaders(qlConfig);
