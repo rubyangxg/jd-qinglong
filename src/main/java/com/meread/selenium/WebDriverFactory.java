@@ -14,11 +14,9 @@ import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -50,9 +48,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Slf4j
 public class WebDriverFactory implements CommandLineRunner {
-
-    @Autowired
-    private StringRedisTemplate redisTemplate;
 
     @Autowired
     private JDService jdService;

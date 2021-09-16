@@ -53,9 +53,6 @@ public class JDService {
     @Autowired
     private WebDriverFactory driverFactory;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
     @Value("${jd.debug}")
     private boolean debug;
 
