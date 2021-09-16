@@ -473,18 +473,18 @@ public class WebDriverFactory implements CommandLineRunner {
     private ChromeOptions getChromeOptions() {
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
-        chromeOptions.setExperimentalOption("useAutomationExtension", false);
+        chromeOptions.setExperimentalOption("useAutomationExtension", true);
         chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
         chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--headless");
-        chromeOptions.addArguments("--no-sandbox");
-        chromeOptions.addArguments("--disable-extensions");
-        chromeOptions.addArguments("--disable-software-rasterizer");
+//        chromeOptions.addArguments("--no-sandbox");
+//        chromeOptions.addArguments("--disable-extensions");
+//        chromeOptions.addArguments("--disable-software-rasterizer");
         chromeOptions.addArguments("--ignore-ssl-errors=yes");
         chromeOptions.addArguments("--ignore-certificate-errors");
-        chromeOptions.addArguments("--allow-running-insecure-content");
+//        chromeOptions.addArguments("--allow-running-insecure-content");
         chromeOptions.addArguments("--window-size=500,700");
         return chromeOptions;
     }
