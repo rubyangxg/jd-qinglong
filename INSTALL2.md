@@ -6,7 +6,7 @@ docker-compose更新至最新版：
 ```bash
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose  
 sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version`
+docker-compose --version
 ```
 
 需要安装`docker-ce`及`docker-compose`  
