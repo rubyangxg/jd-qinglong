@@ -155,12 +155,21 @@ public class JDService {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
 
+        if (pageText.contains("若您输入的手机号未注册")) {
+            boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
+            log.info("勾选协议" + isChecked);
+            if (!isChecked) {
+                return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.AGREE_AGREEMENT);
+            }
+        }
+
         WebElement loginBtn = webDriver.findElement(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']"));
         HashSet<String> loginBtnClasses = new HashSet<>(Arrays.asList(loginBtn.getAttribute("class").split(" ")));
         WebElement sendAuthCodeBtn = webDriver.findElement(By.xpath("//button[@report-eventid='MLoginRegister_SMSReceiveCode']"));
         HashSet<String> sendAuthCodeBtnClasses = new HashSet<>(Arrays.asList(sendAuthCodeBtn.getAttribute("class").split(" ")));
         //登录按钮是否可点击
         boolean canClickLogin = loginBtnClasses.contains("btn-active");
+
         //获取验证码是否可点击
         boolean canSendAuth = sendAuthCodeBtnClasses.contains("active");
         int authCodeCountDown = -1;
@@ -342,6 +351,8 @@ public class JDService {
                 click(sessionId, By.xpath("//button[@class='dialog-sure']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.SWITCH_SMS_LOGIN) {
                 click(sessionId, By.xpath("//span[@report-eventid='MLoginRegister_SMSVerification']"));
+            } else if (bean.getPageStatus() == JDScreenBean.PageStatus.AGREE_AGREEMENT) {
+                click(sessionId, By.xpath("//input[@class='policy_tip-checkbox']"));
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
