@@ -17,7 +17,7 @@
                 <tr>
                     <td>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="defaultCheck${s.id}" checked name="chooseQLId" value="${s.id}">
+                            <input class="form-check-input" type="checkbox" id="defaultCheck${s.id}" name="chooseQLId" value="${s.id}">
                         </div>
                     </td>
                     <td>${s.label!(s.qlUrl)}</td>
