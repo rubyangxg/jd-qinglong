@@ -157,8 +157,8 @@ public class JDService {
 
         if (pageText.contains("若您输入的手机号未注册")) {
             boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
-            log.info("勾选协议" + isChecked);
             if (!isChecked) {
+                log.info("勾选协议" + isChecked);
                 return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.AGREE_AGREEMENT);
             }
         }
