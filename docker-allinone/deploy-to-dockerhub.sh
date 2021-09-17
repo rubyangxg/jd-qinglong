@@ -1,6 +1,6 @@
 #!/bin/bash
 op=$1
-if test $op and test $op == 'push' ; then
+if [ $op == 'push' ] ; then
    echo "构建并推送镜像"
 else
    echo "本地构建"
@@ -14,7 +14,7 @@ mvn clean package -Dmaven.test.skip=true
 cp target/jd-qinglong-*.jar docker-allinone
 cd docker-allinone || exit
 docker build -t rubyangxg/jd-qinglong:allinone --build-arg JAR_FILE=jd-qinglong-1.0.jar .
-if test $op and $op == 'push' ; then
+if [ $op == 'push' ] ; then
    docker push rubyangxg/jd-qinglong:allinone
 fi
 
