@@ -5,8 +5,8 @@ if [ $op == 'push' ]; then
 else
    echo "本地构建"
 fi
-docker rm -f jd1.1
-docker rmi -f rubyangxg/jd-qinglong:1.1
+docker rm -f jd-qinglong
+docker rmi -f rubyangxg/jd-qinglong:allinone
 
 cd ..
 git pull --allow-unrelated-histories
