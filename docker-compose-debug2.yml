@@ -6,8 +6,13 @@ services:
       - env.properties
     container_name: webapp
     image: rubyangxg/jd-qinglong:allinone
+    shm_size: 2gb
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
+      - SPRING_PROFILES_ACTIVE=docker
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_SESSIONS=${MAX_SESSION}
+      - START_XVFB=false
     ports:
       - "5701:8080"
     volumes:

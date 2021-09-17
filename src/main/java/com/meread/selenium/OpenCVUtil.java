@@ -1,5 +1,6 @@
 package com.meread.selenium;
 
+import com.meread.selenium.util.CommonAttributes;
 import org.apache.commons.io.FilenameUtils;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.opencv.opencv_core.*;
@@ -44,7 +45,7 @@ public class OpenCVUtil {
 
         String namePrefix = FilenameUtils.getBaseName(source);
 
-        imwrite(namePrefix + ".origin.marked.jpeg", sourceColor);
+        imwrite(CommonAttributes.TMPDIR + "/" + namePrefix + ".origin.marked.jpeg", sourceColor);
 //        imwrite(prefix + ".template.jpeg", template);
 //        imwrite(prefix + ".result.jpeg", result);
         return rect;

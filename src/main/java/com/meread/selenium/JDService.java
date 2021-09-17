@@ -8,6 +8,7 @@ import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.QLConfig;
 import com.meread.selenium.bean.QLToken;
 import com.meread.selenium.util.CacheUtil;
+import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -239,16 +240,16 @@ public class JDService {
                 byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
                 byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
                 UUID uuid = UUID.randomUUID();
-                File file1 = new File(uuid + "_captcha.jpg");
-                File file2 = new File(uuid + "_captcha_small.jpg");
+                File file1 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.jpg");
+                File file2 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_small.jpg");
                 FileUtils.writeByteArrayToFile(file1, bgBytes);
                 FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
                 Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
 
                 if (isDebug) {
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(uuid + "_captcha.origin.marked.jpeg")));
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
                     webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                    FileUtils.writeByteArrayToFile(new File(uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
+                    FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
                 }
 
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
