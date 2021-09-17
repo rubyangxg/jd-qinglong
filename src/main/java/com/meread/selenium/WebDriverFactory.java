@@ -433,6 +433,7 @@ public class WebDriverFactory implements CommandLineRunner {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
+                    Thread.sleep(2000);
                     b = WebDriverUtil.waitForJStoLoad(webDriver);
                     if (b) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
