@@ -20,7 +20,7 @@ import re
 
 # 通知服务
 BARK = ''                                                                 # bark服务,此参数如果以http或者https开头则判定为自建bark服务; secrets可填;
-SCKEY = ''                                                                # Server酱的SCKEY; secrets可填
+SCKEY = 'SCT50024Tcin4Eq0COkCsWbEJFuk8ApIY'                                                                # Server酱的SCKEY; secrets可填
 TG_BOT_TOKEN = ''                                                         # tg机器人的TG_BOT_TOKEN; secrets可填
 TG_USER_ID = ''                                                           # tg机器人的TG_USER_ID; secrets可填
 TG_PROXY_IP = ''                                                          # tg机器人的TG_PROXY_IP; secrets可填
@@ -89,7 +89,8 @@ def serverJ(title, content):
         "desp": content.replace("\n", "\n\n")
     }
     response = requests.post(f"https://sc.ftqq.com/{SCKEY}.send", data=data).json()
-    if response['errno'] == 0:
+    print(response)
+    if response['data']['errno'] == 0:
         print('推送成功！')
     else:
         print('推送失败！')
