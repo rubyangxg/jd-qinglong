@@ -8,8 +8,6 @@ services:
       - "5701:8080"
     volumes:
       - ./env.properties:/env.properties
-    depends_on:
-      - qinglong
 
   qinglong:
     container_name: qinglong

@@ -39,11 +39,12 @@ sudo docker-compose --env-file env.properties logs -f
 
 ```bash
 #停止阿东应用
-sudo docker-compose --env-file env.properties stop webapp
-sudo docker rm webapp && sudo docker rmi rubyangxg/jd-qinglong
+docker-compose --env-file env.properties stop webapp
+docker rm webapp && sudo docker rmi -f rubyangxg/jd-qinglong:allinone
 #此操作不要轻易执行
 #sudo docker-compose --env-file env.properties down
 #下载最新阿东镜像
-sudo docker pull rubyangxg/jd-qinglong:latest
-sudo docker-compose --env-file env.properties restart
+docker pull rubyangxg/jd-qinglong:allinone
+docker-compose --env-file env.properties restart
+docker-compose --env-file env.properties up -d
 ```

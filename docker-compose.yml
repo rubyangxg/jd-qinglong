@@ -1,19 +1,11 @@
 version: "3"
 services:
   webapp:
-    env_file:
-      - env.properties
     container_name: webapp
     image: rubyangxg/jd-qinglong:allinone
     shm_size: 2gb
-    environment:
-      - SPRING_PROFILES_ACTIVE=allinone
-      - SE_NODE_SESSION_TIMEOUT=300
-      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
-      - SE_NODE_MAX_SESSIONS=${MAX_SESSION}
-      - START_XVFB=false
     ports:
       - "5701:8080"
     volumes:
-      - ./data:/data
+      - ./env.properties:/env.properties
 
