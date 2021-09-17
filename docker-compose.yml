@@ -1,47 +1,19 @@
 version: "3"
 services:
-  chrome:
+  webapp:
     env_file:
       - env.properties
-    container_name: chrome
-    image: selenium/standalone-chrome:4.0.0-rc-2-prerelease-20210915
+    container_name: webapp
+    image: rubyangxg/jd-qinglong:allinone
     shm_size: 2gb
     environment:
+      - SPRING_PROFILES_ACTIVE=allinone
       - SE_NODE_SESSION_TIMEOUT=300
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
       - SE_NODE_MAX_SESSIONS=${MAX_SESSION}
       - START_XVFB=false
     ports:
-      - "4444:4444"
-    restart: always
-
-  webapp:
-    env_file:
-      - env.properties
-    container_name: webapp
-    image: rubyangxg/jd-qinglong:1.0
-    environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
-    ports:
       - "5701:8080"
     volumes:
       - ./data:/data
-    depends_on:
-      - chrome
-
-#  qinglong:
-#    container_name: qinglong
-#    image: whyour/qinglong:latest
-#    volumes:
-#      - ./data/config:/ql/config
-#      - ./data/log:/ql/log
-#      - ./data/db:/ql/db
-#      - ./data/scripts:/ql/scripts
-#      - ./data/repo:/ql/repo
-#    ports:
-#      - "0.0.0.0:5700:5700"
-#    environment:
-#      - ENABLE_HANGUP=true
-#      - ENABLE_WEB_PANEL=true
-#    restart: always
 
