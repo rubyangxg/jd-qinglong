@@ -7,6 +7,7 @@ else
 fi
 docker rm -f jd-qinglong
 docker rmi -f rubyangxg/jd-qinglong:allinone
+docker rmi -f rubyangxg/jd-qinglong:latest
 
 cd ..
 git pull --allow-unrelated-histories
