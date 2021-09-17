@@ -351,8 +351,16 @@ public class WebDriverFactory implements CommandLineRunner {
                     result_token = true;
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
                     JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
+                    int ckSize = 0;
                     if (currentCKS != null) {
-                        qlConfig.setRemain(qlConfig.getCapacity() - currentCKS.size());
+                        for (int i = 0; i < currentCKS.size(); i++) {
+                            JSONObject jo = currentCKS.getJSONObject(i);
+                            if ("JD_COOKIE".equals(jo.getString("name"))) {
+                                ckSize++;
+                            }
+                        }
+                        log.info("获取到的ck数量=" + ckSize);
+                        qlConfig.setRemain(qlConfig.getCapacity() - ckSize);
                     }
                 } else {
                     log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
@@ -364,8 +372,16 @@ public class WebDriverFactory implements CommandLineRunner {
                     result = initInnerQingLong(qlConfig);
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
                     JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
+                    int ckSize = 0;
                     if (currentCKS != null) {
-                        qlConfig.setRemain(qlConfig.getCapacity() - currentCKS.size());
+                        for (int i = 0; i < currentCKS.size(); i++) {
+                            JSONObject jo = currentCKS.getJSONObject(i);
+                            if ("JD_COOKIE".equals(jo.getString("name"))) {
+                                ckSize++;
+                            }
+                        }
+                        log.info("获取到的ck数量=" + ckSize);
+                        qlConfig.setRemain(qlConfig.getCapacity() - ckSize);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -555,7 +571,7 @@ public class WebDriverFactory implements CommandLineRunner {
                         status.setAssignSessionId(s);
                         status.setNew(true);
 //                    redisTemplate.opsForValue().set("servlet:session:" + servletSessionId, s, 300, TimeUnit.SECONDS);
-                        CacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(),s,300), 300);
+                        CacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(), s, 300), 300);
                         return status;
                     }
                 }
@@ -587,7 +603,7 @@ public class WebDriverFactory implements CommandLineRunner {
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(sessionId);
 //                redisTemplate.opsForValue().set(CLIENT_SESSION_ID_KEY + ":" + sessionId, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout, TimeUnit.SECONDS);
-                CacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(),new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),opTimeout), opTimeout);
+                CacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout), opTimeout);
                 break;
             }
         }

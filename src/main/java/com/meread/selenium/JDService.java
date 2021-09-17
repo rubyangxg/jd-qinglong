@@ -241,12 +241,13 @@ public class JDService {
                 UUID uuid = UUID.randomUUID();
                 File file1 = new File(uuid + "_captcha.jpg");
                 File file2 = new File(uuid + "_captcha_small.jpg");
+                File file3 = new File(uuid + "_captcha.origin.marked.jpeg");
                 FileUtils.writeByteArrayToFile(file1, bgBytes);
                 FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
                 Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
 
                 if (isDebug) {
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(uuid + "_captcha.origin.marked.jpeg")));
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(file3));
                     webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
                     FileUtils.writeByteArrayToFile(new File(uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
                 }
@@ -256,6 +257,7 @@ public class JDService {
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x());
                 FileUtils.deleteQuietly(file1);
                 FileUtils.deleteQuietly(file2);
+                FileUtils.deleteQuietly(file3);
             }
         }
     }

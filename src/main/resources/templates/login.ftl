@@ -425,24 +425,28 @@
         </script>
     </div>
     <#if qlConfigs?has_content>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">青龙</th>
-                <th scope="col">可用容量</th>
-            </tr>
-            </thead>
-            <tbody>
-            <#list qlConfigs as s>
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${s.label!(s.qlUrl)}</td>
-                    <td><span style="color: red">${s.remain!(0)}</span></td>
-                </tr>
-            </#list>
-            </tbody>
-        </table>
+        <div class="row">
+            <div class="col-sm-10 col-md-4 col-lg-4 col-xl-4 mx-auto text-center">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">青龙</th>
+                        <th scope="col">可用容量</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <#list qlConfigs as s>
+                        <tr>
+                            <td>${s.id}</td>
+                            <td>${s.label!(s.qlUrl)}</td>
+                            <td><span style="color: red">${s.remain!(0)}</span></td>
+                        </tr>
+                    </#list>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     <#else>
         <div class="alert alert-primary" role="alert">
             无青龙配置

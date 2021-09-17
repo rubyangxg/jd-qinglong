@@ -11,6 +11,10 @@
     padding: 30px;
 }
 
+body {
+    max-width: 1920px;
+}
+
 .login-form h2 {
     margin: 0 0 15px;
 }
