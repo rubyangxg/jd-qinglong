@@ -40,6 +40,7 @@
 
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
+* 编写好env.properties && docker run --name=jd-qinglong -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong:allinone
 * 已经安装好青龙的: [INSTALL1.md](INSTALL1.md)
 * 从0搭建: [INSTALL2.md](INSTALL2.md)
 * 免费代挂及问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)
