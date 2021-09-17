@@ -1,6 +1,6 @@
 #!/bin/bash
 op=$1
-if test $op and $op == 'push' ; then
+if test $op and test $op == 'push' ; then
    echo "构建并推送镜像"
 else
    echo "本地构建"
