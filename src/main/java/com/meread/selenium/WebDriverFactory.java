@@ -467,7 +467,7 @@ public class WebDriverFactory implements CommandLineRunner {
             if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password) && !"adminadmin".equals(password)) {
                 qlConfig.setQlUsername(username);
                 qlConfig.setQlPassword(password);
-                log.info("username = " + username + ", password = " + password);
+                log.debug("username = " + username + ", password = " + password);
                 return true;
             }
         }

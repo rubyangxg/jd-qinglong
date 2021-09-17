@@ -1,0 +1,39 @@
+version: "3"
+services:
+
+  webapp:
+    env_file:
+      - env.properties
+    container_name: webapp
+    image: rubyangxg/jd-qinglong:allinone
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    ports:
+      - "5701:8080"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - qinglong
+
+  qinglong:
+    container_name: qinglong
+    image: whyour/qinglong:latest
+    volumes:
+      - ./data/config:/ql/config
+      - ./data/log:/ql/log
+      - ./data/db:/ql/db
+      - ./data/scripts:/ql/scripts
+      - ./data/repo:/ql/repo
+    ports:
+      - "0.0.0.0:5700:5700"
+    environment:
+      - ENABLE_HANGUP=true
+      - ENABLE_WEB_PANEL=true
+    restart: always
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.177.0.0/16
