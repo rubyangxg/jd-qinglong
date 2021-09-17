@@ -29,6 +29,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -232,7 +233,6 @@ public class WebDriverFactory implements CommandLineRunner {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
 
-
         ChromeOptions chromeOptions = getChromeOptions();
         chromes = Collections.synchronizedList(new ArrayList<>());
 
@@ -290,13 +290,22 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private List<QLConfig> parseMultiQLConfig() {
         List<QLConfig> qlConfigs = new ArrayList<>();
-        Map<String, String> env = System.getenv();
+        File envFile = new File("/env.properties");
+        if (!envFile.exists()) {
+            return qlConfigs;
+        }
+        Properties properties = new Properties();
+        try (FileInputStream fileInputStream = new FileInputStream(envFile)) {
+            properties.load(fileInputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return qlConfigs;
+        }
         for (int i = 1; i <= 5; i++) {
             QLConfig config = new QLConfig();
             config.setId(i);
-            for (Map.Entry<String, String> entry : env.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
+            for (String key : properties.stringPropertyNames()) {
+                String value = properties.getProperty(key);
                 if (key.equals("QL_USERNAME_" + i)) {
                     config.setQlUsername(value);
                 } else if (key.equals("QL_URL_" + i)) {
@@ -319,18 +328,6 @@ public class WebDriverFactory implements CommandLineRunner {
             if (config.isValid()) {
                 qlConfigs.add(config);
             }
-        }
-
-        //兼容老的逻辑，只支持单个青龙
-        QLConfig config = new QLConfig();
-        config.setQlUrl(System.getenv("ql.url"));
-        config.setQlUsername(System.getenv("ql.username"));
-        config.setQlPassword(System.getenv("ql.password"));
-        config.setQlClientID(System.getenv("ql.clientId"));
-        config.setQlClientSecret(System.getenv("ql.clientSecret"));
-        config.setLabel(System.getenv("ql.label"));
-        if (config.isValid()) {
-            qlConfigs.add(config);
         }
 
         log.info("解析" + qlConfigs.size() + "套配置");
@@ -436,7 +433,6 @@ public class WebDriverFactory implements CommandLineRunner {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                    Thread.sleep(2000);
                     b = WebDriverUtil.waitForJStoLoad(webDriver);
                     if (b) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
@@ -555,7 +551,7 @@ public class WebDriverFactory implements CommandLineRunner {
                         status.setAssignSessionId(s);
                         status.setNew(true);
 //                    redisTemplate.opsForValue().set("servlet:session:" + servletSessionId, s, 300, TimeUnit.SECONDS);
-                        CacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(),s,300), 300);
+                        CacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(), s, 300), 300);
                         return status;
                     }
                 }
@@ -587,7 +583,7 @@ public class WebDriverFactory implements CommandLineRunner {
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(sessionId);
 //                redisTemplate.opsForValue().set(CLIENT_SESSION_ID_KEY + ":" + sessionId, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout, TimeUnit.SECONDS);
-                CacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(),new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()),opTimeout), opTimeout);
+                CacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout), opTimeout);
                 break;
             }
         }
