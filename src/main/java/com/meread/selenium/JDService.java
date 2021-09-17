@@ -496,4 +496,7 @@ public class JDService {
         return headers;
     }
 
+    public void setDebug(boolean isDebug) {
+        this.isDebug = isDebug;
+    }
 }

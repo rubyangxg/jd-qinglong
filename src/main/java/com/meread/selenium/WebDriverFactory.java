@@ -28,11 +28,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -295,8 +297,8 @@ public class WebDriverFactory implements CommandLineRunner {
             return qlConfigs;
         }
         Properties properties = new Properties();
-        try (FileInputStream fileInputStream = new FileInputStream(envFile)) {
-            properties.load(fileInputStream);
+        try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
+            properties.load(br);
         } catch (IOException e) {
             e.printStackTrace();
             return qlConfigs;
@@ -306,6 +308,9 @@ public class WebDriverFactory implements CommandLineRunner {
             config.setId(i);
             for (String key : properties.stringPropertyNames()) {
                 String value = properties.getProperty(key);
+                if ("SPRING_PROFILES_ACTIVE".equals(key)) {
+                    jdService.setDebug("debug".equals(value));
+                }
                 if (key.equals("QL_USERNAME_" + i)) {
                     config.setQlUsername(value);
                 } else if (key.equals("QL_URL_" + i)) {
