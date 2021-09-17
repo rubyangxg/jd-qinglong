@@ -6,6 +6,8 @@ services:
     shm_size: 2gb
     ports:
       - "5701:8080"
+    environment:
+      - SE_NODE_MAX_SESSIONS=4
     volumes:
       - ./env.properties:/env.properties
 
