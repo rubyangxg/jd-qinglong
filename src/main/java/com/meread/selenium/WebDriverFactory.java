@@ -28,10 +28,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -232,7 +235,6 @@ public class WebDriverFactory implements CommandLineRunner {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
 
-
         ChromeOptions chromeOptions = getChromeOptions();
         chromes = Collections.synchronizedList(new ArrayList<>());
 
@@ -290,13 +292,25 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private List<QLConfig> parseMultiQLConfig() {
         List<QLConfig> qlConfigs = new ArrayList<>();
-        Map<String, String> env = System.getenv();
+        File envFile = new File("/env.properties");
+        if (!envFile.exists()) {
+            return qlConfigs;
+        }
+        Properties properties = new Properties();
+        try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
+            properties.load(br);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return qlConfigs;
+        }
         for (int i = 1; i <= 5; i++) {
             QLConfig config = new QLConfig();
             config.setId(i);
-            for (Map.Entry<String, String> entry : env.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
+            for (String key : properties.stringPropertyNames()) {
+                String value = properties.getProperty(key);
+                if ("SPRING_PROFILES_ACTIVE".equals(key)) {
+                    jdService.setDebug("debug".equals(value));
+                }
                 if (key.equals("QL_USERNAME_" + i)) {
                     config.setQlUsername(value);
                 } else if (key.equals("QL_URL_" + i)) {
@@ -319,18 +333,6 @@ public class WebDriverFactory implements CommandLineRunner {
             if (config.isValid()) {
                 qlConfigs.add(config);
             }
-        }
-
-        //兼容老的逻辑，只支持单个青龙
-        QLConfig config = new QLConfig();
-        config.setQlUrl(System.getenv("ql.url"));
-        config.setQlUsername(System.getenv("ql.username"));
-        config.setQlPassword(System.getenv("ql.password"));
-        config.setQlClientID(System.getenv("ql.clientId"));
-        config.setQlClientSecret(System.getenv("ql.clientSecret"));
-        config.setLabel(System.getenv("ql.label"));
-        if (config.isValid()) {
-            qlConfigs.add(config);
         }
 
         log.info("解析" + qlConfigs.size() + "套配置");
@@ -483,7 +485,7 @@ public class WebDriverFactory implements CommandLineRunner {
             if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password) && !"adminadmin".equals(password)) {
                 qlConfig.setQlUsername(username);
                 qlConfig.setQlPassword(password);
-                log.info("username = " + username + ", password = " + password);
+                log.debug("username = " + username + ", password = " + password);
                 return true;
             }
         }

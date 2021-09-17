@@ -23,6 +23,7 @@ public class JDScreenBean {
         SUCCESS_CK("已经获取到ck了"),
         NORMAL("正常页面"),
         SWITCH_SMS_LOGIN("需要切换到短信验证码登录"),
+        AGREE_AGREEMENT("若您输入的手机号未注册，将为您直接注册，注册即视为同意"),
         INTERNAL_ERROR("抛异常了");
         private final String desc;
         PageStatus(String s) {

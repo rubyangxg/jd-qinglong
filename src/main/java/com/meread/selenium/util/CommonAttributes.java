@@ -10,6 +10,8 @@ package com.meread.selenium.util;
  */
 public final class CommonAttributes {
 
+    public static final String TMPDIR = System.getProperty("java.io.tmpdir");
+
     /**
      * 日期格式配比
      */

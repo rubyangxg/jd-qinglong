@@ -31,6 +31,8 @@
  3. `docker logs -f webapp`
 
 ## 更新历史
+* 2021-09-17 解决验证码输入后登录按钮无效问题，请升级成allinone镜像
+* 2021-09-17 推出allinone镜像，无需其他依赖，升级的话只修改docker-compose.yml即可
 * 2021-09-17 推出1.0版本，优化性能，缩减镜像依赖3变1，升级的话只修改docker-compose.yml即可
 * 2021-09-16 bug fix 解决了卡验证码问题，请务必pull最新镜像
 * 2021-09-16 增加实验功能：支持配置最多上传ck容量
@@ -38,6 +40,8 @@
 
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
+* **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
+* 编写好env.properties，然后`docker run -e "SE_NODE_MAX_SESSIONS=4" -p 5701:8080 --name=jd-qinglong -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong:allinone`
 * 已经安装好青龙的: [INSTALL1.md](INSTALL1.md)
 * 从0搭建: [INSTALL2.md](INSTALL2.md)
 * 免费代挂及问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)

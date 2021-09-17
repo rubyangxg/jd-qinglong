@@ -8,6 +8,7 @@ import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.QLConfig;
 import com.meread.selenium.bean.QLToken;
 import com.meread.selenium.util.CacheUtil;
+import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -154,12 +155,21 @@ public class JDService {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
 
+        if (pageText.contains("若您输入的手机号未注册")) {
+            boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
+            if (!isChecked) {
+                log.info("勾选协议" + isChecked);
+                return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.AGREE_AGREEMENT);
+            }
+        }
+
         WebElement loginBtn = webDriver.findElement(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']"));
         HashSet<String> loginBtnClasses = new HashSet<>(Arrays.asList(loginBtn.getAttribute("class").split(" ")));
         WebElement sendAuthCodeBtn = webDriver.findElement(By.xpath("//button[@report-eventid='MLoginRegister_SMSReceiveCode']"));
         HashSet<String> sendAuthCodeBtnClasses = new HashSet<>(Arrays.asList(sendAuthCodeBtn.getAttribute("class").split(" ")));
         //登录按钮是否可点击
         boolean canClickLogin = loginBtnClasses.contains("btn-active");
+
         //获取验证码是否可点击
         boolean canSendAuth = sendAuthCodeBtnClasses.contains("active");
         int authCodeCountDown = -1;
@@ -239,17 +249,16 @@ public class JDService {
                 byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
                 byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
                 UUID uuid = UUID.randomUUID();
-                File file1 = new File(uuid + "_captcha.jpg");
-                File file2 = new File(uuid + "_captcha_small.jpg");
-                File file3 = new File(uuid + "_captcha.origin.marked.jpeg");
+                File file1 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.jpg");
+                File file2 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_small.jpg");
                 FileUtils.writeByteArrayToFile(file1, bgBytes);
                 FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
                 Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
 
                 if (isDebug) {
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(file3));
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
                     webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                    FileUtils.writeByteArrayToFile(new File(uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
+                    FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
                 }
 
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
@@ -257,7 +266,6 @@ public class JDService {
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x());
                 FileUtils.deleteQuietly(file1);
                 FileUtils.deleteQuietly(file2);
-                FileUtils.deleteQuietly(file3);
             }
         }
     }
@@ -343,6 +351,8 @@ public class JDService {
                 click(sessionId, By.xpath("//button[@class='dialog-sure']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.SWITCH_SMS_LOGIN) {
                 click(sessionId, By.xpath("//span[@report-eventid='MLoginRegister_SMSVerification']"));
+            } else if (bean.getPageStatus() == JDScreenBean.PageStatus.AGREE_AGREEMENT) {
+                click(sessionId, By.xpath("//input[@class='policy_tip-checkbox']"));
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -486,4 +496,7 @@ public class JDService {
         return headers;
     }
 
+    public void setDebug(boolean isDebug) {
+        this.isDebug = isDebug;
+    }
 }

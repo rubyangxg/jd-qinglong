@@ -1,5 +1,6 @@
 package com.meread.selenium;
 
+import com.meread.selenium.util.CommonAttributes;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
@@ -50,7 +51,7 @@ public class SlideVerifyBlock {
         actions.pause(200);
         actions.perform();
         int currx = 0;
-        BufferedImage read = ImageIO.read(new File(uuid + "_captcha.origin.marked.jpeg"));
+        BufferedImage read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
 
         //275 * 170  --> 375 * 232
         //京东图片是等比例缩放的，所以原始图片计算出来的偏移量，需要和实际渲染图片的宽高进行比例计算
@@ -89,7 +90,7 @@ public class SlideVerifyBlock {
                 currx += step;
             }
         }
-        ImageIO.write(read, "jpg", new File(uuid + "_captcha.origin.marked.jpeg"));
+        ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
         actions.pause(200 + new Random().nextInt(300)).release(slider);
         actions.perform();
     }
