@@ -17,7 +17,7 @@ ARG JAR_FILE
 COPY ${JAR_FILE} app.jar
 COPY selenium.conf /etc/supervisor/conf.d/selenium.conf
 COPY start-webapp.sh /opt/bin/start-webapp.sh
-COPY notify-linux /opt/bin/notify
+COPY notify /opt/bin/notify
 #COPY update_nodejs_notify.sh /opt/bin/update_nodejs_notify.sh
 RUN chmod 755 /opt/bin/start-webapp.sh
 RUN chmod 755 /opt/bin/notify

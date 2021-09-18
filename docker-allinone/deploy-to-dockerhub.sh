@@ -15,6 +15,7 @@ else
 fi
 
 rm -rf qinglong && mkdir qinglong
+rm -rf notify
 git clone -b master --depth=1 https://github.com/whyour/qinglong.git
 cd qinglong/sample || exit
 npm install
