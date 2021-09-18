@@ -166,7 +166,6 @@
                 $.ajax({
                     type: "POST",
                     url: "/uploadQingLong",
-                    async: false,
                     data: data,
                     dataType: "json",
                     success: function (data) {

@@ -9,10 +9,10 @@
         </thead>
         <tbody>
         <#list uploadStatuses as s>
-            <tr <#if s.uploadStatus> class="table-success" <#else> class="table-warning"</#if>>
+            <tr <#if s.uploadStatus gt 0> class="table-success" <#else> class="table-warning"</#if>>
                 <td>${s.qlConfig.label!(s.qlConfig.qlUrl)}</td>
 <#--                <td>${s.qlConfig.qlLoginType}</td>-->
-                <td>${s.uploadStatus?string('成功', '失败')}</td>
+                <td><#if s.uploadStatus gt 0>成功<#else>失败</#if></td>
             </tr>
         </#list>
         </tbody>

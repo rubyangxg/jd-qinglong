@@ -17,6 +17,8 @@ import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,10 +30,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -53,10 +52,16 @@ import java.util.concurrent.TimeUnit;
 public class WebDriverFactory implements CommandLineRunner {
 
     @Autowired
+    ResourceLoader resourceLoader;
+
+    @Autowired
     private JDService jdService;
 
     @Value("${selenium.hub.url}")
     private String seleniumHubUrl;
+
+    @Value("${env.path}")
+    private String envPath;
 
     @Value("${selenium.hub.status.url}")
     private String seleniumHubStatusUrl;
@@ -73,6 +78,7 @@ public class WebDriverFactory implements CommandLineRunner {
     private static int capacity = 0;
 
     public volatile boolean stopSchedule = false;
+    public volatile boolean initSuccess = false;
     public volatile boolean runningSchedule = false;
 
     private List<MyChrome> chromes;
@@ -130,9 +136,6 @@ public class WebDriverFactory implements CommandLineRunner {
 
     @Scheduled(initialDelay = 10000, fixedDelay = 2000)
     public void heartbeat() {
-        if (CollectionUtils.isEmpty(chromes)) {
-            return;
-        }
         runningSchedule = true;
         if (!stopSchedule) {
             List<NodeStatus> nss = getGridStatus();
@@ -278,34 +281,19 @@ public class WebDriverFactory implements CommandLineRunner {
     @Override
     public void run(String... args) throws MalformedURLException {
         stopSchedule = true;
-
-        qlConfigs = parseMultiQLConfig();
-        if (qlConfigs.isEmpty()) {
-            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
-        }
-
         chromes = Collections.synchronizedList(new ArrayList<>());
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture<List<NodeStatus>> startSeleniumRes = CompletableFuture.supplyAsync(() -> {
-            while (true) {
-                List<NodeStatus> statusList = getGridStatus();
-                if (statusList.size() > 0) {
-                    return statusList;
-                }
-            }
-        }, executor);
-        List<NodeStatus> statusList = null;
-        try {
-            statusList = startSeleniumRes.get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        executor.shutdown();
+        log.info("解析配置不初始化");
+        parseMultiQLConfig();
+
+        //获取hub-node状态
+        List<NodeStatus> statusList = getNodeStatuses();
         if (statusList == null) {
             throw new RuntimeException("Selenium 浏览器组初始化失败");
         }
 
+        //清理未关闭的session
+        log.info("清理未关闭的session，获取最大容量");
         for (NodeStatus status : statusList) {
             List<SlotStatus> sss = status.getSlotStatus();
             for (SlotStatus ss : sss) {
@@ -325,32 +313,69 @@ public class WebDriverFactory implements CommandLineRunner {
             throw new RuntimeException("无法创建浏览器实例");
         }
 
-        for (int i = 0; i < capacity / 2; i++) {
+        //初始化一半Chrome实例
+        log.info("初始化一半Chrome实例");
+        for (int i = 0; i < (capacity == 1 ? 2 : capacity) / 2; i++) {
             RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
-            webDriver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
             MyChrome myChrome = new MyChrome();
             myChrome.setWebDriver(webDriver);
             chromes.add(myChrome);
         }
 
         inflate(chromes, getGridStatus());
+        //借助这一半chrome实例，初始化配置
+        initConfig();
+        if (qlConfigs.isEmpty()) {
+            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
+        }
+
         log.info("启动成功!");
         stopSchedule = false;
+        initSuccess = true;
     }
 
-    private List<QLConfig> parseMultiQLConfig() {
-        List<QLConfig> qlConfigs = new ArrayList<>();
-        File envFile = new File("/env.properties");
-        if (!envFile.exists()) {
-            return qlConfigs;
+    private List<NodeStatus> getNodeStatuses() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CompletableFuture<List<NodeStatus>> startSeleniumRes = CompletableFuture.supplyAsync(() -> {
+            while (true) {
+                List<NodeStatus> statusList = getGridStatus();
+                if (statusList.size() > 0) {
+                    return statusList;
+                }
+            }
+        }, executor);
+        List<NodeStatus> statusList = null;
+        try {
+            statusList = startSeleniumRes.get(30, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        executor.shutdown();
+        return statusList;
+    }
+
+    private void parseMultiQLConfig() {
+        qlConfigs = new ArrayList<>();
+        if (envPath.startsWith("classpath")) {
+            Resource resource = resourceLoader.getResource(envPath);
+            try (InputStreamReader inputStreamReader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                properties.load(inputStreamReader);
+            } catch (IOException e) {
+                throw new RuntimeException("env.properties配置有误");
+            }
+        } else {
+            File envFile = new File(envPath);
+            if (!envFile.exists()) {
+                throw new RuntimeException("env.properties配置有误");
+            }
+            try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
+                properties.load(br);
+            } catch (IOException e) {
+                throw new RuntimeException("env.properties配置有误");
+            }
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
-            properties.load(br);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return qlConfigs;
-        }
         for (int i = 1; i <= 5; i++) {
             QLConfig config = new QLConfig();
             config.setId(i);
@@ -382,9 +407,10 @@ public class WebDriverFactory implements CommandLineRunner {
                 qlConfigs.add(config);
             }
         }
-
         log.info("解析" + qlConfigs.size() + "套配置");
+    }
 
+    private void initConfig() {
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
             QLConfig qlConfig = iterator.next();
@@ -430,7 +456,6 @@ public class WebDriverFactory implements CommandLineRunner {
         }
 
         log.info("成功添加" + qlConfigs.size() + "套配置");
-        return qlConfigs;
     }
 
     public boolean getToken(QLConfig qlConfig) {
@@ -464,7 +489,15 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public boolean initInnerQingLong(QLConfig qlConfig) throws MalformedURLException {
         String qlUrl = qlConfig.getQlUrl();
-        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
+        String sessionId = assignSessionId(null, true, null).getAssignSessionId();
+        MyChrome chrome = null;
+        if (sessionId != null) {
+            chrome = getMyChromeBySessionId(sessionId);
+        }
+        if (chrome == null) {
+            throw new RuntimeException("请检查资源配置，资源数太少");
+        }
+        RemoteWebDriver webDriver = chrome.getWebDriver();
         webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         try {
             String token = null;
@@ -499,7 +532,7 @@ public class WebDriverFactory implements CommandLineRunner {
         } catch (Exception e) {
             log.error(qlUrl + "测试登录失败，请检查配置");
         } finally {
-            webDriver.quit();
+            releaseWebDriver(sessionId);
         }
         return qlConfig.getQlToken() != null && qlConfig.getQlToken().getToken() != null;
     }
@@ -522,6 +555,9 @@ public class WebDriverFactory implements CommandLineRunner {
     }
 
     public RemoteWebDriver getDriverBySessionId(String sessionId) {
+        if (sessionId == null) {
+            return null;
+        }
         for (MyChrome myChrome : chromes) {
             if (myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 return myChrome.getWebDriver();
@@ -645,7 +681,7 @@ public class WebDriverFactory implements CommandLineRunner {
         return properties;
     }
 
-    public RemoteWebDriver newWebDriver() throws MalformedURLException {
-        return new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
+    public boolean isInitSuccess() {
+        return initSuccess;
     }
 }

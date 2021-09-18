@@ -162,4 +162,3 @@ target
 .idea
 
 env.properties
-docker-compose-debug.yml

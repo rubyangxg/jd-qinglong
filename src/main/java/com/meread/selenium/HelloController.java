@@ -207,23 +207,21 @@ public class HelloController {
 
         if ((chooseQLId != null && chooseQLId.size() > 0) || qlUploadDirect == 1) {
             List<QLUploadStatus> uploadStatuses = new ArrayList<>();
-            try {
-                if (factory.getQlConfigs() != null) {
-                    for (QLConfig qlConfig : factory.getQlConfigs()) {
-                        if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
-                            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                                QLUploadStatus status = service.uploadQingLongWithToken(ck, phone, qlConfig);
-                                uploadStatuses.add(status);
-                            }
-                            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                                QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone, qlConfig);
-                                uploadStatuses.add(status);
-                            }
+            if (factory.getQlConfigs() != null) {
+                for (QLConfig qlConfig : factory.getQlConfigs()) {
+                    if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
+                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+                            QLUploadStatus status = service.uploadQingLongWithToken(sessionId, ck, phone, qlConfig);
+                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
+                            uploadStatuses.add(status);
+                        }
+                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                            QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone, qlConfig);
+                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
+                            uploadStatuses.add(status);
                         }
                     }
                 }
-            } finally {
-                factory.releaseWebDriver(sessionId);
             }
 
             if (qlUploadDirect != 1) {

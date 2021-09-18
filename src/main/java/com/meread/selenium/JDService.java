@@ -16,7 +16,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,13 +25,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -402,10 +401,7 @@ public class JDService {
         }
         String token = getUserNamePasswordToken(sessionId, qlConfig);
         if (token != null) {
-            QLConfig tmpConfig = new QLConfig();
-            BeanUtils.copyProperties(qlConfig, tmpConfig);
-            tmpConfig.setQlToken(new QLToken(token));
-            return uploadQingLongWithToken(ck, remark, tmpConfig);
+            return uploadQingLongWithToken(sessionId, ck, remark, qlConfig);
         } else {
             res = 0;
         }
@@ -413,18 +409,29 @@ public class JDService {
     }
 
     private String getUserNamePasswordToken(String sessionId, QLConfig qlConfig) {
-        RemoteWebDriver webDriver = null;
-        boolean close = false;
+        log.info("getUserNamePasswordToken " + sessionId);
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
+        String closeSessionId = null;
         try {
-            if (sessionId == null) {
-                webDriver = driverFactory.newWebDriver();
-                close = true;
-            } else {
-                webDriver = driverFactory.getDriverBySessionId(sessionId);
+            if (webDriver == null) {
+                String newSessionId = driverFactory.assignSessionId(null, true, null).getAssignSessionId();
+                log.info("getUserNamePasswordToken newSessionId " + newSessionId);
+                if (newSessionId != null) {
+                    webDriver = driverFactory.getDriverBySessionId(newSessionId);
+                } else {
+                    return null;
+                }
+                closeSessionId = newSessionId;
             }
+//            new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
             webDriver.get(qlConfig.getQlUrl() + "/login");
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
+                log.info(webDriver.getTitle() + ", url = " + webDriver.getCurrentUrl());
+                if (!webDriver.getCurrentUrl().endsWith("/login")) {
+                    new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
+                    webDriver.get(qlConfig.getQlUrl() + "/login");
+                }
                 webDriver.findElement(By.id("username")).sendKeys(qlConfig.getQlUsername());
                 webDriver.findElement(By.id("password")).sendKeys(qlConfig.getQlPassword());
                 webDriver.findElement(By.xpath("//button[@type='submit']")).click();
@@ -441,37 +448,58 @@ public class JDService {
                     return storage.getItem("token");
                 }
             }
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (webDriver != null && close) {
-                webDriver.quit();
+            if (closeSessionId != null) {
+//                driverFactory.releaseWebDriver(closeSessionId);
             }
         }
         return null;
     }
 
-    public JSONArray getCurrentCKS(QLConfig qlConfig, String searchValue) {
-        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-            String token = getUserNamePasswordToken(null, qlConfig);
-            qlConfig.setQlToken(new QLToken(token));
-        }
-        if (qlConfig.getQlToken() == null) {
-            return null;
-        }
-        String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + searchValue + "&t=" + System.currentTimeMillis();
-        log.info("开始获取当前ck数量" + url);
-        HttpHeaders headers = getHttpHeaders(qlConfig);
-        ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-        if (exchange.getStatusCode().is2xxSuccessful()) {
-            String body = exchange.getBody();
-            return JSON.parseObject(body).getJSONArray("data");
+    public JSONArray getCurrentCKS(String sessionId, QLConfig qlConfig, String searchValue) {
+        int maxRetry = 3;
+        while (true) {
+            maxRetry--;
+            if (maxRetry == 0) {
+                break;
+            }
+            if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                String token = getUserNamePasswordToken(sessionId, qlConfig);
+                log.info(qlConfig.getQlUrl() + " 更新token " + token);
+                qlConfig.setQlToken(new QLToken(token));
+            }
+            if (qlConfig.getQlToken() == null) {
+                return null;
+            }
+            String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?searchValue=" + searchValue + "&t=" + System.currentTimeMillis();
+            log.info("开始获取当前ck数量" + url);
+            HttpHeaders headers = getHttpHeaders(qlConfig);
+            ResponseEntity<String> exchange = null;
+            try {
+                exchange = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+                if (exchange.getStatusCode().is2xxSuccessful()) {
+                    String body = exchange.getBody();
+                    return JSON.parseObject(body).getJSONArray("data");
+                } else if (exchange.getStatusCodeValue() == 401) {
+                    log.info("token" + qlConfig.getQlToken().getToken() + "失效");
+                }
+            } catch (HttpClientErrorException.Unauthorized e) {
+                int rawStatusCode = e.getRawStatusCode();
+                if (rawStatusCode == 401) {
+                    continue;
+                }
+                e.printStackTrace();
+            } catch (RestClientException e) {
+                e.printStackTrace();
+            }
         }
         return null;
     }
 
     public void fetchCurrentCKS_count(QLConfig qlConfig, String searchValue) {
-        JSONArray currentCKS = getCurrentCKS(qlConfig, searchValue);
+        JSONArray currentCKS = getCurrentCKS(null, qlConfig, searchValue);
         int ckSize = 0;
         if (currentCKS != null) {
             for (int i = 0; i < currentCKS.size(); i++) {
@@ -485,16 +513,15 @@ public class JDService {
         }
     }
 
-    public QLUploadStatus uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLongWithToken(String sessionId, String ck, String remark, QLConfig qlConfig) {
         int res = -1;
         String pushRes = "";
         if (qlConfig.getRemain() <= 0) {
             return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes);
         }
-        HttpHeaders headers = getHttpHeaders(qlConfig);
         boolean update = false;
         String updateId = "";
-        JSONArray data = getCurrentCKS(qlConfig, remark);
+        JSONArray data = getCurrentCKS(sessionId, qlConfig, remark);
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
@@ -508,6 +535,7 @@ public class JDService {
             }
         }
 
+        HttpHeaders headers = getHttpHeaders(qlConfig);
         String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis();
         if (!update) {
             JSONArray jsonArray = new JSONArray();
