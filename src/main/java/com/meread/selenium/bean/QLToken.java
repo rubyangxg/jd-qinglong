@@ -36,6 +36,15 @@ public class QLToken {
     }
 
     @Override
+    public String toString() {
+        return "QLToken{" +
+                "token='" + token + '\'' +
+                ", tokenType='" + tokenType + '\'' +
+                ", expiration=" + expiration +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(token);
     }

@@ -31,6 +31,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -396,40 +398,64 @@ public class JDService {
     public QLUploadStatus uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
         int res = -1;
         if (qlConfig.getRemain() <= 0) {
-            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0,"");
+            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "");
         }
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        webDriver.get(qlConfig.getQlUrl() + "/login");
-        boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
-        if (b) {
-            webDriver.findElement(By.id("username")).sendKeys(qlConfig.getQlUsername());
-            webDriver.findElement(By.id("password")).sendKeys(qlConfig.getQlPassword());
-            webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        String token = getUserNamePasswordToken(sessionId, qlConfig);
+        if (token != null) {
+            QLConfig tmpConfig = new QLConfig();
+            BeanUtils.copyProperties(qlConfig, tmpConfig);
+            tmpConfig.setQlToken(new QLToken(token));
+            return uploadQingLongWithToken(ck, remark, tmpConfig);
+        } else {
+            res = 0;
+        }
+        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "");
+    }
+
+    private String getUserNamePasswordToken(String sessionId, QLConfig qlConfig) {
+        RemoteWebDriver webDriver = null;
+        boolean close = false;
+        try {
+            if (sessionId == null) {
+                webDriver = driverFactory.newWebDriver();
+                close = true;
+            } else {
+                webDriver = driverFactory.getDriverBySessionId(sessionId);
             }
-            b = WebDriverUtil.waitForJStoLoad(webDriver);
+            webDriver.get(qlConfig.getQlUrl() + "/login");
+            boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
-                RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
-                RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
-                LocalStorage storage = webStorage.getLocalStorage();
-                String token = storage.getItem("token");
-                if (token != null) {
-                    QLConfig tmpConfig = new QLConfig();
-                    BeanUtils.copyProperties(qlConfig, tmpConfig);
-                    tmpConfig.setQlToken(new QLToken(token));
-                    return uploadQingLongWithToken(ck, remark, tmpConfig);
-                } else {
-                    res = 0;
+                webDriver.findElement(By.id("username")).sendKeys(qlConfig.getQlUsername());
+                webDriver.findElement(By.id("password")).sendKeys(qlConfig.getQlPassword());
+                webDriver.findElement(By.xpath("//button[@type='submit']")).click();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                b = WebDriverUtil.waitForJStoLoad(webDriver);
+                if (b) {
+                    RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
+                    RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
+                    LocalStorage storage = webStorage.getLocalStorage();
+                    return storage.getItem("token");
                 }
             }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } finally {
+            if (webDriver != null && close) {
+                webDriver.quit();
+            }
         }
-        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0,"");
+        return null;
     }
 
     public JSONArray getCurrentCKS(QLConfig qlConfig, String searchValue) {
+        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+            String token = getUserNamePasswordToken(null, qlConfig);
+            qlConfig.setQlToken(new QLToken(token));
+        }
         if (qlConfig.getQlToken() == null) {
             return null;
         }
@@ -497,7 +523,6 @@ public class JDService {
             ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-                updateRemain(qlConfig);
                 pushRes = doNodeJSNotify("新的CK上传到" + qlConfig.getLabel(), remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 res = 1;
             }
@@ -557,10 +582,6 @@ public class JDService {
         return "";
     }
 
-    private void updateRemain(QLConfig qlConfig) {
-        qlConfig.setRemain(qlConfig.getRemain() - 1);
-    }
-
     private HttpHeaders getHttpHeaders(QLConfig qlConfig) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + qlConfig.getQlToken().getToken());
@@ -573,5 +594,9 @@ public class JDService {
 
     public void setDebug(boolean isDebug) {
         this.isDebug = isDebug;
+    }
+
+    public void fetchNewOpenIdToken(QLConfig qlConfig) {
+        driverFactory.getToken(qlConfig);
     }
 }

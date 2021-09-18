@@ -81,7 +81,28 @@ public class WebDriverFactory implements CommandLineRunner {
         return chromes;
     }
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 30000)
+    public static final ChromeOptions chromeOptions;
+
+    static {
+        chromeOptions = new ChromeOptions();
+        chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
+        chromeOptions.setExperimentalOption("useAutomationExtension", true);
+        chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
+        chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
+        chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+        chromeOptions.addArguments("--disable-gpu");
+        chromeOptions.addArguments("--headless");
+//        chromeOptions.addArguments("--no-sandbox");
+//        chromeOptions.addArguments("--disable-extensions");
+//        chromeOptions.addArguments("--disable-software-rasterizer");
+        chromeOptions.addArguments("--ignore-ssl-errors=yes");
+        chromeOptions.addArguments("--ignore-certificate-errors");
+//        chromeOptions.addArguments("--allow-running-insecure-content");
+        chromeOptions.addArguments("--window-size=500,700");
+    }
+
+
+    @Scheduled(initialDelay = 30000, fixedDelay = 30000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {
@@ -89,6 +110,20 @@ public class WebDriverFactory implements CommandLineRunner {
                 jdService.fetchCurrentCKS_count(qlConfig, "");
                 int newSize = qlConfig.getRemain();
                 log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+//    @Scheduled(initialDelay = 30000, fixedDelay = 30000)
+    public void refreshOpenIdToken() {
+        if (qlConfigs != null) {
+            for (QLConfig qlConfig : qlConfigs) {
+                if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+                    QLToken qlTokenOld = qlConfig.getQlToken();
+                    jdService.fetchNewOpenIdToken(qlConfig);
+                    log.info(qlConfig.getQlToken() + " token 从" + qlTokenOld + " 变为 " + qlConfig.getQlToken());
+                }
             }
         }
     }
@@ -133,7 +168,7 @@ public class WebDriverFactory implements CommandLineRunner {
             int shouldCreate = capacity - chromes.size();
             if (shouldCreate > 0) {
                 try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getChromeOptions());
+                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
                     MyChrome myChrome = new MyChrome();
                     myChrome.setWebDriver(webDriver);
                     log.warn("create a chrome " + webDriver.getSessionId().toString());
@@ -249,7 +284,6 @@ public class WebDriverFactory implements CommandLineRunner {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
 
-        ChromeOptions chromeOptions = getChromeOptions();
         chromes = Collections.synchronizedList(new ArrayList<>());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -399,7 +433,7 @@ public class WebDriverFactory implements CommandLineRunner {
         return qlConfigs;
     }
 
-    private boolean getToken(QLConfig qlConfig) {
+    public boolean getToken(QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
         String qlClientID = qlConfig.getQlClientID();
         String qlClientSecret = qlConfig.getQlClientSecret();
@@ -430,7 +464,7 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public boolean initInnerQingLong(QLConfig qlConfig) throws MalformedURLException {
         String qlUrl = qlConfig.getQlUrl();
-        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getChromeOptions());
+        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
         webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         try {
             String token = null;
@@ -485,25 +519,6 @@ public class WebDriverFactory implements CommandLineRunner {
             }
         }
         return false;
-    }
-
-    private ChromeOptions getChromeOptions() {
-        ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
-        chromeOptions.setExperimentalOption("useAutomationExtension", true);
-        chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
-        chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
-        chromeOptions.addArguments("disable-blink-features=AutomationControlled");
-        chromeOptions.addArguments("--disable-gpu");
-        chromeOptions.addArguments("--headless");
-//        chromeOptions.addArguments("--no-sandbox");
-//        chromeOptions.addArguments("--disable-extensions");
-//        chromeOptions.addArguments("--disable-software-rasterizer");
-        chromeOptions.addArguments("--ignore-ssl-errors=yes");
-        chromeOptions.addArguments("--ignore-certificate-errors");
-//        chromeOptions.addArguments("--allow-running-insecure-content");
-        chromeOptions.addArguments("--window-size=500,700");
-        return chromeOptions;
     }
 
     public RemoteWebDriver getDriverBySessionId(String sessionId) {
@@ -628,5 +643,9 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public Properties getProperties() {
         return properties;
+    }
+
+    public RemoteWebDriver newWebDriver() throws MalformedURLException {
+        return new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
     }
 }
