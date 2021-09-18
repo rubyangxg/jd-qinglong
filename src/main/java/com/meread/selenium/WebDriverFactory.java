@@ -68,6 +68,8 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private List<QLConfig> qlConfigs;
 
+    public Properties properties = new Properties();
+
     private static int capacity = 0;
 
     public volatile boolean stopSchedule = false;
@@ -296,7 +298,7 @@ public class WebDriverFactory implements CommandLineRunner {
         if (!envFile.exists()) {
             return qlConfigs;
         }
-        Properties properties = new Properties();
+
         try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
             properties.load(br);
         } catch (IOException e) {
@@ -340,6 +342,9 @@ public class WebDriverFactory implements CommandLineRunner {
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
             QLConfig qlConfig = iterator.next();
+            if (StringUtils.isEmpty(qlConfig.getLabel())) {
+                qlConfig.setLabel("请配置QL_LABEL_" + qlConfig.getId() + "");
+            }
 
             boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
             boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
@@ -629,5 +634,9 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public List<QLConfig> getQlConfigs() {
         return qlConfigs;
+    }
+
+    public Properties getProperties() {
+        return properties;
     }
 }

@@ -12,6 +12,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class QLUploadStatus {
     private QLConfig qlConfig;
-    private boolean uploadStatus;
+    private int uploadStatus;
     private boolean isFull;
+    private String pushRes;
 }

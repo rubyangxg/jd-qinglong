@@ -26,9 +26,9 @@ git clone -b master --depth=1 https://github.com/whyour/qinglong.git
 cd qinglong/sample || exit
 
 if [[ $is_macos == 1 ]]; then
-  sed -i '' 's/https:\/\/github.com\/whyour\/qinglong.git/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
+  sed -i '' 's/https:\/\/github.com\/whyour\/qinglong/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
 else
-  sed -i 's/https:\/\/github.com\/whyour\/qinglong.git/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
+  sed -i 's/https:\/\/github.com\/whyour\/qinglong/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
 fi
 
 npm install
@@ -48,7 +48,7 @@ rm -rf .npm
 rm -rf .pkg-cache
 rm -rf qinglong
 
-docker rm -f jd-qinglong
+docker rm -f webapp
 docker rmi -f rubyangxg/jd-qinglong:allinone
 docker rmi -f rubyangxg/jd-qinglong:latest
 
@@ -65,8 +65,9 @@ if [[ $op == 'push' ]]; then
 fi
 
 rm -rf $HOME/.docker
-#cd ..
-#docker stop webapp && docker rm webapp && docker run -d --name=webapp -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong
+cd ..
+#docker stop webapp && docker rm webapp
+docker run -d -p 5701:8080 --name=webapp -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
 #docker-compose -f docker-compose-debug.yml --env-file=env.properties  up -d --no-deps && docker logs -f webapp

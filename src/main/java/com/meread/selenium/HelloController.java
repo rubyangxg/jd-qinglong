@@ -194,7 +194,7 @@ public class HelloController {
 
     @PostMapping({"/uploadQingLong"})
     @ResponseBody
-    public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId, @RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "无手机号") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
+    public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId, @RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "13612345678") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("status", 0);
 
@@ -212,12 +212,12 @@ public class HelloController {
                     for (QLConfig qlConfig : factory.getQlConfigs()) {
                         if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
                             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                                int i = service.uploadQingLongWithToken(ck, phone, qlConfig);
-                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0, qlConfig.getRemain() <= 0));
+                                QLUploadStatus status = service.uploadQingLongWithToken(ck, phone, qlConfig);
+                                uploadStatuses.add(status);
                             }
                             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                                int i = service.uploadQingLong(sessionId, ck, phone, qlConfig);
-                                uploadStatuses.add(new QLUploadStatus(qlConfig, i > 0, qlConfig.getRemain() <= 0));
+                                QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone, qlConfig);
+                                uploadStatuses.add(status);
                             }
                         }
                     }
@@ -241,11 +241,22 @@ public class HelloController {
             } else {
                 StringBuilder msg = new StringBuilder();
                 for (QLUploadStatus uploadStatus : uploadStatuses) {
-                    if (!uploadStatus.isUploadStatus()) {
-                        msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId()).append("上传失败<br/>");
+                    String label = uploadStatus.getQlConfig().getLabel();
+                    if (uploadStatus.getUploadStatus() <= 0) {
+                        if (!StringUtils.isEmpty(label)) {
+                            msg.append(label);
+                        } else {
+                            msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
+                        }
+                        msg.append("上传失败<br/>");
                     }
                     if (uploadStatus.isFull()) {
-                        msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId()).append("超容量了<br/>");
+                        if (!StringUtils.isEmpty(label)) {
+                            msg.append(label);
+                        } else {
+                            msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
+                        }
+                        msg.append("超容量了<br/>");
                     }
                 }
                 if (msg.length() > 0) {

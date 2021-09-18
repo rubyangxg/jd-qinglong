@@ -3,10 +3,7 @@ package com.meread.selenium;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.meread.selenium.bean.JDScreenBean;
-import com.meread.selenium.bean.MyChrome;
-import com.meread.selenium.bean.QLConfig;
-import com.meread.selenium.bean.QLToken;
+import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CacheUtil;
 import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +30,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +55,31 @@ public class JDService {
 
     @Value("${jd.debug}")
     private boolean isDebug;
+
+    public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
+
+    static {
+        NODEJS_PUSH_KEYS.add("PUSH_KEY");
+        NODEJS_PUSH_KEYS.add("BARK_PUSH");
+        NODEJS_PUSH_KEYS.add("BARK_SOUND");
+        NODEJS_PUSH_KEYS.add("BARK_GROUP");
+        NODEJS_PUSH_KEYS.add("TG_BOT_TOKEN");
+        NODEJS_PUSH_KEYS.add("TG_USER_ID");
+        NODEJS_PUSH_KEYS.add("TG_PROXY_HOST");
+        NODEJS_PUSH_KEYS.add("TG_PROXY_PORT");
+        NODEJS_PUSH_KEYS.add("TG_PROXY_AUTH");
+        NODEJS_PUSH_KEYS.add("TG_API_HOST");
+        NODEJS_PUSH_KEYS.add("DD_BOT_TOKEN");
+        NODEJS_PUSH_KEYS.add("DD_BOT_SECRET");
+        NODEJS_PUSH_KEYS.add("QYWX_KEY");
+        NODEJS_PUSH_KEYS.add("QYWX_AM");
+        NODEJS_PUSH_KEYS.add("IGOT_PUSH_KEY");
+        NODEJS_PUSH_KEYS.add("PUSH_PLUS_TOKEN");
+        NODEJS_PUSH_KEYS.add("PUSH_PLUS_USER");
+        NODEJS_PUSH_KEYS.add("GOBOT_URL");
+        NODEJS_PUSH_KEYS.add("GOBOT_TOKEN");
+        NODEJS_PUSH_KEYS.add("GOBOT_QQ");
+    }
 
     //关闭hub：http://{hubhost}:{hubport}/lifecycle-manager/LifecycleServlet?action=shutdown
     //关闭node：http://localhost:5557/extra/LifecycleServlet?action=shutdown
@@ -155,7 +174,7 @@ public class JDService {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
 
-        if (pageText.contains("若您输入的手机号未注册")) {
+        if (pageText.contains("输入的手机号未注册")) {
             boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
             if (!isChecked) {
                 log.info("勾选协议" + isChecked);
@@ -374,9 +393,10 @@ public class JDService {
         return bean;
     }
 
-    public int uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
+        int res = -1;
         if (qlConfig.getRemain() <= 0) {
-            return -1;
+            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0,"");
         }
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
         webDriver.get(qlConfig.getQlUrl() + "/login");
@@ -402,11 +422,11 @@ public class JDService {
                     tmpConfig.setQlToken(new QLToken(token));
                     return uploadQingLongWithToken(ck, remark, tmpConfig);
                 } else {
-                    return 0;
+                    res = 0;
                 }
             }
         }
-        return -1;
+        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0,"");
     }
 
     public JSONArray getCurrentCKS(QLConfig qlConfig, String searchValue) {
@@ -424,9 +444,11 @@ public class JDService {
         return null;
     }
 
-    public int uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
+        int res = -1;
+        String pushRes = "";
         if (qlConfig.getRemain() <= 0) {
-            return -1;
+            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes);
         }
         HttpHeaders headers = getHttpHeaders(qlConfig);
         boolean update = false;
@@ -461,7 +483,8 @@ public class JDService {
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
                 updateRemain(qlConfig);
-                return 1;
+                pushRes = doNodeJSNotify("新的CK上传", remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                res = 1;
             }
         } else {
             JSONObject jsonObject = new JSONObject();
@@ -476,10 +499,47 @@ public class JDService {
             ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-                return 1;
+                pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                res = 1;
             }
         }
-        return -1;
+        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes);
+    }
+
+    private synchronized String doNodeJSNotify(String title, String content) {
+        log.info("doNodeJSNotify title = " + title + " content = " + content);
+        Properties properties = driverFactory.getProperties();
+        StringBuilder sb = new StringBuilder();
+        if (properties != null) {
+            for (String key : properties.stringPropertyNames()) {
+                String value = properties.getProperty(key);
+                if (NODEJS_PUSH_KEYS.contains(key)) {
+                    sb.append(key).append("=").append(value).append(" ");
+                }
+            }
+        }
+        sb.append(" /opt/bin/notify ").append(title).append(" ").append(content);
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command("bash", "-c", sb.toString());
+        log.info("executing : " + sb);
+        try {
+            Process process = processBuilder.start();
+            StringBuilder output = new StringBuilder();
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            int exitVal = process.waitFor();
+            if (exitVal == 0) {
+                System.out.println("Success!");
+                return output.toString();
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     private void updateRemain(QLConfig qlConfig) {
