@@ -1,5 +1,11 @@
 #!/bin/bash
 
+detect_macos() {
+    [[ $(uname -s) == Darwin ]] && is_macos=1 || is_macos=0
+}
+
+detect_macos
+
 #当前目录
 HOME=$(
   cd $(dirname $0)
@@ -18,14 +24,28 @@ rm -rf qinglong && mkdir qinglong
 rm -rf notify
 git clone -b master --depth=1 https://github.com/whyour/qinglong.git
 cd qinglong/sample || exit
+
+if [[ $is_macos == 1 ]]; then
+  sed -i '' 's/https:\/\/github.com\/whyour\/qinglong.git/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
+else
+  sed -i 's/https:\/\/github.com\/whyour\/qinglong.git/https:\/\/github.com\/rubyangxg\/jd-qinglong/' notify.js
+fi
+
 npm install
 cd ../shell || exit
-sed -i '' 's/\/ql\/scripts\/sendNotify.js/..\/sample\/notify.js/' notify.js
+if [[ $is_macos == 1 ]]; then
+  sed -i '' 's/\/ql\/scripts\/sendNotify.js/..\/sample\/notify.js/' notify.js
+else
+  sed -i 's/\/ql\/scripts\/sendNotify.js/..\/sample\/notify.js/' notify.js
+fi
+
 pkg notify.js
 cp notify-linux $HOME/notify
+#cp notify-macos $HOME/notify-macos
 
 cd $HOME || exit
-rm -rf .*
+rm -rf .npm
+rm -rf .pkg-cache
 rm -rf qinglong
 
 docker rm -f jd-qinglong
@@ -44,8 +64,9 @@ if [[ $op == 'push' ]]; then
   docker push rubyangxg/jd-qinglong:allinone
 fi
 
+rm -rf $HOME/.docker
 #cd ..
-#docker run --name=jd-qinglong -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong:allinone
+#docker stop webapp && docker rm webapp && docker run -d --name=webapp -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
 #docker-compose -f docker-compose-debug.yml --env-file=env.properties  up -d --no-deps && docker logs -f webapp
