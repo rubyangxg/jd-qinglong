@@ -108,7 +108,7 @@ public class WebDriverFactory implements CommandLineRunner {
     }
 
 
-    @Scheduled(initialDelay = 30000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 180000, fixedDelay = 60000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {

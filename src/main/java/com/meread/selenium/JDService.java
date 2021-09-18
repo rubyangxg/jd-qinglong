@@ -96,13 +96,15 @@ public class JDService {
 //    cURL --request DELETE 'http://172.18.0.8:5555/se/grid/node/session/a73dade333fd8b68224ca762f087d676' --header 'X-REGISTRATION-SECRET;'
 //    cURL --request GET 'http://<node-URL>/se/grid/node/owner/<session-id>' --header 'X-REGISTRATION-SECRET;'
 
-    public String getJDCookies(String chromeSessionId) {
+    public JDCookie getJDCookies(String chromeSessionId) {
+        JDCookie ck = new JDCookie();
         String mockCookie = System.getenv("mockCookie");
         if ("1".equals(mockCookie)) {
             String uuid = UUID.randomUUID().toString().replace("-", "");
-            return "pt_key=test_" + uuid + ";pt_pin=" + uuid;
+            ck.setPtPin("PtPin");
+            ck.setPtKey(uuid);
+            return ck;
         }
-        StringBuilder sb = new StringBuilder();
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(chromeSessionId);
         if (webDriver != null) {
             String currentUrl = webDriver.getCurrentUrl();
@@ -111,19 +113,19 @@ public class JDService {
                 Set<Cookie> cookies = webDriver.manage().getCookies();
                 for (Cookie cookie : cookies) {
                     if ("pt_key".equals(cookie.getName())) {
-                        sb.append("pt_key=").append(cookie.getValue()).append(";");
+                        ck.setPtKey(cookie.getValue());
                         break;
                     }
                 }
                 for (Cookie cookie : cookies) {
                     if ("pt_pin".equals(cookie.getName())) {
-                        sb.append("pt_pin=").append(cookie.getValue()).append(";");
+                        ck.setPtPin(cookie.getValue());
                         break;
                     }
                 }
             }
         }
-        return sb.toString();
+        return ck;
     }
 
     static Pattern pattern = Pattern.compile("data:image.*base64,(.*)");
@@ -158,12 +160,12 @@ public class JDService {
             element = webDriver.findElement(By.id("app"));
         }
 
-        String jdCookies = getJDCookies(sessionId);
-        if (element == null && StringUtils.isEmpty(jdCookies)) {
+        JDCookie jdCookies = getJDCookies(sessionId);
+        if (element == null && jdCookies.isEmpty()) {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.EMPTY_URL);
         }
 
-        if (!StringUtils.isEmpty(jdCookies)) {
+        if (!jdCookies.isEmpty()) {
             return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
         }
 
@@ -514,6 +516,7 @@ public class JDService {
     }
 
     public QLUploadStatus uploadQingLongWithToken(String sessionId, String ck, String remark, QLConfig qlConfig) {
+        JDCookie jdCookie = JDCookie.parse(ck);
         int res = -1;
         String pushRes = "";
         if (qlConfig.getRemain() <= 0) {
@@ -521,16 +524,20 @@ public class JDService {
         }
         boolean update = false;
         String updateId = "";
-        JSONArray data = getCurrentCKS(sessionId, qlConfig, remark);
+        JSONArray data = getCurrentCKS(sessionId, qlConfig, "");
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
-                String remarks = jsonObject.getString("remarks");
                 String _id = jsonObject.getString("_id");
-                if (!StringUtils.isEmpty(remark) && remark.equals(remarks)) {
-                    update = true;
-                    updateId = _id;
-                    break;
+                String value = jsonObject.getString("value");
+                String name = jsonObject.getString("name");
+                if ("JD_COOKIE".equals(name)) {
+                    JDCookie oldCookie = JDCookie.parse(value);
+                    if (oldCookie.getPtPin().equals(jdCookie.getPtPin())) {
+                        update = true;
+                        updateId = _id;
+                        break;
+                    }
                 }
             }
         }
@@ -542,17 +549,41 @@ public class JDService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("value", ck);
             jsonObject.put("name", "JD_COOKIE");
-            if (ck != null) {
-                jsonObject.put("remarks", remark);
-            }
+            jsonObject.put("remarks", remark);
             jsonArray.add(jsonObject);
             HttpEntity<?> request = new HttpEntity<>(jsonArray.toJSONString(), headers);
-            log.info("开始上传ck" + url);
-            ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-            if (exchange.getStatusCode().is2xxSuccessful()) {
-                log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-                pushRes = doNodeJSNotify("新的CK上传到" + qlConfig.getLabel(), remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
-                res = 1;
+            log.info("开始上传ck " + url);
+
+            int maxRetry = 3;
+            while (true) {
+                maxRetry--;
+                if (maxRetry == 0) {
+                    break;
+                }
+                ResponseEntity<String> exchange = null;
+                try {
+                    exchange = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+                    if (exchange.getStatusCode().is2xxSuccessful()) {
+                        log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
+                        pushRes = doNodeJSNotify("新的CK上传到" + qlConfig.getLabel(), remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                        res = 1;
+                        break;
+                    }
+                } catch (HttpClientErrorException.Unauthorized e) {
+                    int rawStatusCode = e.getRawStatusCode();
+                    log.info(rawStatusCode + " : token" + qlConfig.getQlToken().getToken() + "失效");
+                } catch (RestClientException e) {
+                    e.printStackTrace();
+                }
+
+                if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                    String token = getUserNamePasswordToken(sessionId, qlConfig);
+                    log.info(qlConfig.getQlUrl() + " 更新token " + token);
+                    qlConfig.setQlToken(new QLToken(token));
+                }
+                if (qlConfig.getQlToken() == null) {
+                    res = 0;
+                }
             }
         } else {
             JSONObject jsonObject = new JSONObject();

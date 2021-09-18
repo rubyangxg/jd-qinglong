@@ -35,7 +35,7 @@ public class JDScreenBean {
         }
     }
     private String screen;
-    private String ck;
+    private JDCookie ck;
     private PageStatus pageStatus;
     //手机验证码重新获取倒计时
     private int authCodeCountDown;
@@ -53,7 +53,7 @@ public class JDScreenBean {
         this.pageStatus = pageStatus;
     }
 
-    public JDScreenBean(String screen, PageStatus pageStatus,String ck) {
+    public JDScreenBean(String screen, PageStatus pageStatus,JDCookie ck) {
         this.screen = screen;
         this.pageStatus = pageStatus;
         this.ck = ck;

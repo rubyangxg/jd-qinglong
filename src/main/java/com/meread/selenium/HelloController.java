@@ -116,6 +116,7 @@ public class HelloController {
         int qlUploadDirect = qlUploadDirect();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
+        model.addAttribute("initSuccess", factory.isInitSuccess());
         if (!StringUtils.isEmpty(debug)) {
             int i = Integer.parseInt(debug);
             model.addAttribute("debug", i == 1);
@@ -142,11 +143,11 @@ public class HelloController {
         if ("1".equals(reset)) {
             service.reset(status.getAssignSessionId());
         }
-        String ck = null;
+        JDCookie ck = null;
         try {
             ck = service.getJDCookies(status.getAssignSessionId());
             if (!StringUtils.isEmpty(ck)) {
-                model.addAttribute("ck", ck);
+                model.addAttribute("ck", ck.toString());
             } else {
                 service.toJDlogin(status.getAssignSessionId());
             }

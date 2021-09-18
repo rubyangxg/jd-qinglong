@@ -32,6 +32,16 @@
             <a href="${base}/">刷新重试</a>
         </div>
     </div>
+<#elseif !initSuccess>
+    <div id="notfound">
+        <div class="notfound">
+            <div class="notfound-404">
+                <h1>5<span>0</span>2</h1>
+            </div>
+            <p>未启动完成，请耐心等待！</p>
+            <a href="${base}/">刷新重试</a>
+        </div>
+    </div>
 <#else>
     <div class="login-form">
         <div class="alert alert-primary" role="alert">
@@ -276,7 +286,7 @@
                                 });
                                 return true;
                             }
-                            ck = data.ck;
+                            ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin;
                             pageStatus = data.pageStatus;
                             authCodeCountDown = data.authCodeCountDown;
                             canClickLogin = data.canClickLogin;
