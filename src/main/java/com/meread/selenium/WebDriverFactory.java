@@ -81,6 +81,18 @@ public class WebDriverFactory implements CommandLineRunner {
         return chromes;
     }
 
+    @Scheduled(initialDelay = 60000, fixedDelay = 30000)
+    public void syncCK_count() {
+        if (qlConfigs != null) {
+            for (QLConfig qlConfig : qlConfigs) {
+                int oldSize = qlConfig.getRemain();
+                jdService.fetchCurrentCKS_count(qlConfig, "");
+                int newSize = qlConfig.getRemain();
+                log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
+            }
+        }
+    }
+
     @Scheduled(initialDelay = 10000, fixedDelay = 2000)
     public void heartbeat() {
         if (CollectionUtils.isEmpty(chromes)) {
@@ -357,18 +369,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 if (success) {
                     result_token = true;
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
-                    JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
-                    int ckSize = 0;
-                    if (currentCKS != null) {
-                        for (int i = 0; i < currentCKS.size(); i++) {
-                            JSONObject jo = currentCKS.getJSONObject(i);
-                            if ("JD_COOKIE".equals(jo.getString("name"))) {
-                                ckSize++;
-                            }
-                        }
-                        log.info("获取到的ck数量=" + ckSize);
-                        qlConfig.setRemain(qlConfig.getCapacity() - ckSize);
-                    }
+                    jdService.fetchCurrentCKS_count(qlConfig, "");
                 } else {
                     log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
                 }
@@ -378,18 +379,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 try {
                     result = initInnerQingLong(qlConfig);
                     qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
-                    JSONArray currentCKS = jdService.getCurrentCKS(qlConfig, "");
-                    int ckSize = 0;
-                    if (currentCKS != null) {
-                        for (int i = 0; i < currentCKS.size(); i++) {
-                            JSONObject jo = currentCKS.getJSONObject(i);
-                            if ("JD_COOKIE".equals(jo.getString("name"))) {
-                                ckSize++;
-                            }
-                        }
-                        log.info("获取到的ck数量=" + ckSize);
-                        qlConfig.setRemain(qlConfig.getCapacity() - ckSize);
-                    }
+                    jdService.fetchCurrentCKS_count(qlConfig, "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

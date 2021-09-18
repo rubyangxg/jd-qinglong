@@ -444,6 +444,21 @@ public class JDService {
         return null;
     }
 
+    public void fetchCurrentCKS_count(QLConfig qlConfig, String searchValue) {
+        JSONArray currentCKS = getCurrentCKS(qlConfig, searchValue);
+        int ckSize = 0;
+        if (currentCKS != null) {
+            for (int i = 0; i < currentCKS.size(); i++) {
+                JSONObject jo = currentCKS.getJSONObject(i);
+                if ("JD_COOKIE".equals(jo.getString("name"))) {
+                    ckSize++;
+                }
+            }
+            log.info("获取到的ck数量=" + ckSize);
+            qlConfig.setRemain(qlConfig.getCapacity() - ckSize);
+        }
+    }
+
     public QLUploadStatus uploadQingLongWithToken(String ck, String remark, QLConfig qlConfig) {
         int res = -1;
         String pushRes = "";
