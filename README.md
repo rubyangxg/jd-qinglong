@@ -32,12 +32,16 @@
 
 ## 更新历史
 * 2021-09-18 新增推送功能，配置同青龙，请查看[env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties)
-* 2021-09-17 解决验证码输入后登录按钮无效问题，请升级成allinone镜像
-*            推出allinone镜像，无需其他依赖，升级的话只修改docker-compose.yml即可
-*            推出1.0版本，优化性能，缩减镜像依赖3变1，升级的话只修改docker-compose.yml即可
-* 2021-09-16 bug fix 解决了卡验证码问题，请务必pull最新镜像
-*            增加实验功能：支持配置最多上传ck容量
-* 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties) 里面的注释
+
+[comment]: <> (* 2021-09-17 解决验证码输入后登录按钮无效问题，请升级成allinone镜像)
+
+[comment]: <> (* 2021-09-17 推出allinone镜像，无需其他依赖，升级的话只修改docker-compose.yml即可)
+
+[comment]: <> (* 2021-09-16 bug fix 解决了卡验证码问题，请务必pull最新镜像)
+
+[comment]: <> (*            增加实验功能：支持配置最多上传ck容量)
+
+[comment]: <> (* 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties]&#40;https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties&#41; 里面的注释)
 
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
