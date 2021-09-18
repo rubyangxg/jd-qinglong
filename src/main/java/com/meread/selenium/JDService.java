@@ -483,7 +483,7 @@ public class JDService {
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("create resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
                 updateRemain(qlConfig);
-                pushRes = doNodeJSNotify("新的CK上传", remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                pushRes = doNodeJSNotify("新的CK上传到" + qlConfig.getLabel(), remark.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 res = 1;
             }
         } else {

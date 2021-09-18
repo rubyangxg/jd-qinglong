@@ -57,8 +57,7 @@ git pull --allow-unrelated-histories
 mvn clean package -Dmaven.test.skip=true
 cp target/jd-qinglong-*.jar docker-allinone
 cd docker-allinone || exit
-docker build -t rubyangxg/jd-qinglong:allinone --build-arg JAR_FILE=jd-qinglong-1.0.jar .
-docker build -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
+docker build -t rubyangxg/jd-qinglong:allinone -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 if [[ $op == 'push' ]]; then
   docker push rubyangxg/jd-qinglong:latest
   docker push rubyangxg/jd-qinglong:allinone
