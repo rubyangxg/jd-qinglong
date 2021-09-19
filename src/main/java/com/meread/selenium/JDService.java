@@ -602,7 +602,7 @@ public class JDService {
             ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-                pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), remark+"->"+phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), (StringUtils.isEmpty(remark) ? "" : remark + "->") + phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 res = 1;
             }
         }
