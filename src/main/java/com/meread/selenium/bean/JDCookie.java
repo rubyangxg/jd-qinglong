@@ -32,7 +32,7 @@ public class JDCookie {
 
     @Override
     public String toString() {
-        return "pt_key=" + ptKey + ";pt_pin=" + ptPin;
+        return "pt_key=" + ptKey + ";pt_pin=" + ptPin + ";";
     }
 
     public boolean isEmpty() {
