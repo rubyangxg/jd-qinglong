@@ -4,7 +4,7 @@ services:
     env_file:
       - env.properties
     container_name: chrome
-    image: selenium/standalone-chrome:4
+    image: selenium/standalone-firefox:4
     shm_size: 2gb
     environment:
       - SE_NODE_SESSION_TIMEOUT=300
