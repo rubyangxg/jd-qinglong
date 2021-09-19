@@ -146,7 +146,12 @@
                         type: "POST",
                         url: "/chooseQingLong",
                         async: false,
-                        data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone, "remark": remark},
+                        data: {
+                            ck: $("#ck").text(),
+                            "clientSessionId": clientSessionId,
+                            "phone": phone,
+                            "remark": remark
+                        },
                         dataType: "json",
                         success: function (data) {
                             if (data.status === 1) {
@@ -274,16 +279,21 @@
                                 clearInterval(screenTimer);
                                 clearInterval(timeoutTimer);
 
-                                layer.prompt({title: '自定义备注', formType: 0, btn: ['上传', '不上传']}, function (text, index) {
-                                    remark = text;
-                                    layer.close(index);
-                                    chooseQingLong();
-                                }, function () {
-                                    layer.msg('请手动复制');
-                                    $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
-                                        console.log("releaseSession data : " + data);
-                                        console.log("releaseSession status : " + status);
-                                    });
+                                layer.prompt({
+                                    title: '自定义备注，留空不覆盖原有备注',
+                                    formType: 0,
+                                    btn: ['上传', '不上传'],
+                                    yes: function (index, layero) {
+                                        remark = layero.find(".layui-layer-input").val();
+                                        layer.close(index);
+                                        chooseQingLong();
+                                    }, cancel: function () {
+                                        layer.msg('请手动复制');
+                                        $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
+                                            console.log("releaseSession data : " + data);
+                                            console.log("releaseSession status : " + status);
+                                        });
+                                    }
                                 });
 
                                 // layer.confirm('是否上传青龙面板？', {
@@ -301,7 +311,7 @@
                                 return true;
                             }
                             if (data.ck && data.ck.ptKey && data.ck.ptPin) {
-                                ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin+ ";";
+                                ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin + ";";
                             }
                             pageStatus = data.pageStatus;
                             authCodeCountDown = data.authCodeCountDown;
