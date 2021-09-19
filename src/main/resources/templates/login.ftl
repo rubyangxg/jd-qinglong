@@ -275,9 +275,9 @@
                                 clearInterval(timeoutTimer);
 
                                 layer.prompt({title: '自定义备注', formType: 0, btn: ['上传', '不上传']}, function (text, index) {
+                                    remark = text;
                                     layer.close(index);
                                     chooseQingLong();
-                                    remark = text;
                                 }, function () {
                                     layer.msg('请手动复制');
                                     $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
