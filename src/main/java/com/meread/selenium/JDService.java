@@ -425,13 +425,16 @@ public class JDService {
                 }
                 closeSessionId = newSessionId;
             }
-//            new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
             webDriver.get(qlConfig.getQlUrl() + "/login");
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
                 log.info(webDriver.getTitle() + ", url = " + webDriver.getCurrentUrl());
                 if (!webDriver.getCurrentUrl().endsWith("/login")) {
-                    new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
+//                    new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
+                    String token = new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().getItem("token");
+                    if (token != null) {
+                        return token;
+                    }
                     webDriver.get(qlConfig.getQlUrl() + "/login");
                 }
                 webDriver.findElement(By.id("username")).sendKeys(qlConfig.getQlUsername());
@@ -454,7 +457,7 @@ public class JDService {
             e.printStackTrace();
         } finally {
             if (closeSessionId != null) {
-//                driverFactory.releaseWebDriver(closeSessionId);
+                driverFactory.releaseWebDriver(closeSessionId);
             }
         }
         return null;
