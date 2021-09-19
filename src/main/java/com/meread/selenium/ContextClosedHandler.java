@@ -2,6 +2,7 @@ package com.meread.selenium;
 
 import com.meread.selenium.bean.NodeStatus;
 import com.meread.selenium.bean.SlotStatus;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -33,11 +34,13 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
         for (NodeStatus ns : status) {
             String uri = ns.getUri();
             List<SlotStatus> slotStatus = ns.getSlotStatus();
-            for (SlotStatus ss : slotStatus) {
-                String sessionId = ss.getSessionId();
-                if (sessionId != null) {
-                    log.info("destroy chrome : " + uri + " --> " + sessionId);
-                    webDriverFactory.closeSession(uri, sessionId);
+            if (slotStatus != null) {
+                for (SlotStatus ss : slotStatus) {
+                    String sessionId = ss.getSessionId();
+                    if (sessionId != null) {
+                        log.info("destroy chrome : " + uri + " --> " + sessionId);
+                        webDriverFactory.closeSession(uri, sessionId);
+                    }
                 }
             }
         }

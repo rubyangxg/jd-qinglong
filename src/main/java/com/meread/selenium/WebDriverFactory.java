@@ -116,17 +116,9 @@ public class WebDriverFactory implements CommandLineRunner {
         chromeOptions.addArguments("--window-size=500,700");
 
         firefoxOptions = new FirefoxOptions();
-        firefoxOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
-        firefoxOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:92.0) Gecko/20100101 Firefox/92.0");
-        firefoxOptions.addArguments("disable-blink-features=AutomationControlled");
-        firefoxOptions.addArguments("--disable-gpu");
         firefoxOptions.addArguments("--headless");
-//        chromeOptions.addArguments("--no-sandbox");
-//        chromeOptions.addArguments("--disable-extensions");
-//        chromeOptions.addArguments("--disable-software-rasterizer");
-        firefoxOptions.addArguments("--ignore-ssl-errors=yes");
-        firefoxOptions.addArguments("--ignore-certificate-errors");
-//        chromeOptions.addArguments("--allow-running-insecure-content");
+        firefoxOptions.addArguments("--disable-gpu");
+        firefoxOptions.setAcceptInsecureCerts(true);
         firefoxOptions.addArguments("--window-size=500,700");
     }
 
@@ -240,10 +232,10 @@ public class WebDriverFactory implements CommandLineRunner {
                 String availability = node.getString("availability");
                 status.setAvailability(availability);
                 if ("UP".equals(availability)) {
-                    JSONArray sessions = node.getJSONArray("slots");
+                    JSONArray slots = node.getJSONArray("slots");
                     List<SlotStatus> sss = new ArrayList<>();
-                    for (int s = 0; s < sessions.size(); s++) {
-                        JSONObject currSession = sessions.getJSONObject(s).getJSONObject("session");
+                    for (int s = 0; s < slots.size(); s++) {
+                        JSONObject currSession = slots.getJSONObject(s).getJSONObject("session");
                         SlotStatus ss = new SlotStatus();
                         Date start = null;
                         String sessionId = null;
@@ -326,12 +318,14 @@ public class WebDriverFactory implements CommandLineRunner {
         log.info("清理未关闭的session，获取最大容量");
         for (NodeStatus status : statusList) {
             List<SlotStatus> sss = status.getSlotStatus();
-            for (SlotStatus ss : sss) {
-                if (ss != null && ss.getSessionId() != null) {
-                    try {
-                        closeSession(status.getUri(), ss.getSessionId());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            if (sss != null) {
+                for (SlotStatus ss : sss) {
+                    if (ss != null && ss.getSessionId() != null) {
+                        try {
+                            closeSession(status.getUri(), ss.getSessionId());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

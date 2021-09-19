@@ -13,6 +13,19 @@ services:
       - "4444:4444"
     restart: always
 
+  firefox:
+    container_name: firefox
+    image: selenium/standalone-firefox:4.0.0-rc-2-prerelease-20210916
+    shm_size: 2gb
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_SESSIONS=8
+      - START_XVFB=false
+    ports:
+      - "4445:4444"
+    restart: always
+
 #  webapp:
 #    container_name: webapp
 #    image: rubyangxg/jd-qinglong:jar
@@ -57,3 +70,10 @@ services:
       - ENABLE_HANGUP=true
       - ENABLE_WEB_PANEL=true
     restart: always
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.177.0.0/16

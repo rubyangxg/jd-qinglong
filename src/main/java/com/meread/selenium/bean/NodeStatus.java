@@ -21,5 +21,4 @@ public class NodeStatus {
     private boolean isFullSession;
     private String availability;
     private List<SlotStatus> slotStatus;
-
 }
