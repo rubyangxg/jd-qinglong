@@ -25,7 +25,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -74,6 +73,10 @@ public class WebDriverFactory implements CommandLineRunner {
     private List<QLConfig> qlConfigs;
 
     public Properties properties = new Properties();
+
+    private String xddUrl;
+
+    private String xddToken;
 
     private static int capacity = 0;
 
@@ -170,15 +173,19 @@ public class WebDriverFactory implements CommandLineRunner {
             }
             int shouldCreate = capacity - chromes.size();
             if (shouldCreate > 0) {
-                try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
-                    MyChrome myChrome = new MyChrome();
-                    myChrome.setWebDriver(webDriver);
-                    log.warn("create a chrome " + webDriver.getSessionId().toString());
-                    chromes.add(myChrome);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
+                int currCount = 0;
+                do {
+                    try {
+                        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
+                        MyChrome myChrome = new MyChrome();
+                        myChrome.setWebDriver(webDriver);
+                        log.warn("create a chrome " + webDriver.getSessionId().toString());
+                        chromes.add(myChrome);
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
+                    currCount++;
+                } while (currCount < shouldCreate / 2);
             }
             inflate(chromes, getGridStatus());
         }
@@ -376,6 +383,9 @@ public class WebDriverFactory implements CommandLineRunner {
             }
         }
 
+        xddUrl = properties.getProperty("XDD_URL");
+        xddToken = properties.getProperty("XDD_TOKEN");
+
         for (int i = 1; i <= 5; i++) {
             QLConfig config = new QLConfig();
             config.setId(i);
@@ -400,7 +410,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 } else if (key.equals("QL_LABEL_" + i)) {
                     config.setLabel(value);
                 } else if (key.equals("QL_CAPACITY_" + i)) {
-                    config.setCapacity(Integer.parseInt(value.trim()));
+                    config.setCapacity(Integer.parseInt(value));
                 }
             }
             if (config.isValid()) {
@@ -638,8 +648,12 @@ public class WebDriverFactory implements CommandLineRunner {
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
             if (sessionId.equals(input)) {
                 String uri = myChrome.getSlotStatus().getBelongsToUri();
-                myChrome.getWebDriver().quit();
-                iterator.remove();
+                try {
+                    myChrome.getWebDriver().quit();
+                    iterator.remove();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 log.info("destroy chrome : " + uri + "-->" + sessionId);
                 break;
             }
@@ -671,6 +685,14 @@ public class WebDriverFactory implements CommandLineRunner {
                 break;
             }
         }
+    }
+
+    public String getXddUrl() {
+        return xddUrl;
+    }
+
+    public String getXddToken() {
+        return xddToken;
     }
 
     public List<QLConfig> getQlConfigs() {

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.config.HttpClientUtil;
 import com.meread.selenium.util.CacheUtil;
 import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
@@ -48,11 +49,11 @@ public class JDService {
     @Autowired
     private WebDriverFactory driverFactory;
 
-    @Value("${jd.debug}")
-    private boolean debug;
-
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private HttpClientUtil httpClientUtil;
 
     @Value("${jd.debug}")
     private boolean isDebug;
@@ -135,7 +136,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (debug) {
+        if (isDebug) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
@@ -399,7 +400,7 @@ public class JDService {
     public QLUploadStatus uploadQingLong(String sessionId, String ck, String phone, String remark, QLConfig qlConfig) {
         int res = -1;
         if (qlConfig.getRemain() <= 0) {
-            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "");
+            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
         }
         String token = getUserNamePasswordToken(sessionId, qlConfig);
         if (token != null) {
@@ -407,7 +408,7 @@ public class JDService {
         } else {
             res = 0;
         }
-        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "");
+        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
     }
 
     private String getUserNamePasswordToken(String sessionId, QLConfig qlConfig) {
@@ -522,11 +523,13 @@ public class JDService {
         JDCookie jdCookie = JDCookie.parse(ck);
         int res = -1;
         String pushRes = "";
+        String xddRes = "";
         if (qlConfig.getRemain() <= 0) {
-            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes);
+            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes, xddRes);
         }
         boolean update = false;
         String updateId = "";
+        String updateRemark = null;
         JSONArray data = getCurrentCKS(sessionId, qlConfig, "");
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
@@ -539,6 +542,7 @@ public class JDService {
                     if (oldCookie.getPtPin().equals(jdCookie.getPtPin())) {
                         update = true;
                         updateId = _id;
+                        updateRemark = jsonObject.getString("remarks");
                         break;
                     }
                 }
@@ -593,20 +597,68 @@ public class JDService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("value", ck);
             jsonObject.put("name", "JD_COOKIE");
-            if (ck != null) {
-                jsonObject.put("remarks", remark);
+            String s = strSpecialFilter(remark);
+            String remarksRes = remark;
+            //如果上传的备注是空
+            if (StringUtils.isEmpty(s)) {
+//                老的备注也是空，则备注填手机号
+                if (StringUtils.isEmpty(updateRemark)) {
+                    remarksRes = phone;
+                } else {
+                    remarksRes = updateRemark;
+                }
             }
+            jsonObject.put("remarks", remarksRes);
             jsonObject.put("_id", updateId);
             HttpEntity<?> request = new HttpEntity<>(jsonObject.toJSONString(), headers);
             log.info("开始更新ck" + url);
             ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-                pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), (StringUtils.isEmpty(remark) ? "" : remark + "->") + phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                try {
+                    pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), remarksRes + "->" + phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                    log.info("pushRes = " + pushRes);
+                    xddRes = doXDDNotify(ck);
+                    log.info("xddRes = " + xddRes);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 res = 1;
             }
         }
-        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes);
+        return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes, xddRes);
+    }
+
+    private String doXDDNotify(String ck) {
+        String xddUrl = driverFactory.getXddUrl();
+        String xddToken = driverFactory.getXddToken();
+        if (!StringUtils.isEmpty(xddUrl) && !StringUtils.isEmpty(xddToken)) {
+            Map<String, String> paramMap = new HashMap<>();
+            paramMap.put("ck", ck);
+            paramMap.put("token", xddToken);
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(paramMap, headers);
+//            ResponseEntity<String> exchange = restTemplate.exchange(xddUrl, HttpMethod.POST, request, String.class);
+//            if (exchange.getStatusCode().is2xxSuccessful()) {
+//                return exchange.getBody();
+//            }
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Accept", "*/*");
+            headers.put("Accept-Encoding", "gzip, deflate, br");
+            headers.put("Accept-Language", "zh-CN,zh;q=0.9");
+            headers.put("Connection", "keep-alive");
+            headers.put("DNT", "1");
+            headers.put("sec-ch-ua", "\"Google Chrome\";v=\"93\", \" Not;A Brand\";v=\"99\", \"Chromium\";v=\"93\"");
+            headers.put("sec-ch-ua-mobile", "?0");
+            headers.put("sec-ch-ua-platform", "\"macOS\"");
+            headers.put("Sec-Fetch-Dest", "empty");
+            headers.put("Sec-Fetch-Mode", "cors");
+            headers.put("Sec-Fetch-Site", "same-origin");
+            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36");
+            return httpClientUtil.doPost(xddUrl, paramMap, headers);
+        }
+        return null;
     }
 
     private synchronized String doNodeJSNotify(String title, String content) {

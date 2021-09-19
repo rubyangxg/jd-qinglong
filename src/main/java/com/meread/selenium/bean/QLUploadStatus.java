@@ -15,4 +15,5 @@ public class QLUploadStatus {
     private int uploadStatus;
     private boolean isFull;
     private String pushRes;
+    private String xddRes;
 }
