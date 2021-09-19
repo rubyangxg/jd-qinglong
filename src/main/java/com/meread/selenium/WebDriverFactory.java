@@ -9,7 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.html5.LocalStorage;
+import org.openqa.selenium.remote.AbstractDriverOptions;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
@@ -68,6 +70,9 @@ public class WebDriverFactory implements CommandLineRunner {
     @Value("${op.timeout}")
     private int opTimeout;
 
+    @Value("${selenium.type}")
+    private String seleniumType;
+
     public static final String CLIENT_SESSION_ID_KEY = "client:session";
 
     private List<QLConfig> qlConfigs;
@@ -91,6 +96,7 @@ public class WebDriverFactory implements CommandLineRunner {
     }
 
     public static final ChromeOptions chromeOptions;
+    public static final FirefoxOptions firefoxOptions;
 
     static {
         chromeOptions = new ChromeOptions();
@@ -108,8 +114,25 @@ public class WebDriverFactory implements CommandLineRunner {
         chromeOptions.addArguments("--ignore-certificate-errors");
 //        chromeOptions.addArguments("--allow-running-insecure-content");
         chromeOptions.addArguments("--window-size=500,700");
+
+        firefoxOptions = new FirefoxOptions();
+        firefoxOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
+        firefoxOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:92.0) Gecko/20100101 Firefox/92.0");
+        firefoxOptions.addArguments("disable-blink-features=AutomationControlled");
+        firefoxOptions.addArguments("--disable-gpu");
+        firefoxOptions.addArguments("--headless");
+//        chromeOptions.addArguments("--no-sandbox");
+//        chromeOptions.addArguments("--disable-extensions");
+//        chromeOptions.addArguments("--disable-software-rasterizer");
+        firefoxOptions.addArguments("--ignore-ssl-errors=yes");
+        firefoxOptions.addArguments("--ignore-certificate-errors");
+//        chromeOptions.addArguments("--allow-running-insecure-content");
+        firefoxOptions.addArguments("--window-size=500,700");
     }
 
+    public AbstractDriverOptions getOptions() {
+        return seleniumType.equals("chrome") ? chromeOptions : firefoxOptions;
+    }
 
     @Scheduled(initialDelay = 180000, fixedDelay = 60000)
     public void syncCK_count() {
@@ -176,7 +199,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 int currCount = 0;
                 do {
                     try {
-                        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
+                        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                         MyChrome myChrome = new MyChrome();
                         myChrome.setWebDriver(webDriver);
                         log.warn("create a chrome " + webDriver.getSessionId().toString());
@@ -323,7 +346,7 @@ public class WebDriverFactory implements CommandLineRunner {
         //初始化一半Chrome实例
         log.info("初始化一半Chrome实例");
         for (int i = 0; i < (capacity == 1 ? 2 : capacity) / 2; i++) {
-            RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
+            RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
             MyChrome myChrome = new MyChrome();
             myChrome.setWebDriver(webDriver);
