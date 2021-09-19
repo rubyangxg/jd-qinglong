@@ -7,7 +7,7 @@ services:
     ports:
       - "5701:8080"
     environment:
-      - SE_NODE_MAX_SESSIONS=4
+      - SE_NODE_MAX_SESSIONS=4  #这里设置资源数，根据机器性能设置
     volumes:
       - ./env.properties:/env.properties
 

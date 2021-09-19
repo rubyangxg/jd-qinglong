@@ -16,10 +16,6 @@
 [docker-image-size-url]: https://hub.docker.com/r/rubyangxg/jd-qinglong
 </div>
 
-<p align="center">
-  <img width="49%" src="/public/images/home.png">
-</p>
-
 ## 提醒一下
 * arm的设备不用试了，没时间测试和解决遇到的问题
 * 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
@@ -47,8 +43,7 @@
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
 * 编写好env.properties，然后`docker run -e "SE_NODE_MAX_SESSIONS=4" -p 5701:8080 --name=jd-qinglong -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong:allinone`
-* 已经安装好青龙的: [INSTALL1.md](INSTALL1.md)
-* 从0搭建: [INSTALL2.md](INSTALL2.md)
+* 安装教程: [INSTALL.md](INSTALL.md)
 * 免费代挂及问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)
 
 ## 多谢

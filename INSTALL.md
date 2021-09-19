@@ -34,40 +34,12 @@ cd jd-qinglong
 wget -O docker-compose.yml https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/docker-compose-allinone.yml
 # 下载配置文件模板
 wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
+#确保env.properties和docker-compose.yml处于同级目录
+#根据需要修改配置文件内容
 # 启动 -d表示后台静默启动
-# 使用从0搭建的，不需要修改env.properties中的青龙配置
-# 非root用户请执行，root用户请去掉sudo，可能会出现command not found
-sudo docker-compose --env-file env.properties up -d
-# 非root用户请执行，root用户请去掉sudo，可能会出现command not found
-sudo docker-compose --env-file env.properties logs -f
+sudo docker-compose up -d
+sudo docker-compose logs -f
 ```
-青龙面板默认端口5700
-启动完毕后，会自动获取青龙的登录密码，密码查看命令：
-```bash
-cat data/config/auth.json
-```
-
-cat查看之后返回的结果类似如下字段
-
-```json
-{"username":"admin","password":"Xb-ZYP526wmg4_h6q1WqIO"}
-```
-
-输入此处记录的`username`及`password`，即可成功登陆qinglong面板，登陆后即可正常使用
-
-## 备份
-
-所有数据都将保存在`docker-compose.yml`所在的同级目录的`data`文件夹中，如需要备份，请直接备份`docker-compose.yml`及`data`文件夹即可
-
-```bash
-root@debian:/opt/qinglong# ls -lah
-总用量 8.0K
-drwxr-xr-x 3 root root 4.0K  8月 30 01:29 .
-drwxr-xr-x 4 root root 4.0K  8月 30 00:51 ..
-drwxr-xr-x 8 root root 4.0K  8月 30 01:30 data
--rw-r--r-- 1 root root  386  8月 30 01:29 docker-compose.yml
-```
-
 ## 更新
 
 请直接pull最新的docker镜像即可
@@ -80,6 +52,6 @@ docker rm webapp && sudo docker rmi -f rubyangxg/jd-qinglong:allinone
 #sudo docker-compose --env-file env.properties down
 #下载最新阿东镜像
 docker pull rubyangxg/jd-qinglong:allinone
-docker-compose --env-file env.properties restart
-docker-compose --env-file env.properties up -d
+docker-compose restart
+docker-compose up -d
 ```
