@@ -243,7 +243,7 @@ public class JDService {
         Long expire = CacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         log.info(sessionId + " expire " + expire);
         JDScreenBean bean = new JDScreenBean(screenBase64, jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
-        if (!StringUtils.isEmpty(jdCookies)) {
+        if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
         }
 

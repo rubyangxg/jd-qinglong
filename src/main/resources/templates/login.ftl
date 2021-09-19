@@ -300,7 +300,7 @@
                                 // });
                                 return true;
                             }
-                            if (data.ck.ptKey && data.ck.ptPin) {
+                            if (data.ck && data.ck.ptKey && data.ck.ptPin) {
                                 ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin;
                             }
                             pageStatus = data.pageStatus;
