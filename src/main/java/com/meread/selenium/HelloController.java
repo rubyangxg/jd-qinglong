@@ -199,7 +199,7 @@ public class HelloController {
     @ResponseBody
     public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId,
                                      @RequestParam("clientSessionId") String clientSessionId,
-                                     @RequestParam(value = "phone", defaultValue = "13612345678") String phone,
+                                     @RequestParam(value = "phone", defaultValue = "无手机号") String phone,
                                      @RequestParam(value = "remark", defaultValue = "") String remark,
                                      @RequestParam("ck") String ck) {
         JSONObject jsonObject = new JSONObject();
