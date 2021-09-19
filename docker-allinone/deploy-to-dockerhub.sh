@@ -66,7 +66,7 @@ fi
 rm -rf $HOME/.docker
 cd ..
 #docker stop webapp && docker rm webapp
-docker run -d -p 5701:8080 --name=webapp -e "mockCookie=1" -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong
+docker run -d -p 5701:8080 --name=webapp -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
 #docker-compose -f docker-compose-debug.yml --env-file=env.properties  up -d --no-deps && docker logs -f webapp

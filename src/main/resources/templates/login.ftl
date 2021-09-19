@@ -125,6 +125,7 @@
             var clientSessionId = "${clientSessionId}";
             var phone;
             var qlUploadDirect = ${qlUploadDirect};
+            var remark;
 
             function copy1() {
                 var clipboard = new ClipboardJS('#copyBtn');
@@ -145,7 +146,7 @@
                         type: "POST",
                         url: "/chooseQingLong",
                         async: false,
-                        data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone},
+                        data: {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone, "remark": remark},
                         dataType: "json",
                         success: function (data) {
                             if (data.status === 1) {
@@ -171,7 +172,7 @@
             function uploadQingLong(qlUploadDirect) {
                 var data = $("#chooseQL_form").serialize();
                 if (qlUploadDirect) {
-                    data = {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone};
+                    data = {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone, "remark": remark};
                 }
                 $.ajax({
                     type: "POST",
@@ -272,11 +273,11 @@
                                 $("#ck").html(ck);
                                 clearInterval(screenTimer);
                                 clearInterval(timeoutTimer);
-                                layer.confirm('是否上传青龙面板？', {
-                                    btn: ['上传', '不上传'] //按钮
-                                }, function (index) {
+
+                                layer.prompt({title: '自定义备注', formType: 0, btn: ['上传', '不上传']}, function (text, index) {
                                     layer.close(index);
                                     chooseQingLong();
+                                    remark = text;
                                 }, function () {
                                     layer.msg('请手动复制');
                                     $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
@@ -284,9 +285,24 @@
                                         console.log("releaseSession status : " + status);
                                     });
                                 });
+
+                                // layer.confirm('是否上传青龙面板？', {
+                                //     btn: ['上传', '不上传'] //按钮
+                                // }, function (index) {
+                                //     layer.close(index);
+                                //     chooseQingLong();
+                                // }, function () {
+                                //     layer.msg('请手动复制');
+                                //     $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
+                                //         console.log("releaseSession data : " + data);
+                                //         console.log("releaseSession status : " + status);
+                                //     });
+                                // });
                                 return true;
                             }
-                            ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin;
+                            if (data.ck.ptKey && data.ck.ptPin) {
+                                ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin;
+                            }
                             pageStatus = data.pageStatus;
                             authCodeCountDown = data.authCodeCountDown;
                             canClickLogin = data.canClickLogin;

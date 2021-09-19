@@ -3,6 +3,7 @@
         <input type="hidden" name="clientSessionId" value="${clientSessionId}">
         <input type="hidden" name="phone" value="${phone}">
         <input type="hidden" name="ck" value="${ck}">
+        <input type="hidden" name="remark" value="${remark}">
         <table class="table table-striped">
             <thead>
             <tr>

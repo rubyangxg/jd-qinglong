@@ -197,7 +197,11 @@ public class HelloController {
 
     @PostMapping({"/uploadQingLong"})
     @ResponseBody
-    public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId, @RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "13612345678") String phone, @RequestParam("ck") String ck, HttpServletResponse response) {
+    public JSONObject uploadQingLong(@RequestParam(value = "chooseQLId", required = false) Set<Integer> chooseQLId,
+                                     @RequestParam("clientSessionId") String clientSessionId,
+                                     @RequestParam(value = "phone", defaultValue = "13612345678") String phone,
+                                     @RequestParam(value = "remark", defaultValue = "无备注") String remark,
+                                     @RequestParam("ck") String ck) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("status", 0);
 
@@ -214,12 +218,12 @@ public class HelloController {
                 for (QLConfig qlConfig : factory.getQlConfigs()) {
                     if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
                         if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                            QLUploadStatus status = service.uploadQingLongWithToken(sessionId, ck, phone, qlConfig);
+                            QLUploadStatus status = service.uploadQingLongWithToken(sessionId, ck, phone,remark, qlConfig);
                             log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
                             uploadStatuses.add(status);
                         }
                         if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                            QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone, qlConfig);
+                            QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone,remark, qlConfig);
                             log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
                             uploadStatuses.add(status);
                         }
@@ -276,7 +280,10 @@ public class HelloController {
 
     @PostMapping({"/chooseQingLong"})
     @ResponseBody
-    public JSONObject chooseQingLong(@RequestParam("clientSessionId") String clientSessionId, @RequestParam(value = "phone", defaultValue = "无手机号") String phone, @RequestParam("ck") String ck) {
+    public JSONObject chooseQingLong(@RequestParam("clientSessionId") String clientSessionId,
+                                     @RequestParam(value = "phone", defaultValue = "无手机号") String phone,
+                                     @RequestParam(value = "remark", defaultValue = "无备注") String remark,
+                                     @RequestParam("ck") String ck) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("status", 0);
         Map<String, Object> map = new HashMap<>();
@@ -285,6 +292,7 @@ public class HelloController {
             map.put("clientSessionId", clientSessionId);
             map.put("phone", phone);
             map.put("ck", ck);
+            map.put("remark", remark);
             try {
                 Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/chooseQL.ftl");
                 String process = FreemarkerUtils.process(template, map);

@@ -396,14 +396,14 @@ public class JDService {
         return bean;
     }
 
-    public QLUploadStatus uploadQingLong(String sessionId, String ck, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLong(String sessionId, String ck, String phone, String remark, QLConfig qlConfig) {
         int res = -1;
         if (qlConfig.getRemain() <= 0) {
             return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "");
         }
         String token = getUserNamePasswordToken(sessionId, qlConfig);
         if (token != null) {
-            return uploadQingLongWithToken(sessionId, ck, remark, qlConfig);
+            return uploadQingLongWithToken(sessionId, ck, phone, remark, qlConfig);
         } else {
             res = 0;
         }
@@ -518,7 +518,7 @@ public class JDService {
         }
     }
 
-    public QLUploadStatus uploadQingLongWithToken(String sessionId, String ck, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLongWithToken(String sessionId, String ck, String phone, String remark, QLConfig qlConfig) {
         JDCookie jdCookie = JDCookie.parse(ck);
         int res = -1;
         String pushRes = "";
@@ -552,7 +552,8 @@ public class JDService {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("value", ck);
             jsonObject.put("name", "JD_COOKIE");
-            jsonObject.put("remarks", remark);
+            String s = strSpecialFilter(remark);
+            jsonObject.put("remarks", StringUtils.isEmpty(s) ? phone : remark);
             jsonArray.add(jsonObject);
             HttpEntity<?> request = new HttpEntity<>(jsonArray.toJSONString(), headers);
             log.info("开始上传ck " + url);
@@ -660,5 +661,13 @@ public class JDService {
 
     public void fetchNewOpenIdToken(QLConfig qlConfig) {
         driverFactory.getToken(qlConfig);
+    }
+
+    public static String strSpecialFilter(String str) {
+        String regEx = "[\\u00A0\\s\"`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        //将所有的特殊字符替换为空字符串
+        return m.replaceAll("").trim();
     }
 }
