@@ -34,7 +34,7 @@ services:
 #    ports:
 #      - "5701:8080"
 #    volumes:
-#      - ./data:/data
+#      - ./env.properties:/env.properties
 #    depends_on:
 #      - chrome
 #      - qinglong
