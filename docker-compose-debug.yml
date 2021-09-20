@@ -2,7 +2,7 @@ version: "3"
 services:
   chrome:
     container_name: chrome
-    image: selenium/standalone-chrome:4
+    image: selenium/standalone-chrome:4.0.0-rc-2-prerelease-20210915
     shm_size: 2gb
     environment:
       - SE_NODE_SESSION_TIMEOUT=300

@@ -7,8 +7,6 @@ import com.meread.selenium.util.FreemarkerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.remote.RemoteExecuteMethod;
-import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -53,6 +51,8 @@ public class HelloController {
         JDScreenBean screen = service.getScreen(sessionId);
         if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
             log.info("已经获取到ck了 " + sessionId + ", ck = " + screen.getCk());
+            String xddRes = service.doXDDNotify(screen.getCk().toString());
+            log.info("doXDDNotify res = " + xddRes);
         }
         return screen;
     }
@@ -218,12 +218,12 @@ public class HelloController {
                 for (QLConfig qlConfig : factory.getQlConfigs()) {
                     if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
                         if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                            QLUploadStatus status = service.uploadQingLongWithToken(sessionId, ck, phone,remark, qlConfig);
+                            QLUploadStatus status = service.uploadQingLongWithToken(sessionId, ck, phone, remark, qlConfig);
                             log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
                             uploadStatuses.add(status);
                         }
                         if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                            QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone,remark, qlConfig);
+                            QLUploadStatus status = service.uploadQingLong(sessionId, ck, phone, remark, qlConfig);
                             log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
                             uploadStatuses.add(status);
                         }

@@ -618,8 +618,6 @@ public class JDService {
                 try {
                     pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), remarksRes + "->" + phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                     log.info("pushRes = " + pushRes);
-                    xddRes = doXDDNotify(ck);
-                    log.info("xddRes = " + xddRes);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -629,7 +627,7 @@ public class JDService {
         return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes, xddRes);
     }
 
-    private String doXDDNotify(String ck) {
+    public String doXDDNotify(String ck) {
         String xddUrl = driverFactory.getXddUrl();
         String xddToken = driverFactory.getXddToken();
         if (!StringUtils.isEmpty(xddUrl) && !StringUtils.isEmpty(xddToken)) {

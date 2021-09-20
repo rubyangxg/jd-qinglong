@@ -116,6 +116,7 @@ public class WebDriverFactory implements CommandLineRunner {
         chromeOptions.addArguments("--window-size=500,700");
 
         firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setHeadless(true);
 //        firefoxOptions.addArguments("--headless");
 //        firefoxOptions.addArguments("--disable-gpu");
         firefoxOptions.setAcceptInsecureCerts(true);
