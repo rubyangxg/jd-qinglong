@@ -53,6 +53,9 @@ public class JDService {
     private RestTemplate restTemplate;
 
     @Autowired
+    private CacheUtil cacheUtil;
+
+    @Autowired
     private HttpClientUtil httpClientUtil;
 
     @Value("${jd.debug}")
@@ -241,7 +244,7 @@ public class JDService {
         }
 
 //        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
-        Long expire = CacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         log.info(sessionId + " expire " + expire);
         JDScreenBean bean = new JDScreenBean(screenBase64, jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
         if (!jdCookies.isEmpty()) {
@@ -382,7 +385,7 @@ public class JDService {
             return null;
         }
 //        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
-        Long expire = CacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         log.info(sessionId + " expire " + expire);
         bean.setSessionTimeOut(expire);
         List<MyChrome> chromes = driverFactory.getChromes();

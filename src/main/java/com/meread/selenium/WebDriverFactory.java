@@ -56,6 +56,9 @@ public class WebDriverFactory implements CommandLineRunner {
     ResourceLoader resourceLoader;
 
     @Autowired
+    private CacheUtil cacheUtil;
+
+    @Autowired
     private JDService jdService;
 
     @Value("${selenium.hub.url}")
@@ -339,14 +342,28 @@ public class WebDriverFactory implements CommandLineRunner {
         }
 
         //初始化一半Chrome实例
-        log.info("初始化一半Chrome实例");
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
         for (int i = 0; i < (capacity == 1 ? 2 : capacity) / 2; i++) {
-            RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-            MyChrome myChrome = new MyChrome();
-            myChrome.setWebDriver(webDriver);
-            chromes.add(myChrome);
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    log.info("初始化Chrome实例");
+                    RemoteWebDriver webDriver = null;
+                    try {
+                        webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+                    MyChrome myChrome = new MyChrome();
+                    myChrome.setWebDriver(webDriver);
+                    chromes.add(myChrome);
+                }
+            });
         }
+
+        executorService.shutdown();
 
         inflate(chromes, getGridStatus());
         //借助这一半chrome实例，初始化配置
@@ -610,7 +627,7 @@ public class WebDriverFactory implements CommandLineRunner {
 
         if (clientSessionId == null && servletSessionId != null) {
 //            String s = redisTemplate.opsForValue().get("servlet:session:" + servletSessionId);
-            String s = CacheUtil.get("servlet:session:" + servletSessionId);
+            String s = cacheUtil.get("servlet:session:" + servletSessionId);
             if (!StringUtils.isEmpty(s)) {
                 clientSessionId = s;
             }
@@ -623,7 +640,7 @@ public class WebDriverFactory implements CommandLineRunner {
                 status.setNew(false);
                 status.setAssignSessionId(myChrome.getClientSessionId());
 //                Long expire = redisTemplate.getExpire();
-                Long expire = CacheUtil.getExpire(CLIENT_SESSION_ID_KEY + ":" + clientSessionId);
+                Long expire = cacheUtil.getExpire(CLIENT_SESSION_ID_KEY + ":" + clientSessionId);
                 if (expire != null && expire < 0) {
                     log.info("force expire " + status.getAssignSessionId());
                     //强制1分钟过期一个sessionId
@@ -647,7 +664,7 @@ public class WebDriverFactory implements CommandLineRunner {
                         status.setAssignSessionId(s);
                         status.setNew(true);
 //                    redisTemplate.opsForValue().set("servlet:session:" + servletSessionId, s, 300, TimeUnit.SECONDS);
-                        CacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(), s, 300), 300);
+                        cacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(), s, 300), 300);
                         return status;
                     }
                 }
@@ -658,7 +675,7 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public synchronized void releaseWebDriver(String input) {
 //        redisTemplate.delete(CLIENT_SESSION_ID_KEY + ":" + input);
-        CacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
+        cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
         log.info("releaseWebDriver " + input);
         Iterator<MyChrome> iterator = chromes.iterator();
         while (iterator.hasNext()) {
@@ -683,7 +700,7 @@ public class WebDriverFactory implements CommandLineRunner {
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(sessionId);
 //                redisTemplate.opsForValue().set(CLIENT_SESSION_ID_KEY + ":" + sessionId, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout, TimeUnit.SECONDS);
-                CacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout), opTimeout);
+                cacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout), opTimeout);
                 break;
             }
         }
@@ -692,13 +709,13 @@ public class WebDriverFactory implements CommandLineRunner {
     public synchronized void unBindSessionId(String sessionId, String servletSessionId) {
         Iterator<MyChrome> iterator = chromes.iterator();
 //        redisTemplate.delete("servlet:session:" + servletSessionId);
-        CacheUtil.remove("servlet:session:" + servletSessionId);
+        cacheUtil.remove("servlet:session:" + servletSessionId);
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next();
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(null);
 //                redisTemplate.delete(CLIENT_SESSION_ID_KEY + ":" + sessionId);
-                CacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + sessionId);
+                cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + sessionId);
                 iterator.remove();
                 break;
             }

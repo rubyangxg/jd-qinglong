@@ -11,6 +11,8 @@ services:
       - START_XVFB=false
     ports:
       - "4444:4444"
+      - "7900:7900"
+      - "5900:5900"
     restart: always
 
   firefox:
@@ -24,6 +26,8 @@ services:
       - START_XVFB=false
     ports:
       - "4445:4444"
+      - "7901:7900"
+      - "5901:5900"
     restart: always
 
 #  webapp:

@@ -1,20 +1,27 @@
 package com.meread.selenium.util;
 
+import com.meread.selenium.WebDriverFactory;
 import com.meread.selenium.bean.StringCache;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import javax.annotation.PreDestroy;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-  
+
 /**
  * <pre>
  *     基于concurrentHash的本地缓存工具类
  *     缓存删除基于timer定时器
  * <pre>
  */
+@Component
 public class CacheUtil {
-  
+
+    @Autowired
+    private WebDriverFactory factory;
+
     //默认大小
     private static final int DEFAULT_CAPACITY = 1024;
   
@@ -37,12 +44,7 @@ public class CacheUtil {
         timer = new Timer();
     }
   
-    //私有化构造方法
-    private CacheUtil() {
-  
-    }
-
-    public static Long getExpire(String key) {
+    public Long getExpire(String key) {
         StringCache cache = getCache(key);
         if (cache != null) {
             return cache.getRemainSeconds();
@@ -55,16 +57,20 @@ public class CacheUtil {
      *     缓存任务清除类
      * <pre>
      */
-    static class ClearTask extends TimerTask {
+     class ClearTask extends TimerTask {
         private String key;
-  
-        public ClearTask(String key) {
+        private StringCache object;
+
+        public ClearTask(String key, StringCache object) {
             this.key = key;
+            this.object = object;
         }
   
         @Override
         public void run() {
-            CacheUtil.remove(key);
+            String value = object.getValue();
+            factory.releaseWebDriver(value);
+            remove(key);
         }
   
     }
@@ -76,11 +82,11 @@ public class CacheUtil {
      *     添加缓存
      * <pre>
      */
-    public static boolean put(String key, StringCache object) {
+    public boolean put(String key, StringCache object) {
         if (checkCapacity()) {
             map.put(key, object);
             //默认缓存时间
-            timer.schedule(new ClearTask(key), DEFAULT_TIMEOUT);
+            timer.schedule(new ClearTask(key,object), DEFAULT_TIMEOUT);
             return true;
         }
         return false;
@@ -91,39 +97,22 @@ public class CacheUtil {
      *     添加缓存
      * <pre>
      */
-    public static boolean put(String key, StringCache object, int time_out) {
+    public boolean put(String key, StringCache object, int time_out) {
         if (checkCapacity()) {
             map.put(key, object);
             //默认缓存时间
-            timer.schedule(new ClearTask(key), time_out * SECOND_TIME);
+            timer.schedule(new ClearTask(key, object), time_out * SECOND_TIME);
         }
         return false;
     }
-  
   
     /**
      * <pre>
      *     判断容量大小
      * <pre>
      */
-    public static boolean checkCapacity() {
+    public boolean checkCapacity() {
         return map.size() < MAX_CAPACITY;
-    }
-  
-    /**
-     * <pre>
-     *     批量增加缓存
-     * <pre>
-     */
-    public static boolean put(Map<String, Object> m, int time_out) {
-        if (map.size() + m.size() <= MAX_CAPACITY) {
-            map.putAll(map);
-            for (String key : m.keySet()) {
-                timer.schedule(new ClearTask(key), time_out * SECOND_TIME);
-            }
-            return true;
-        }
-        return false;
     }
   
     /**
@@ -131,7 +120,7 @@ public class CacheUtil {
      *     删除缓存
      * <pre>
      */
-    public static void remove(String key) {
+    public void remove(String key) {
         map.remove(key);
     }
   
@@ -140,6 +129,7 @@ public class CacheUtil {
      *     清除所有缓存
      * <pre>
      */
+    @PreDestroy
     public void clearAll() {
         if (map.size() > 0) {
             map.clear();
@@ -152,7 +142,7 @@ public class CacheUtil {
      *     获取缓存
      * <pre>
      */
-    public static String get(String key) {
+    public String get(String key) {
         StringCache cache = map.get(key);
         return cache == null ? null : cache.getValue();
     }
@@ -162,7 +152,7 @@ public class CacheUtil {
      *     获取缓存
      * <pre>
      */
-    public static StringCache getCache(String key) {
+    public StringCache getCache(String key) {
         return map.get(key);
     }
   
@@ -171,7 +161,7 @@ public class CacheUtil {
      *     是否包含某个缓存
      * <pre>
      */
-    public static boolean isContain(String key) {
+    public boolean isContain(String key) {
         return map.contains(key);
     }
 }

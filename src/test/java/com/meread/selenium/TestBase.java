@@ -41,7 +41,7 @@ public class TestBase {
 
     @Before
     public void setUp() throws Exception {
-        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), capabilities);
+        RemoteWebDriver webDriver = new RemoteWebDriver(new URL("http://10.10.10.6:4444/"), capabilities);
         webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
         driver.set(webDriver);
     }
