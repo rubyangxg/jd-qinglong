@@ -27,6 +27,7 @@
  3. `docker logs -f webapp`
 
 ## 更新历史
+* 2021-09-21 优化资源回收创建流程，优化资源404时间过长
 * 2021-09-18 新增推送功能，配置同青龙，请查看[env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties)
 
 [comment]: <> (* 2021-09-17 解决验证码输入后登录按钮无效问题，请升级成allinone镜像)
