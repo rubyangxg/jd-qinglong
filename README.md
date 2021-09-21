@@ -1,3 +1,8 @@
+## **功能：**
+1. 手机验证码获取X东CK，CK有效期默认一个月 
+2. 对接青龙面板，多青龙选择上传
+3. 对接xdd-plus
+
 <p align="center">
   用于替代Ninja【代码仅供参考学习，禁止商用和非法用途，否则，一切后果请用户自负。】
 </p>
@@ -21,10 +26,6 @@
 * 请选择性能好的设备运行，最好是云服务器或pc、x86软路由、群晖
 * 选择Openid方式登录的，确保青龙版本>=2.9，并且创建了应用。
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
-* 查看日志的命令有三个，具体含义自行学习：
- 1. `docker-compose --env-file env.properties logs -f webapp`
- 2. `docker-compose --env-file env.properties logs -f`
- 3. `docker logs -f webapp`
 
 ## 更新历史
 * 2021-09-21 优化资源回收创建流程，优化资源404时间过长
