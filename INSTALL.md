@@ -2,7 +2,6 @@
 1. 确保docker.sock存在(只要安装了docker一般都会有)
 ```
 ls -alh /var/run/docker.sock
-srw-rw---- 1 root root 0 Sep 21 19:46 /var/run/docker.sock
 ```
 2. 下载chrome镜像（仅需执行一次，后续更新不用重新下载)
 ```
