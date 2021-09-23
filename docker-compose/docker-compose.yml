@@ -2,7 +2,7 @@ version: "3"
 #networks:
 #  selenoid:
 #    external:
-#      name: selenoid # This assumes network is already created
+#      name: selenoid # 需要事先创建：docker network create selenoid
 
 #networks:
 #  se-net:
@@ -39,9 +39,7 @@ services:
       - selenoid
     ports:
       - "8081:8080"
-    command: [ "--selenoid-uri", "http://selenoid:4444" ]
-    depends_on:
-      - selenoid
+    command: [ "--selenoid-uri", "http://10.10.10.6:4444" ]
 #    networks:
 #      - selenoid
 

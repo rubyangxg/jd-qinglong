@@ -115,8 +115,8 @@ public class HelloController {
     }
 
     @GetMapping({"/"})
-    public String index(HttpServletRequest httpRequest, Model model) {
-        String debug = httpRequest.getParameter("debug");
+    public String index(HttpServletRequest request, Model model) {
+        String debug = request.getParameter("debug");
 
         model.addAttribute("debug", this.debug);
         int qlUploadDirect = qlUploadDirect();
@@ -129,7 +129,7 @@ public class HelloController {
             model.addAttribute("debug", i == 1);
         }
         //请求一个sessionId
-        AssignSessionIdStatus status = factory.assignSessionId(httpRequest.getParameter("clientSessionId"), true, httpRequest.getSession());
+        AssignSessionIdStatus status = factory.assignSessionId(request.getParameter("clientSessionId"), true, request.getSession());
         log.info("index : " + JSON.toJSONString(status));
         if (status.getAssignSessionId() == null) {
             //分配sessionid失败
@@ -146,7 +146,7 @@ public class HelloController {
             }
         }
 
-        String reset = httpRequest.getParameter("reset");
+        String reset = request.getParameter("reset");
         if ("1".equals(reset)) {
             service.reset(status.getAssignSessionId());
         }
@@ -161,7 +161,7 @@ public class HelloController {
         } catch (Exception e) {
             e.printStackTrace();
             log.error("getJDCookies " + status.getAssignSessionId() + " error!");
-            factory.unBindSessionId(status.getAssignSessionId(), httpRequest.getSession());
+            factory.unBindSessionId(status.getAssignSessionId(), request.getSession());
         }
         model.addAttribute("clientSessionId", status.getAssignSessionId());
         return "login";
