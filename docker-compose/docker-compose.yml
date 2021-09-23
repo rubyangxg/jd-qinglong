@@ -45,21 +45,6 @@ services:
 #    networks:
 #      - selenoid
 
-  chrome:
-    container_name: chrome
-    image: selenium/standalone-chrome:4.0.0-rc-2-prerelease-20210915
-    shm_size: 2gb
-    environment:
-      - SE_NODE_SESSION_TIMEOUT=300
-      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
-      - SE_NODE_MAX_SESSIONS=8
-      - START_XVFB=false
-    ports:
-      - "4445:4444"
-      - "7900:7900"
-      - "5900:5900"
-    restart: always
-
   #  webapp:
   #    container_name: webapp
   #    image: rubyangxg/jd-qinglong:jar
