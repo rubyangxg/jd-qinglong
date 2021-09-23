@@ -1,15 +1,14 @@
 package com.meread.selenium;
 
-import com.meread.selenium.bean.NodeStatus;
-import com.meread.selenium.bean.SlotStatus;
-import lombok.NonNull;
+import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.bean.SelenoidStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -30,19 +29,16 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
             log.info("wait WebDriverFactory schedule destroy...");
         }
 
-        List<NodeStatus> status = webDriverFactory.getGridStatus();
-        for (NodeStatus ns : status) {
-            String uri = ns.getUri();
-            List<SlotStatus> slotStatus = ns.getSlotStatus();
-            if (slotStatus != null) {
-                for (SlotStatus ss : slotStatus) {
-                    String sessionId = ss.getSessionId();
-                    if (sessionId != null) {
-                        log.info("destroy chrome : " + uri + " --> " + sessionId);
-                        webDriverFactory.closeSession(uri, sessionId);
-                    }
+        SelenoidStatus status = webDriverFactory.getGridStatus();
+        Map<String, JSONObject> sessions = status.getSessions();
+        if (sessions != null) {
+            for (String sessionId : sessions.keySet()) {
+                if (sessionId != null) {
+                    log.info("destroy chrome " + sessionId);
+                    webDriverFactory.closeSession(sessionId);
                 }
             }
         }
+        webDriverFactory.cleanDockerContainer();
     }
 }

@@ -1,0 +1,107 @@
+version: "3"
+#networks:
+#  selenoid:
+#    external:
+#      name: selenoid # This assumes network is already created
+
+#networks:
+#  se-net:
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 172.177.0.0/16
+
+services:
+  selenoid:
+    container_name: selenoid
+    network_mode: bridge
+    image: aerokube/selenoid:latest-release
+    volumes:
+      - "./config:/etc/selenoid"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./logs:/opt/selenoid/logs"
+    command: [ "-conf", "/etc/selenoid/browsers.json",
+               "-video-output-dir", "/opt/selenoid/video",
+               "-log-output-dir", "/opt/selenoid/logs",
+               "-limit", "10",
+               "-disable-queue",
+               "-container-network", "bridge" ]
+    ports:
+      - "4444:4444"
+#    networks:
+#      - selenoid
+
+  selenoid-ui:
+    network_mode: bridge
+    container_name: selenoid-ui
+    image: "aerokube/selenoid-ui"
+    links:
+      - selenoid
+    ports:
+      - "8081:8080"
+    command: [ "--selenoid-uri", "http://selenoid:4444" ]
+    depends_on:
+      - selenoid
+#    networks:
+#      - selenoid
+
+  chrome:
+    container_name: chrome
+    image: selenium/standalone-chrome:4.0.0-rc-2-prerelease-20210915
+    shm_size: 2gb
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_SESSIONS=8
+      - START_XVFB=false
+    ports:
+      - "4445:4444"
+      - "7900:7900"
+      - "5900:5900"
+    restart: always
+
+  #  webapp:
+  #    container_name: webapp
+  #    image: rubyangxg/jd-qinglong:jar
+  #    environment:
+  #      - "SPRING_PROFILES_ACTIVE=docker"
+  #    ports:
+  #      - "5701:8080"
+  #    volumes:
+  #      - ./env.properties:/env.properties
+  #    depends_on:
+  #      - chrome
+  #      - qinglong
+
+#  qinglong1:
+#    container_name: qinglong1
+#    image: whyour/qinglong:latest
+#    volumes:
+#      - ./data1/config:/ql/config
+#      - ./data1/log:/ql/log
+#      - ./data1/db:/ql/db
+#      - ./data1/scripts:/ql/scripts
+#      - ./data1/repo:/ql/repo
+#    ports:
+#      - "0.0.0.0:5700:5700"
+#    environment:
+#      - ENABLE_HANGUP=true
+#      - ENABLE_WEB_PANEL=true
+#    restart: always
+#
+#  qinglong2:
+#    container_name: qinglong2
+#    image: whyour/qinglong:latest
+#    volumes:
+#      - ./data2/config:/ql/config
+#      - ./data2/log:/ql/log
+#      - ./data2/db:/ql/db
+#      - ./data2/scripts:/ql/scripts
+#      - ./data2/repo:/ql/repo
+#    ports:
+#      - "0.0.0.0:6700:5700"
+#    environment:
+#      - ENABLE_HANGUP=true
+#      - ENABLE_WEB_PANEL=true
+#    restart: always
+

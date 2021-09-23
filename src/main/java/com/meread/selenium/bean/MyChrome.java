@@ -1,5 +1,6 @@
 package com.meread.selenium.bean;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -11,6 +12,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 @Data
 public class MyChrome {
     private RemoteWebDriver webDriver;
-    private SlotStatus slotStatus;
+    private JSONObject sessionInfoJson;
+    private String selenoidSessionId;
     private String clientSessionId;
 }

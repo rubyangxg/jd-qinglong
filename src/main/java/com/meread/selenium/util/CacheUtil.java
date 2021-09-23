@@ -2,14 +2,17 @@ package com.meread.selenium.util;
 
 import com.meread.selenium.WebDriverFactory;
 import com.meread.selenium.bean.StringCache;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-
+  
 /**
  * <pre>
  *     基于concurrentHash的本地缓存工具类
@@ -17,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <pre>
  */
 @Component
+@Slf4j
 public class CacheUtil {
 
     @Autowired
@@ -71,6 +75,7 @@ public class CacheUtil {
             String value = object.getValue();
             factory.releaseWebDriver(value);
             remove(key);
+            log.warn("timer clear session " + key + " value = " + object);
         }
   
     }

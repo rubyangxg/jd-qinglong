@@ -18,6 +18,11 @@ public class JDScreenBean {
         VERIFY_FAILED("验证失败，请重新验证"),
         SESSION_EXPIRED("浏览器sessionId失效，请重新获取"),
         REQUIRE_VERIFY("安全验证"),
+
+        REQUIRE_SCANQR("需要扫码"),
+        REQUIRE_REFRESH("二维码失效，请点击刷新"),
+        WAIT_QR_CONFIRM("扫描成功，请在手机确认"),
+
         VERIFY_CODE_MAX("对不起，短信验证码发送次数已达上限，请24小时后再试"),
         VERIFY_FAILED_MAX("验证码错误多次，请重新获取"),
         SUCCESS_CK("已经获取到ck了"),
@@ -35,6 +40,7 @@ public class JDScreenBean {
         }
     }
     private String screen;
+    private String qr;
     private JDCookie ck;
     private PageStatus pageStatus;
     //手机验证码重新获取倒计时
@@ -48,13 +54,15 @@ public class JDScreenBean {
     //当前可用的chrome实例
     private int availChrome;
 
-    public JDScreenBean(String screen, PageStatus pageStatus) {
+    public JDScreenBean(String screen,String qr, PageStatus pageStatus) {
         this.screen = screen;
+        this.qr = qr;
         this.pageStatus = pageStatus;
     }
 
-    public JDScreenBean(String screen, PageStatus pageStatus,JDCookie ck) {
+    public JDScreenBean(String screen,String qr, PageStatus pageStatus,JDCookie ck) {
         this.screen = screen;
+        this.qr = qr;
         this.pageStatus = pageStatus;
         this.ck = ck;
     }

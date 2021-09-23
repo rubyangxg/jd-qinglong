@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @Controller
@@ -41,12 +42,15 @@ public class HelloController {
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
 
+    @Value("${login.type}")
+    private JDLoginType jdLoginType;
+
     @GetMapping(value = "/getScreen")
     @ResponseBody
     public JDScreenBean getScreen(@RequestParam("clientSessionId") String clientSessionId) {
         String sessionId = factory.assignSessionId(clientSessionId, false, null).getAssignSessionId();
         if (sessionId == null) {
-            return new JDScreenBean("", JDScreenBean.PageStatus.SESSION_EXPIRED);
+            return new JDScreenBean("","", JDScreenBean.PageStatus.SESSION_EXPIRED);
         }
         JDScreenBean screen = service.getScreen(sessionId);
         if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
@@ -63,7 +67,7 @@ public class HelloController {
         try {
             String sessionId = factory.assignSessionId(clientSessionId, false, null).getAssignSessionId();
             if (sessionId == null) {
-                JDScreenBean screen = new JDScreenBean("", JDScreenBean.PageStatus.SESSION_EXPIRED);
+                JDScreenBean screen = new JDScreenBean("","", JDScreenBean.PageStatus.SESSION_EXPIRED);
                 return new JDOpResultBean(screen, false);
             }
             boolean success = service.sendAuthCode(sessionId);
@@ -75,7 +79,7 @@ public class HelloController {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return new JDOpResultBean(new JDScreenBean("", JDScreenBean.PageStatus.INTERNAL_ERROR), false);
+        return new JDOpResultBean(new JDScreenBean("","", JDScreenBean.PageStatus.INTERNAL_ERROR), false);
     }
 
     @GetMapping(value = "/crackCaptcha")
@@ -113,18 +117,19 @@ public class HelloController {
     @GetMapping({"/"})
     public String index(HttpServletRequest httpRequest, Model model) {
         String debug = httpRequest.getParameter("debug");
-        String servletSessionId = httpRequest.getSession().getId();
+
         model.addAttribute("debug", this.debug);
         int qlUploadDirect = qlUploadDirect();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", factory.isInitSuccess());
+        model.addAttribute("jdLoginType", jdLoginType);
         if (!StringUtils.isEmpty(debug)) {
             int i = Integer.parseInt(debug);
             model.addAttribute("debug", i == 1);
         }
         //请求一个sessionId
-        AssignSessionIdStatus status = factory.assignSessionId(httpRequest.getParameter("clientSessionId"), true, servletSessionId);
+        AssignSessionIdStatus status = factory.assignSessionId(httpRequest.getParameter("clientSessionId"), true, httpRequest.getSession());
         log.info("index : " + JSON.toJSONString(status));
         if (status.getAssignSessionId() == null) {
             //分配sessionid失败
@@ -156,7 +161,7 @@ public class HelloController {
         } catch (Exception e) {
             e.printStackTrace();
             log.error("getJDCookies " + status.getAssignSessionId() + " error!");
-            factory.unBindSessionId(status.getAssignSessionId(), servletSessionId);
+            factory.unBindSessionId(status.getAssignSessionId(), httpRequest.getSession());
         }
         model.addAttribute("clientSessionId", status.getAssignSessionId());
         return "login";
@@ -230,6 +235,8 @@ public class HelloController {
                     }
                 }
             }
+
+            factory.releaseWebDriver(sessionId);
 
             if (qlUploadDirect != 1) {
                 Map<String, Object> map = new HashMap<>();

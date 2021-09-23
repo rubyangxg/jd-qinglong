@@ -53,13 +53,16 @@ public class JDService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private CacheUtil cacheUtil;
-
-    @Autowired
     private HttpClientUtil httpClientUtil;
 
     @Value("${jd.debug}")
-    private boolean isDebug;
+    private boolean debug;
+
+    @Autowired
+    CacheUtil cacheUtil;
+
+    @Value("${login.type}")
+    private JDLoginType jdLoginType;
 
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
 
@@ -112,7 +115,6 @@ public class JDService {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(chromeSessionId);
         if (webDriver != null) {
             String currentUrl = webDriver.getCurrentUrl();
-            log.info("getJDCookies " + chromeSessionId + "," + currentUrl);
             if (!currentUrl.startsWith("data:")) {
                 Set<Cookie> cookies = webDriver.manage().getCookies();
                 for (Cookie cookie : cookies) {
@@ -139,7 +141,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (isDebug) {
+        if (debug || jdLoginType == JDLoginType.qr) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
@@ -148,7 +150,7 @@ public class JDService {
         //是否空白页面
         String currentUrl = webDriver.getCurrentUrl();
         if (currentUrl.startsWith("data:")) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.EMPTY_URL);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.EMPTY_URL);
         }
 
         //获取网页文字
@@ -156,7 +158,7 @@ public class JDService {
         try {
             pageText = webDriver.findElement(By.tagName("body")).getText();
         } catch (Exception e) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.EMPTY_URL);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.EMPTY_URL);
         }
 
         WebElement element = null;
@@ -165,27 +167,75 @@ public class JDService {
         }
 
         JDCookie jdCookies = getJDCookies(sessionId);
-        if (element == null && jdCookies.isEmpty()) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.EMPTY_URL);
-        }
 
         if (!jdCookies.isEmpty()) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
+        }
+
+        if (jdLoginType == JDLoginType.qr) {
+            int retry = 1;
+            while (pageText.contains("服务异常")) {
+                log.info("尝试第" + retry + "次刷新");
+                if (retry++ > 10) {
+                    break;
+                }
+                webDriver.navigate().refresh();
+                WebDriverUtil.waitForJStoLoad(webDriver);
+                Thread.sleep(500);
+                pageText = webDriver.findElement(By.tagName("body")).getText();
+            }
+            if (pageText.contains("服务异常")) {
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
+            }
+            if (!pageText.contains("请使用QQ手机版扫描二维码") && webDriver.getCurrentUrl().contains("qq.com")) {
+                webDriver.switchTo().frame("ptlogin_iframe");
+                pageText = webDriver.findElement(By.tagName("body")).getText();
+            }
+            if (pageText.contains("二维码失效") && pageText.contains("请点击刷新")) {
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
+            }
+            if (pageText.contains("扫描成功")) {
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_QR_CONFIRM);
+            }
+            //创建全屏截图
+            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
+            screenBase64 = Base64Utils.encodeToString(screen);
+            WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
+            if (qrElement != null) {
+                element = qrElement;
+                //截取某个元素的图，此处为了方便调试和验证，所以如果出现验证码 就只获取验证码的截图
+                BufferedImage subImg = null;
+                Rectangle rect = element.getRect();
+                int w = rect.width + 5;
+                int x = (500 - w) / 2;
+                int h = rect.height + 5;
+                int y = 180;
+                subImg = ImageIO.read(new ByteArrayInputStream(screen)).getSubimage(x, y, w, h);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                ImageIO.write(subImg, "png", outputStream);
+                screen = outputStream.toByteArray();
+                screenBase64 = Base64Utils.encodeToString(screen);
+                return new JDScreenBean("", screenBase64, JDScreenBean.PageStatus.REQUIRE_SCANQR);
+            }
+        }
+
+        if (element == null && jdCookies.isEmpty()) {
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.EMPTY_URL);
         }
 
         if (pageText.contains("短信验证码发送次数")) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.VERIFY_CODE_MAX);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.VERIFY_CODE_MAX);
         }
 
         if (pageText.contains("短信验证码登录")) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
 
         if (pageText.contains("输入的手机号未注册")) {
             boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
             if (!isChecked) {
-                log.info("勾选协议" + isChecked);
-                return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.AGREE_AGREEMENT);
+                log.info("需要勾选协议" + isChecked);
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.AGREE_AGREEMENT);
             }
         }
 
@@ -235,18 +285,17 @@ public class JDService {
                 ImageIO.write(subImg, "png", outputStream);
                 screen = outputStream.toByteArray();
                 screenBase64 = Base64Utils.encodeToString(screen);
-                return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.REQUIRE_VERIFY);
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
             }
         }
 
         if (pageText.contains("验证码错误多次")) {
-            return new JDScreenBean(screenBase64, JDScreenBean.PageStatus.VERIFY_FAILED_MAX);
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.VERIFY_FAILED_MAX);
         }
 
 //        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
-        log.info(sessionId + " expire " + expire);
-        JDScreenBean bean = new JDScreenBean(screenBase64, jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
+        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
         if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
         }
@@ -281,7 +330,7 @@ public class JDService {
                 FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
                 Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
 
-                if (isDebug) {
+                if (debug) {
                     String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
                     webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
                     FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
@@ -298,14 +347,13 @@ public class JDService {
 
     public void toJDlogin(String sessionId) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        webDriver.manage().deleteAllCookies();
-        try {
+        if (jdLoginType == JDLoginType.qr) {
+            webDriver.navigate().to("https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=100273020&redirect_uri=https%3A%2F%2Fplogin.m.jd.com%2Fcgi-bin%2Fml%2Fqqcallback%3Flsid%3D6pifrkrkjsb6t3mvpr0tplsrgpqa51rcq9sitj2dbej5h617&state=y20nntf3");
+        } else if (jdLoginType == JDLoginType.phone) {
+            webDriver.manage().deleteAllCookies();
             webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
-        } catch (Exception e) {
-            e.printStackTrace();
+            WebDriverUtil.waitForJStoLoad(webDriver);
         }
-        webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
-        WebDriverUtil.waitForJStoLoad(webDriver);
     }
 
     public void controlChrome(String sessionId, String currId, String currValue) {
@@ -379,14 +427,14 @@ public class JDService {
                 click(sessionId, By.xpath("//span[@report-eventid='MLoginRegister_SMSVerification']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.AGREE_AGREEMENT) {
                 click(sessionId, By.xpath("//input[@class='policy_tip-checkbox']"));
+            } else if (bean.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_REFRESH) {
+                toJDlogin(sessionId);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return null;
         }
-//        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
-        log.info(sessionId + " expire " + expire);
         bean.setSessionTimeOut(expire);
         List<MyChrome> chromes = driverFactory.getChromes();
         int availChrome = 0;
@@ -650,13 +698,13 @@ public class JDService {
             headers.put("Accept-Language", "zh-CN,zh;q=0.9");
             headers.put("Connection", "keep-alive");
             headers.put("DNT", "1");
-            headers.put("sec-ch-ua", "\"Google Chrome\";v=\"93\", \" Not;A Brand\";v=\"99\", \"Chromium\";v=\"93\"");
+            headers.put("sec-ch-ua", "\"Google Chrome\";v=\"89\", \" Not;A Brand\";v=\"99\", \"Chromium\";v=\"89\"");
             headers.put("sec-ch-ua-mobile", "?0");
             headers.put("sec-ch-ua-platform", "\"macOS\"");
             headers.put("Sec-Fetch-Dest", "empty");
             headers.put("Sec-Fetch-Mode", "cors");
             headers.put("Sec-Fetch-Site", "same-origin");
-            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36");
+            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4577.82 Safari/537.36");
             return httpClientUtil.doPost(xddUrl, paramMap, headers);
         }
         return null;
@@ -676,7 +724,7 @@ public class JDService {
         }
         sb.append(" /opt/bin/notify ").append(title).append(" ").append(content);
         ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("bash", "-c", sb.toString());
+        processBuilder.command("sh", "-c", sb.toString());
         log.info("executing : " + sb);
         try {
             Process process = processBuilder.start();
@@ -709,7 +757,7 @@ public class JDService {
     }
 
     public void setDebug(boolean isDebug) {
-        this.isDebug = isDebug;
+        this.debug = isDebug;
     }
 
     public void fetchNewOpenIdToken(QLConfig qlConfig) {

@@ -1,21 +1,25 @@
 package com.meread.selenium;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONPath;
+import com.amihaiemil.docker.Container;
+import com.amihaiemil.docker.Containers;
+import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CacheUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.html5.LocalStorage;
-import org.openqa.selenium.remote.AbstractDriverOptions;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -25,24 +29,22 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author yangxg
@@ -50,13 +52,16 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
-public class WebDriverFactory implements CommandLineRunner {
+public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     @Autowired
     ResourceLoader resourceLoader;
 
+    @Value("${jd.debug}")
+    private boolean debug;
+
     @Autowired
-    private CacheUtil cacheUtil;
+    CacheUtil cacheUtil;
 
     @Autowired
     private JDService jdService;
@@ -73,8 +78,13 @@ public class WebDriverFactory implements CommandLineRunner {
     @Value("${op.timeout}")
     private int opTimeout;
 
-    @Value("${selenium.type}")
-    private String seleniumType;
+    @Value("#{environment.SE_NODE_MAX_SESSIONS}")
+    private String maxSessionFromSystemEnv;
+
+    @Value("${SE_NODE_MAX_SESSIONS}")
+    private String maxSessionFromProps;
+
+    private String maxSessionFromEnvFile;
 
     public static final String CLIENT_SESSION_ID_KEY = "client:session";
 
@@ -86,7 +96,7 @@ public class WebDriverFactory implements CommandLineRunner {
 
     private String xddToken;
 
-    private static int capacity = 0;
+    private static int CAPACITY = 0;
 
     public volatile boolean stopSchedule = false;
     public volatile boolean initSuccess = false;
@@ -98,10 +108,9 @@ public class WebDriverFactory implements CommandLineRunner {
         return chromes;
     }
 
-    public static final ChromeOptions chromeOptions;
-    public static final FirefoxOptions firefoxOptions;
+    public ChromeOptions chromeOptions;
 
-    static {
+    public void init(){
         chromeOptions = new ChromeOptions();
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
         chromeOptions.setExperimentalOption("useAutomationExtension", true);
@@ -109,25 +118,32 @@ public class WebDriverFactory implements CommandLineRunner {
         chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
-        chromeOptions.addArguments("--headless");
-//        chromeOptions.addArguments("--no-sandbox");
-//        chromeOptions.addArguments("--disable-extensions");
-//        chromeOptions.addArguments("--disable-software-rasterizer");
+        chromeOptions.setCapability("browserName", "chrome");
+        chromeOptions.setCapability("browserVersion", "89.0");
+        chromeOptions.setCapability("screenResolution", "1280x1024x24");
+        chromeOptions.setCapability("enableVideo", false);
+        chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(
+                "enableVNC", debug,
+                "enableVideo", false,
+                "enableLog", debug,
+                "sessionTimeout", "5m"
+//                "applicationContainers", new String[]{"webapp"}
+        ));
+        if (!debug) {
+            chromeOptions.addArguments("--headless");
+        }
+        chromeOptions.addArguments("--no-sandbox");
+        chromeOptions.addArguments("--disable-extensions");
+        chromeOptions.addArguments("--disable-dev-shm-usage");
+        chromeOptions.addArguments("--disable-software-rasterizer");
         chromeOptions.addArguments("--ignore-ssl-errors=yes");
         chromeOptions.addArguments("--ignore-certificate-errors");
-//        chromeOptions.addArguments("--allow-running-insecure-content");
+        chromeOptions.addArguments("--allow-running-insecure-content");
         chromeOptions.addArguments("--window-size=500,700");
-
-        firefoxOptions = new FirefoxOptions();
-        firefoxOptions.setHeadless(true);
-//        firefoxOptions.addArguments("--headless");
-//        firefoxOptions.addArguments("--disable-gpu");
-        firefoxOptions.setAcceptInsecureCerts(true);
-//        firefoxOptions.addArguments("--window-size=500,700");
     }
 
-    public AbstractDriverOptions getOptions() {
-        return seleniumType.equals("chrome") ? chromeOptions : firefoxOptions;
+    public MutableCapabilities getOptions() {
+        return chromeOptions;
     }
 
     @Scheduled(initialDelay = 180000, fixedDelay = 60000)
@@ -160,7 +176,7 @@ public class WebDriverFactory implements CommandLineRunner {
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
-            List<NodeStatus> nss = getGridStatus();
+            SelenoidStatus nss = getGridStatus();
             Iterator<MyChrome> iterator = chromes.iterator();
             while (iterator.hasNext()) {
                 MyChrome myChrome = iterator.next();
@@ -172,16 +188,13 @@ public class WebDriverFactory implements CommandLineRunner {
                 }
                 String sessionId = s.toString();
                 boolean find = false;
-                for (NodeStatus ns : nss) {
-                    List<SlotStatus> slotStatus = ns.getSlotStatus();
-                    for (SlotStatus ss : slotStatus) {
-                        if (sessionId.equals(ss.getSessionId())) {
+                Map<String, JSONObject> sessions = nss.getSessions();
+                if (sessions != null) {
+                    for (String ss : sessions.keySet()) {
+                        if (sessionId.equals(ss)) {
                             find = true;
                             break;
                         }
-                    }
-                    if (find) {
-                        break;
                     }
                 }
                 //如果session不存在，则remove
@@ -190,23 +203,19 @@ public class WebDriverFactory implements CommandLineRunner {
                     log.warn("quit a chrome");
                 }
             }
-            int shouldCreate = capacity - chromes.size();
+            int shouldCreate = CAPACITY - chromes.size();
             if (shouldCreate > 0) {
-                int currCount = 0;
-                do {
-                    try {
-                        RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                        MyChrome myChrome = new MyChrome();
-                        myChrome.setWebDriver(webDriver);
-                        log.warn("create a chrome " + webDriver.getSessionId().toString());
-                        chromes.add(myChrome);
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    }
-                    currCount++;
-                } while (currCount < shouldCreate / 2);
+                try {
+                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                    MyChrome myChrome = new MyChrome();
+                    myChrome.setWebDriver(webDriver);
+                    chromes.add(myChrome);
+                    log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                inflate(chromes, getGridStatus());
             }
-            inflate(chromes, getGridStatus());
         }
         runningSchedule = false;
     }
@@ -214,98 +223,63 @@ public class WebDriverFactory implements CommandLineRunner {
     @Autowired
     private RestTemplate restTemplate;
 
-    public List<NodeStatus> getGridStatus() {
+    public SelenoidStatus getGridStatus() {
+        SelenoidStatus status = new SelenoidStatus();
+        Map<String, JSONObject> sessions = new HashMap<>();
         String url = seleniumHubStatusUrl;
         String json = restTemplate.getForObject(url, String.class);
-        JSONObject value = JSON.parseObject(json).getJSONObject("value");
-        Boolean ready = value.getBoolean("ready");
-        List<NodeStatus> res = new ArrayList<>();
-        if (ready) {
-            JSONArray nodes = value.getJSONArray("nodes");
-            for (int i = 0; i < nodes.size(); i++) {
-                JSONObject node = nodes.getJSONObject(i);
-                NodeStatus status = new NodeStatus();
-
-                String uri = node.getString("uri");
-                String nodeStatusUrl = String.format("%s/status", uri);
-                String nodeStatusJson = restTemplate.getForObject(nodeStatusUrl, String.class);
-                boolean nodeReady = JSON.parseObject(nodeStatusJson).getJSONObject("value").getBooleanValue("ready");
-                status.setFullSession(!nodeReady);
-                status.setMaxSessions(node.getInteger("maxSessions"));
-
-                String availability = node.getString("availability");
-                status.setAvailability(availability);
-                if ("UP".equals(availability)) {
-                    JSONArray slots = node.getJSONArray("slots");
-                    List<SlotStatus> sss = new ArrayList<>();
-                    for (int s = 0; s < slots.size(); s++) {
-                        JSONObject currSession = slots.getJSONObject(s).getJSONObject("session");
-                        SlotStatus ss = new SlotStatus();
-                        Date start = null;
-                        String sessionId = null;
-                        if (currSession != null) {
-                            String locald = currSession.getString("start");
-                            locald = locald.substring(0, locald.lastIndexOf(".")) + " UTC";
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss Z");
-                            try {
-                                start = sdf.parse(locald);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-                            sessionId = currSession.getString("sessionId");
-                        }
-                        ss.setSessionStartTime(start);
-                        ss.setSessionId(sessionId);
-                        ss.setBelongsToUri(node.getString("uri"));
-                        sss.add(ss);
-                    }
-                    status.setSlotStatus(sss);
-                    status.setUri(uri);
-                    status.setNodeId(node.getString("id"));
-                }
-
-                res.add(status);
+        JSONObject data = JSON.parseObject(json);
+        int total = data.getIntValue("total");
+        int used = data.getIntValue("used");
+        int queued = data.getIntValue("queued");
+        int pending = data.getIntValue("pending");
+        List<JSONObject> read = (List<JSONObject>) JSONPath.read(json, "$.browsers.chrome..sessions");
+        if (read != null) {
+            for (JSONObject jo : read) {
+                sessions.put(jo.getString("id"), jo);
             }
         }
-        return res;
+        status.setSessions(sessions);
+        status.setUsed(used);
+        status.setTotal(total);
+        status.setQueued(queued);
+        status.setPending(pending);
+        return status;
     }
 
-    public void closeSession(String uri, String sessionId) {
-        String deleteUrl = String.format("%s/session/%s", uri, sessionId);
+    public void closeSession(String sessionId) {
+        String deleteUrl = String.format("%s/session/%s", seleniumHubUrl, sessionId);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-REGISTRATION-SECRET", "");
         HttpEntity<?> request = new HttpEntity<>(headers);
         ResponseEntity<String> exchange = null;
         try {
             exchange = restTemplate.exchange(deleteUrl, HttpMethod.DELETE, request, String.class);
-            log.info("close sessionId : " + sessionId + " resp : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
+            log.info("close sessionId : " + deleteUrl + " resp : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
         } catch (RestClientException e) {
             e.printStackTrace();
         }
     }
 
-    private void inflate(List<MyChrome> chromes, List<NodeStatus> statusList) {
+    private void inflate(List<MyChrome> chromes, SelenoidStatus statusList) {
+        Map<String, JSONObject> sessions = statusList.getSessions();
+        if (sessions == null || sessions.isEmpty()) {
+            return;
+        }
         for (MyChrome chrome : chromes) {
-            for (NodeStatus status : statusList) {
-                String currSessionId = chrome.getWebDriver().getSessionId().toString();
-                List<SlotStatus> slotStatus = status.getSlotStatus();
-                boolean find = false;
-                for (SlotStatus ss : slotStatus) {
-                    if (currSessionId.equals(ss.getSessionId())) {
-                        chrome.setSlotStatus(ss);
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    break;
-                }
+            String currSessionId = chrome.getWebDriver().getSessionId().toString();
+            JSONObject sessionInfo = sessions.get(currSessionId);
+            if (sessionInfo != null) {
+                String id = sessionInfo.getString("id");
+                chrome.setSessionInfoJson(sessionInfo);
+                chrome.setSelenoidSessionId(id);
             }
         }
     }
 
     @Override
     public void run(String... args) throws MalformedURLException {
+
         stopSchedule = true;
         chromes = Collections.synchronizedList(new ArrayList<>());
 
@@ -313,61 +287,63 @@ public class WebDriverFactory implements CommandLineRunner {
         parseMultiQLConfig();
 
         //获取hub-node状态
-        List<NodeStatus> statusList = getNodeStatuses();
-        if (statusList == null) {
+        SelenoidStatus status = getNodeStatuses();
+        if (status == null) {
             throw new RuntimeException("Selenium 浏览器组初始化失败");
         }
 
         //清理未关闭的session
         log.info("清理未关闭的session，获取最大容量");
-        for (NodeStatus status : statusList) {
-            List<SlotStatus> sss = status.getSlotStatus();
-            if (sss != null) {
-                for (SlotStatus ss : sss) {
-                    if (ss != null && ss.getSessionId() != null) {
-                        try {
-                            closeSession(status.getUri(), ss.getSessionId());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+        Map<String, JSONObject> sessions = status.getSessions();
+        if (sessions != null && sessions.size() > 0) {
+            for (String sessionId : sessions.keySet()) {
+                if (sessionId != null) {
+                    try {
+                        closeSession(sessionId);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
-            capacity += status.getMaxSessions();
         }
-
-        if (capacity <= 0) {
-            log.error("capacity <= 0");
-            throw new RuntimeException("无法创建浏览器实例");
-        }
+        //清理未关闭的session
+        log.info("清理未关闭的docker container");
+        cleanDockerContainer();
 
         //初始化一半Chrome实例
+        log.info("初始化一半Chrome实例");
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
-        for (int i = 0; i < (capacity == 1 ? 2 : capacity) / 2; i++) {
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    log.info("初始化Chrome实例");
-                    RemoteWebDriver webDriver = null;
-                    try {
-                        webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    }
+        int create = (CAPACITY == 1 ? 2 : CAPACITY) / 2;
+        CountDownLatch cdl = new CountDownLatch(create);
+        for (int i = 0; i < create; i++) {
+            executorService.execute(() -> {
+                try {
+                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome();
                     myChrome.setWebDriver(webDriver);
                     chromes.add(myChrome);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } finally {
+                    cdl.countDown();
                 }
             });
         }
 
+        try {
+            cdl.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("无法创建浏览器实例");
+        }
         executorService.shutdown();
 
+        if (chromes.isEmpty()) {
+            throw new RuntimeException("无法创建浏览器实例");
+        }
         inflate(chromes, getGridStatus());
         //借助这一半chrome实例，初始化配置
-        initConfig();
+        initQLConfig();
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
@@ -377,24 +353,38 @@ public class WebDriverFactory implements CommandLineRunner {
         initSuccess = true;
     }
 
-    private List<NodeStatus> getNodeStatuses() {
+    public void cleanDockerContainer() {
+        Containers containers = new UnixDocker(new File("/var/run/docker.sock")).containers();
+        for (Container container : containers) {
+            String image = container.getString("Image");
+            if (image.startsWith("selenoid/chrome")) {
+                try {
+                    log.info("关闭残留容器" + container.containerId());
+                    container.remove(true, true, false);
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+    private SelenoidStatus getNodeStatuses() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture<List<NodeStatus>> startSeleniumRes = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<SelenoidStatus> startSeleniumRes = CompletableFuture.supplyAsync(() -> {
             while (true) {
-                List<NodeStatus> statusList = getGridStatus();
-                if (statusList.size() > 0) {
-                    return statusList;
+                SelenoidStatus ss = getGridStatus();
+                if (ss.getTotal() > 0) {
+                    return ss;
                 }
             }
         }, executor);
-        List<NodeStatus> statusList = null;
+        SelenoidStatus status = null;
         try {
-            statusList = startSeleniumRes.get(30, TimeUnit.SECONDS);
+            status = startSeleniumRes.get(30, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
         executor.shutdown();
-        return statusList;
+        return status;
     }
 
     private void parseMultiQLConfig() {
@@ -418,6 +408,26 @@ public class WebDriverFactory implements CommandLineRunner {
             }
         }
 
+        maxSessionFromEnvFile = properties.getProperty("SE_NODE_MAX_SESSIONS");
+        String opTime = properties.getProperty("OP_TIME");
+        if (!StringUtils.isEmpty(opTime)) {
+            try {
+                int i = Integer.parseInt(opTime);
+                if (i > 0) {
+                    opTimeout = i;
+                }
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        log.info("最大资源数配置: maxSessionFromEnvFile = " + maxSessionFromEnvFile + ", maxSessionFromSystemEnv = " + maxSessionFromSystemEnv + ", maxSessionFromProps = " + maxSessionFromProps);
+
+        CAPACITY = parseCapacity();
+        log.info("最大资源数配置: CAPACITY = " + CAPACITY);
+        if (CAPACITY <= 0) {
+            throw new RuntimeException("最大资源数配置有误");
+        }
+
         xddUrl = properties.getProperty("XDD_URL");
         xddToken = properties.getProperty("XDD_TOKEN");
 
@@ -426,9 +436,6 @@ public class WebDriverFactory implements CommandLineRunner {
             config.setId(i);
             for (String key : properties.stringPropertyNames()) {
                 String value = properties.getProperty(key);
-                if ("SPRING_PROFILES_ACTIVE".equals(key)) {
-                    jdService.setDebug("debug".equals(value));
-                }
                 if (key.equals("QL_USERNAME_" + i)) {
                     config.setQlUsername(value);
                 } else if (key.equals("QL_URL_" + i)) {
@@ -455,7 +462,36 @@ public class WebDriverFactory implements CommandLineRunner {
         log.info("解析" + qlConfigs.size() + "套配置");
     }
 
-    private void initConfig() {
+    private int parseCapacity() {
+        int res = 0;
+        if (!StringUtils.isEmpty(maxSessionFromSystemEnv)) {
+            try {
+                res = Integer.parseInt(maxSessionFromSystemEnv);
+            } catch (NumberFormatException e) {
+            }
+        }
+
+        if (res <= 0) {
+            if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
+                try {
+                    res = Integer.parseInt(maxSessionFromEnvFile);
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        if (res <= 0) {
+            if (!StringUtils.isEmpty(maxSessionFromProps)) {
+                try {
+                    res = Integer.parseInt(maxSessionFromProps);
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+        return res;
+    }
+
+    private void initQLConfig() {
         Iterator<QLConfig> iterator = qlConfigs.iterator();
         while (iterator.hasNext()) {
             QLConfig qlConfig = iterator.next();
@@ -543,7 +579,7 @@ public class WebDriverFactory implements CommandLineRunner {
             throw new RuntimeException("请检查资源配置，资源数太少");
         }
         RemoteWebDriver webDriver = chrome.getWebDriver();
-        webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         try {
             String token = null;
             int retry = 0;
@@ -622,14 +658,19 @@ public class WebDriverFactory implements CommandLineRunner {
         return null;
     }
 
-    public synchronized AssignSessionIdStatus assignSessionId(String clientSessionId, boolean create, String servletSessionId) {
+    public AssignSessionIdStatus assignSessionId(String clientSessionId, boolean create, HttpSession session) {
         AssignSessionIdStatus status = new AssignSessionIdStatus();
-
+        String servletSessionId = null;
+        if (session != null) {
+            servletSessionId = session.getId();
+        }
         if (clientSessionId == null && servletSessionId != null) {
-//            String s = redisTemplate.opsForValue().get("servlet:session:" + servletSessionId);
             String s = cacheUtil.get("servlet:session:" + servletSessionId);
             if (!StringUtils.isEmpty(s)) {
                 clientSessionId = s;
+            } else {
+                log.info("servletSessionId " + servletSessionId + " invalidate!");
+                create = true;
             }
         }
 
@@ -639,12 +680,11 @@ public class WebDriverFactory implements CommandLineRunner {
             if (myChrome != null && myChrome.getClientSessionId() != null) {
                 status.setNew(false);
                 status.setAssignSessionId(myChrome.getClientSessionId());
-//                Long expire = redisTemplate.getExpire();
                 Long expire = cacheUtil.getExpire(CLIENT_SESSION_ID_KEY + ":" + clientSessionId);
                 if (expire != null && expire < 0) {
                     log.info("force expire " + status.getAssignSessionId());
                     //强制1分钟过期一个sessionId
-                    closeSession(myChrome.getSlotStatus().getBelongsToUri(), status.getAssignSessionId());
+                    closeSession(myChrome.getClientSessionId());
                     status.setAssignSessionId(null);
                     myChrome.setClientSessionId(null);
                     create = false;
@@ -663,7 +703,6 @@ public class WebDriverFactory implements CommandLineRunner {
                         String s = myChrome.getWebDriver().getSessionId().toString();
                         status.setAssignSessionId(s);
                         status.setNew(true);
-//                    redisTemplate.opsForValue().set("servlet:session:" + servletSessionId, s, 300, TimeUnit.SECONDS);
                         cacheUtil.put("servlet:session:" + servletSessionId, new StringCache(System.currentTimeMillis(), s, 300), 300);
                         return status;
                     }
@@ -673,48 +712,52 @@ public class WebDriverFactory implements CommandLineRunner {
         return status;
     }
 
-    public synchronized void releaseWebDriver(String input) {
-//        redisTemplate.delete(CLIENT_SESSION_ID_KEY + ":" + input);
-        cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
-        log.info("releaseWebDriver " + input);
-        Iterator<MyChrome> iterator = chromes.iterator();
-        while (iterator.hasNext()) {
-            MyChrome myChrome = iterator.next();
-            String sessionId = myChrome.getWebDriver().getSessionId().toString();
-            if (sessionId.equals(input)) {
-                String uri = myChrome.getSlotStatus().getBelongsToUri();
-                try {
-                    myChrome.getWebDriver().quit();
-                    iterator.remove();
-                } catch (Exception e) {
-                    e.printStackTrace();
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    public void releaseWebDriver(String input) {
+        threadPoolTaskExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
+                log.info("releaseWebDriver " + input);
+                Iterator<MyChrome> iterator = chromes.iterator();
+                while (iterator.hasNext()) {
+                    MyChrome myChrome = iterator.next();
+                    String sessionId = myChrome.getWebDriver().getSessionId().toString();
+                    if (sessionId.equals(input)) {
+                        try {
+                            myChrome.getWebDriver().quit();
+                            iterator.remove();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        log.info("destroy chrome : " + sessionId);
+                        break;
+                    }
                 }
-                log.info("destroy chrome : " + uri + "-->" + sessionId);
-                break;
             }
-        }
+        });
     }
 
     public synchronized void bindSessionId(String sessionId) {
         for (MyChrome myChrome : chromes) {
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(sessionId);
-//                redisTemplate.opsForValue().set(CLIENT_SESSION_ID_KEY + ":" + sessionId, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout, TimeUnit.SECONDS);
                 cacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + sessionId, new StringCache(System.currentTimeMillis(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()), opTimeout), opTimeout);
                 break;
             }
         }
     }
 
-    public synchronized void unBindSessionId(String sessionId, String servletSessionId) {
+    public synchronized void unBindSessionId(String sessionId, HttpSession httpSession) {
         Iterator<MyChrome> iterator = chromes.iterator();
-//        redisTemplate.delete("servlet:session:" + servletSessionId);
+        String servletSessionId = httpSession.getId();
         cacheUtil.remove("servlet:session:" + servletSessionId);
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next();
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
                 myChrome.setClientSessionId(null);
-//                redisTemplate.delete(CLIENT_SESSION_ID_KEY + ":" + sessionId);
                 cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + sessionId);
                 iterator.remove();
                 break;
@@ -740,5 +783,10 @@ public class WebDriverFactory implements CommandLineRunner {
 
     public boolean isInitSuccess() {
         return initSuccess;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        init();
     }
 }
