@@ -20,7 +20,7 @@ wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/m
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \ 
 -e "SE_NODE_MAX_SESSIONS=8" \
 -v /var/run/docker.sock:/var/run/docker.sock \ 
--v /[你的路径]/env.properties:/env.properties:ro \ 
+-v [你的路径]/env.properties:/env.properties:ro \ 
 rubyangxg/jd-qinglong:1.1
 ```
 例如：
