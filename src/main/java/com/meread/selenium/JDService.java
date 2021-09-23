@@ -172,6 +172,19 @@ public class JDService {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
         }
 
+        if (pageText.contains("输入的手机号未注册")) {
+            boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
+            if (!isChecked) {
+                log.info("需要勾选协议" + isChecked);
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.AGREE_AGREEMENT);
+            }
+        }
+
+        if (pageText.contains("其他方式登录") && jdLoginType == JDLoginType.qr) {
+            webDriver.findElement(By.xpath("//a[@report-eventid=\"MLoginRegister_SMSQQLogin\"]")).click();
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.NORMAL);
+        }
+
         if (jdLoginType == JDLoginType.qr) {
             int retry = 1;
             while (pageText.contains("服务异常")) {
@@ -184,6 +197,7 @@ public class JDService {
                 Thread.sleep(500);
                 pageText = webDriver.findElement(By.tagName("body")).getText();
             }
+
             if (pageText.contains("服务异常")) {
                 return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
             }
@@ -200,6 +214,10 @@ public class JDService {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
+
+            JDCookie jd = getJDCookies(sessionId);
+            System.out.println(jd.toString());
+
             WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
             if (qrElement != null) {
                 element = qrElement;
@@ -231,13 +249,7 @@ public class JDService {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
 
-        if (pageText.contains("输入的手机号未注册")) {
-            boolean isChecked = webDriver.findElement(By.xpath("//input[@class='policy_tip-checkbox']")).isSelected();
-            if (!isChecked) {
-                log.info("需要勾选协议" + isChecked);
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.AGREE_AGREEMENT);
-            }
-        }
+
 
         WebElement loginBtn = webDriver.findElement(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']"));
         HashSet<String> loginBtnClasses = new HashSet<>(Arrays.asList(loginBtn.getAttribute("class").split(" ")));
@@ -347,9 +359,7 @@ public class JDService {
 
     public void toJDlogin(String sessionId) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        if (jdLoginType == JDLoginType.qr) {
-            webDriver.navigate().to("https://graph.qq.com/oauth2.0/show?which=Login&display=pc&response_type=code&client_id=100273020&redirect_uri=https%3A%2F%2Fplogin.m.jd.com%2Fcgi-bin%2Fml%2Fqqcallback%3Flsid%3D6pifrkrkjsb6t3mvpr0tplsrgpqa51rcq9sitj2dbej5h617&state=y20nntf3");
-        } else if (jdLoginType == JDLoginType.phone) {
+        if (jdLoginType == JDLoginType.phone) {
             webDriver.manage().deleteAllCookies();
             webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
             WebDriverUtil.waitForJStoLoad(webDriver);

@@ -18,7 +18,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <java.version>11</java.version>
         <selenium.version>3.141.59</selenium.version>
-<!--        <selenium.version>4.0.0-rc-1</selenium.version>-->
+        <!--        <selenium.version>4.0.0-rc-1</selenium.version>-->
     </properties>
     <dependencies>
         <dependency>
@@ -45,11 +45,11 @@
             <version>1.0.4</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
-<!--        <dependency>-->
-<!--            <groupId>org.bytedeco</groupId>-->
-<!--            <artifactId>javacv-platform</artifactId>-->
-<!--            <version>1.5.6</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.bytedeco</groupId>-->
+        <!--            <artifactId>javacv-platform</artifactId>-->
+        <!--            <version>1.5.6</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv</artifactId>
@@ -89,10 +89,10 @@
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>

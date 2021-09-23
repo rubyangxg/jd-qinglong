@@ -11,7 +11,11 @@ sudo docker pull selenoid/chrome:89.0
 ```
 sudo docker pull rubyangxg/jd-qinglong:1.1
 ```
-4. 启动
+4. 下载配置文件模板，根据需要修改，不要缺少此文件
+```
+wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
+```
+5. 启动
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \ 
 -e "SE_NODE_MAX_SESSIONS=8" 
