@@ -153,7 +153,7 @@ public class HelloController {
         JDCookie ck = null;
         try {
             ck = service.getJDCookies(status.getAssignSessionId());
-            if (!StringUtils.isEmpty(ck)) {
+            if (!ck.isEmpty()) {
                 model.addAttribute("ck", ck.toString());
             } else {
                 service.toJDlogin(status.getAssignSessionId());

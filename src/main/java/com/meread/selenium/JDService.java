@@ -167,7 +167,6 @@ public class JDService {
         }
 
         JDCookie jdCookies = getJDCookies(sessionId);
-
         if (!jdCookies.isEmpty()) {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
         }
@@ -180,7 +179,7 @@ public class JDService {
             }
         }
 
-        if (pageText.contains("其他方式登录") && jdLoginType == JDLoginType.qr) {
+        if (pageText.contains("其他登录方式") && jdLoginType == JDLoginType.qr) {
             webDriver.findElement(By.xpath("//a[@report-eventid=\"MLoginRegister_SMSQQLogin\"]")).click();
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.NORMAL);
         }
@@ -196,6 +195,11 @@ public class JDService {
                 WebDriverUtil.waitForJStoLoad(webDriver);
                 Thread.sleep(500);
                 pageText = webDriver.findElement(By.tagName("body")).getText();
+            }
+
+            jdCookies = getJDCookies(sessionId);
+            if (!jdCookies.isEmpty()) {
+                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
             }
 
             if (pageText.contains("服务异常")) {
@@ -248,7 +252,6 @@ public class JDService {
         if (pageText.contains("短信验证码登录")) {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
-
 
 
         WebElement loginBtn = webDriver.findElement(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']"));
@@ -359,11 +362,9 @@ public class JDService {
 
     public void toJDlogin(String sessionId) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        if (jdLoginType == JDLoginType.phone) {
-            webDriver.manage().deleteAllCookies();
-            webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
-            WebDriverUtil.waitForJStoLoad(webDriver);
-        }
+        webDriver.manage().deleteAllCookies();
+        webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
+        WebDriverUtil.waitForJStoLoad(webDriver);
     }
 
     public void controlChrome(String sessionId, String currId, String currValue) {
