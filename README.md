@@ -44,9 +44,8 @@
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
-* 编写好env.properties，然后`docker run -e "SE_NODE_MAX_SESSIONS=4" -p 5701:8080 --name=jd-qinglong -v "$(pwd)"/env.properties:/env.properties:ro rubyangxg/jd-qinglong:allinone`
-* 安装教程: [INSTALL.md](INSTALL.md)
-* 免费代挂及问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)
+* 新版本安装教程: [INSTALL.md](INSTALL.md)
+* 问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)
 
 ## 多谢
 
