@@ -1,0 +1,16 @@
+{
+  "chrome": {
+    "default": "89.0",
+    "versions": {
+      "89.0": {
+        "image": "rubyangxg/chrome-arm:89.0",
+        "enableVNC": true,
+        "port": "4444",
+        "path": "/",
+        "limit": 100,
+        "privileged": true,
+        "env" : ["LANG=en_US.UTF-8", "LANGUAGE=us:en", "LC_ALL=en_US.UTF-8", "limit=10"]
+      }
+    }
+  }
+}
