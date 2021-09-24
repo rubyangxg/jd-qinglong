@@ -119,7 +119,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.setCapability("browserName", "chrome");
-        chromeOptions.setCapability("browserVersion", "89.0");
+        chromeOptions.setCapability("browserVersion", "78.0");
         chromeOptions.setCapability("screenResolution", "1280x1024x24");
         chromeOptions.setCapability("enableVideo", false);
         chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(

@@ -715,7 +715,7 @@ public class JDService {
             headers.put("Sec-Fetch-Dest", "empty");
             headers.put("Sec-Fetch-Mode", "cors");
             headers.put("Sec-Fetch-Site", "same-origin");
-            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4577.82 Safari/537.36");
+//            headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.4577.82 Safari/537.36");
             return httpClientUtil.doPost(xddUrl, paramMap, headers);
         }
         return null;
