@@ -1,9 +1,9 @@
 {
   "chrome": {
-    "default": "89.0",
+    "default": "78.0",
     "versions": {
-      "89.0": {
-        "image": "selenoid/dev_chrome:89.0.4389.23",
+      "78.0": {
+        "image": "selenoid/dev_chrome:78.0.3904.97",
         "enableVNC": true,
         "port": "4444",
         "path": "/",
