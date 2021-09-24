@@ -1,4 +1,4 @@
-FROM woahbase/alpine-openjdk11:aarch64
+FROM arm64v8/openjdk:11-jdk
 
 ENV TIME_ZONE=Asia/Shanghai
 
