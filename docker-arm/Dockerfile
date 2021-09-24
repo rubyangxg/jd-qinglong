@@ -11,7 +11,7 @@ COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY config /etc/selenoid
 
-RUN apt-get install -y tzdata && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+RUN apt-get install -y tzdata ca-certificates tzdata mailcap supervisor curl && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     chmod 755 /opt/bin/start-webapp.sh && \
     chmod 755 /opt/bin/notify && \
     chmod 755 /usr/bin/selenoid
