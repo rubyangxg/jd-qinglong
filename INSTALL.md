@@ -1,4 +1,4 @@
-安装教程：
+### 安装教程：
 1. 确保docker.sock存在(只要安装了docker一般都会有)
 ```
 ls -alh /var/run/docker.sock
@@ -31,3 +31,9 @@ sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -v "$(pwd)"/env.properties:/env.properties:ro \
 rubyangxg/jd-qinglong:1.1
 ``` 
+### 更新教程：
+```
+docker rm -f webapp
+docker rmi rubyangxg/jd-qinglong:1.1
+```
+**上面两条命令执行完毕后，重新运行启动命令(安装教程第5步)**

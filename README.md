@@ -28,6 +28,7 @@
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
 ## 更新历史
+* 2021-09-25 解决配置资源数低，或其他情况下启动后显示无青龙配置bug，如果都正常就不需要更新。更新命令看[INSTALL.md](INSTALL.md)
 * 2021-09-21 优化资源回收创建流程，优化资源404时间过长
 * 2021-09-18 新增推送功能，配置同青龙，请查看[env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties)
 
