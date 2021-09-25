@@ -15,7 +15,7 @@ sudo docker pull rubyangxg/jd-qinglong:1.1
 ```
 wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
 ```
-5. 启动，其中SE_NODE_MAX_SESSIONS=8请根据机器配置改
+5. 启动，其中SE_NODE_MAX_SESSIONS=8请根据机器配置改，**_注意这是1条命令，全部复制执行_**
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \ 
 -e "SE_NODE_MAX_SESSIONS=8" \
@@ -23,7 +23,7 @@ sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -v [你的路径]/env.properties:/env.properties:ro \ 
 rubyangxg/jd-qinglong:1.1
 ```
-例如：
+例如：**_注意这是1条命令，全部复制执行_**
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -e "SE_NODE_MAX_SESSIONS=8" \

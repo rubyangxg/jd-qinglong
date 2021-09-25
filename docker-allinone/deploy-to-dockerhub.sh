@@ -75,7 +75,7 @@ if [[ $op == 'push' ]]; then
 fi
 
 rm -rf $HOME/.docker
-docker stop webapp && docker rm webapp
+docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:1.1
 docker run -d -p 5701:8080 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro  rubyangxg/jd-qinglong:1.1
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
