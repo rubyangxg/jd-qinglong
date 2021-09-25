@@ -56,35 +56,22 @@ services:
   #      - chrome
   #      - qinglong
 
-#  qinglong1:
-#    container_name: qinglong1
-#    image: whyour/qinglong:latest
-#    volumes:
-#      - ./data1/config:/ql/config
-#      - ./data1/log:/ql/log
-#      - ./data1/db:/ql/db
-#      - ./data1/scripts:/ql/scripts
-#      - ./data1/repo:/ql/repo
-#    ports:
-#      - "0.0.0.0:5700:5700"
-#    environment:
-#      - ENABLE_HANGUP=true
-#      - ENABLE_WEB_PANEL=true
-#    restart: always
-#
-#  qinglong2:
-#    container_name: qinglong2
-#    image: whyour/qinglong:latest
-#    volumes:
-#      - ./data2/config:/ql/config
-#      - ./data2/log:/ql/log
-#      - ./data2/db:/ql/db
-#      - ./data2/scripts:/ql/scripts
-#      - ./data2/repo:/ql/repo
-#    ports:
-#      - "0.0.0.0:6700:5700"
-#    environment:
-#      - ENABLE_HANGUP=true
-#      - ENABLE_WEB_PANEL=true
-#    restart: always
+  qinglong1:
+    container_name: qinglong1
+    image: whyour/qinglong:latest
+    volumes:
+      - ./data1/config:/ql/config
+      - ./data1/log:/ql/log
+      - ./data1/db:/ql/db
+      - ./data1/scripts:/ql/scripts
+      - ./data1/repo:/ql/repo
+      - ./data1/raw:/ql/raw
+      - ./data1/jbot:/ql/jbot
+    ports:
+      - "0.0.0.0:5700:5700"
+    environment:
+      - ENABLE_HANGUP=true
+      - ENABLE_WEB_PANEL=true
+    restart: always
+
 
