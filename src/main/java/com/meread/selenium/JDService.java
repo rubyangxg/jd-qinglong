@@ -600,12 +600,18 @@ public class JDService {
                 String value = jsonObject.getString("value");
                 String name = jsonObject.getString("name");
                 if ("JD_COOKIE".equals(name)) {
-                    JDCookie oldCookie = JDCookie.parse(value);
-                    if (oldCookie.getPtPin().equals(jdCookie.getPtPin())) {
-                        update = true;
-                        updateId = _id;
-                        updateRemark = jsonObject.getString("remarks");
-                        break;
+                    JDCookie oldCookie = null;
+                    try {
+                        oldCookie = JDCookie.parse(value);
+                        if (oldCookie.getPtPin().equals(jdCookie.getPtPin())) {
+                            update = true;
+                            updateId = _id;
+                            updateRemark = jsonObject.getString("remarks");
+                            break;
+                        }
+                    } catch (Exception e) {
+                        log.warn(qlConfig.getQlUrl() + "后台有一条不能解析的ck");
+                        e.printStackTrace();
                     }
                 }
             }
