@@ -52,7 +52,6 @@ rm -rf .pkg-cache
 rm -rf qinglong
 
 docker rm -f webapp
-docker rmi -f rubyangxg/jd-qinglong:allinone
 docker rmi -f rubyangxg/jd-qinglong:latest
 
 
@@ -68,10 +67,10 @@ else
 fi
 
 docker build -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
-#docker build -t rubyangxg/jd-qinglong:1.1 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
+docker build -t rubyangxg/jd-qinglong:1.1 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 if [[ $op == 'push' ]]; then
   docker push rubyangxg/jd-qinglong:latest
-#  docker push rubyangxg/jd-qinglong:1.1
+  docker push rubyangxg/jd-qinglong:1.1
 fi
 
 rm -rf $HOME/.docker

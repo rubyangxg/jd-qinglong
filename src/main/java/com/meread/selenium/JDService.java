@@ -464,7 +464,18 @@ public class JDService {
         if (qlConfig.getRemain() <= 0) {
             return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
         }
-        String token = getUserNamePasswordToken(sessionId, qlConfig);
+        int maxRetry = 3;
+        String token = null;
+        while (true) {
+            if (maxRetry == 0) {
+                break;
+            }
+            token = getUserNamePasswordToken(sessionId, qlConfig);
+            if (token != null) {
+                break;
+            }
+            maxRetry--;
+        }
         if (token != null) {
             return uploadQingLongWithToken(sessionId, ck, phone, remark, qlConfig);
         } else {
