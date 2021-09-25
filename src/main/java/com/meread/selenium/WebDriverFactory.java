@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -29,7 +28,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -110,7 +108,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     public ChromeOptions chromeOptions;
 
-    public void init(){
+    public void init() {
         chromeOptions = new ChromeOptions();
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
         chromeOptions.setExperimentalOption("useAutomationExtension", true);
@@ -312,6 +310,20 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
         //初始化一半Chrome实例
         log.info("初始化一半Chrome实例");
+        createChrome();
+        inflate(chromes, getGridStatus());
+        //借助这一半chrome实例，初始化配置
+        initQLConfig();
+        if (qlConfigs.isEmpty()) {
+            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
+        }
+
+        log.info("启动成功!");
+        stopSchedule = false;
+        initSuccess = true;
+    }
+
+    private void createChrome() {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         int create = (CAPACITY == 1 ? 2 : CAPACITY) / 2;
         CountDownLatch cdl = new CountDownLatch(create);
@@ -341,16 +353,6 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         if (chromes.isEmpty()) {
             throw new RuntimeException("无法创建浏览器实例");
         }
-        inflate(chromes, getGridStatus());
-        //借助这一半chrome实例，初始化配置
-        initQLConfig();
-        if (qlConfigs.isEmpty()) {
-            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
-        }
-
-        log.info("启动成功!");
-        stopSchedule = false;
-        initSuccess = true;
     }
 
     public void cleanDockerContainer() {
@@ -696,6 +698,9 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         if (create) {
             log.info("开始创建sessionId ");
             if (chromes != null) {
+                if (chromes.size() == 0) {
+                    createChrome();
+                }
                 for (MyChrome myChrome : chromes) {
                     String oldClientSessionId = myChrome.getClientSessionId() == null ? null : myChrome.getClientSessionId();
                     log.info("当前sessionId = " + myChrome.getWebDriver().getSessionId().toString() + ", oldClientSessionId = " + oldClientSessionId);
@@ -716,28 +721,24 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void releaseWebDriver(String input) {
-        threadPoolTaskExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
-                log.info("releaseWebDriver " + input);
-                Iterator<MyChrome> iterator = chromes.iterator();
-                while (iterator.hasNext()) {
-                    MyChrome myChrome = iterator.next();
-                    String sessionId = myChrome.getWebDriver().getSessionId().toString();
-                    if (sessionId.equals(input)) {
-                        try {
-                            myChrome.getWebDriver().quit();
-                            iterator.remove();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        log.info("destroy chrome : " + sessionId);
-                        break;
-                    }
+        Iterator<MyChrome> iterator = chromes.iterator();
+        cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + input);
+        log.info("releaseWebDriver " + input);
+
+        while (iterator.hasNext()) {
+            MyChrome myChrome = iterator.next();
+            String sessionId = myChrome.getWebDriver().getSessionId().toString();
+            if (sessionId.equals(input)) {
+                try {
+                    iterator.remove();
+                    threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+                log.info("destroy chrome : " + sessionId);
+                break;
             }
-        });
+        }
     }
 
     public synchronized void bindSessionId(String sessionId) {
