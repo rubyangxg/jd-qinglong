@@ -162,4 +162,5 @@ target
 .idea
 
 env.properties
-qqbot.yml
+qqbot/qqbot.yml
+qqbot
