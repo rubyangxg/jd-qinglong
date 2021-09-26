@@ -11,7 +11,7 @@ COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY config /etc/selenoid
 
-RUN mkdir /go-cqhttp
+RUN mkdir -p /go-cqhttp/qqbot-data
 COPY config.template.yml /go-cqhttp
 COPY go-cqhttp /go-cqhttp
 
