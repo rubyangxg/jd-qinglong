@@ -22,7 +22,7 @@ RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cac
     chmod 755 /opt/bin/notify && \
     chmod 755 /usr/bin/selenoid
 
-EXPOSE 4444 8080
+EXPOSE 4444 8080 6700
 COPY supervisord.conf /etc/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 #JAVA_OPTS="-server -Xmx2g -Xms2g -Xss512k -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom "
