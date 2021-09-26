@@ -9,19 +9,18 @@ COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
+COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 COPY config /etc/selenoid
 
-RUN mkdir -p /go-cqhttp/qqbot-data
-COPY config.yml /go-cqhttp
-COPY go-cqhttp /go-cqhttp
+COPY config-template.yml /
 
 RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/shanghai" >> /etc/timezone && \
     chmod 755 /opt/bin/start-webapp.sh && \
+    chmod 755 /opt/bin/start-go-cqhttp.sh && \
     chmod 755 /opt/bin/notify && \
-    chmod 755 /usr/bin/selenoid && \
-    chmod 755 /go-cqhttp/go-cqhttp
+    chmod 755 /usr/bin/selenoid
 
 EXPOSE 4444 8080
 COPY supervisord.conf /etc/supervisord.conf
