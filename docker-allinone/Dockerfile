@@ -10,8 +10,10 @@ COPY notify /opt/bin/notify
 COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY config /etc/selenoid
-COPY config.template.yml /go-cqhttp/
-COPY go-cqhttp /go-cqhttp/
+
+RUN mkdir /go-cqhttp
+COPY config.template.yml /go-cqhttp
+COPY go-cqhttp /go-cqhttp
 
 RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
