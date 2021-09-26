@@ -10,6 +10,7 @@ COPY notify /opt/bin/notify
 COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY config /etc/selenoid
+COPY config.template.yml /go-cqhttp/
 COPY go-cqhttp /go-cqhttp/
 
 RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
@@ -17,7 +18,7 @@ RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cac
     echo "Asia/shanghai" >> /etc/timezone && \
     chmod 755 /opt/bin/start-webapp.sh && \
     chmod 755 /opt/bin/notify && \
-    chmod 755 /usr/bin/selenoid
+    chmod 755 /usr/bin/selenoid && \
     chmod 755 /go-cqhttp/go-cqhttp
 
 EXPOSE 4444 8080

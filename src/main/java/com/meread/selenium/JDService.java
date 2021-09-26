@@ -777,7 +777,7 @@ public class JDService {
     private HttpHeaders getHttpHeaders(QLConfig qlConfig) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + qlConfig.getQlToken().getToken());
-        headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36");
+        headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4577.63 Safari/537.36");
         headers.add("Content-Type", "application/json;charset=UTF-8");
         headers.add("Accept-Encoding", "gzip, deflate");
         headers.add("Accept-Language", "zh-CN,zh;q=0.9");

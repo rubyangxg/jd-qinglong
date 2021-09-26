@@ -53,6 +53,7 @@ rm -rf qinglong
 
 docker rm -f webapp
 docker rmi -f rubyangxg/jd-qinglong:latest
+docker rmi -f rubyangxg/jd-qinglong:1.2
 
 
 
@@ -67,15 +68,16 @@ else
 fi
 
 docker build -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
-docker build -t rubyangxg/jd-qinglong:1.1 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
+docker build -t rubyangxg/jd-qinglong:1.2 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 if [[ $op == 'push' ]]; then
   docker push rubyangxg/jd-qinglong:latest
-  docker push rubyangxg/jd-qinglong:1.1
+  docker push rubyangxg/jd-qinglong:1.2
 fi
 
 rm -rf $HOME/.docker
-docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:1.1
-docker run -d -p 5701:8080 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro  rubyangxg/jd-qinglong:1.1
+cd ..
+docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:1.2
+docker run -d -p 5701:8080 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp  rubyangxg/jd-qinglong:1.2
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
 #docker-compose -f docker-compose-debug.yml --env-file=env.properties  up -d --no-deps && docker logs -f webapp

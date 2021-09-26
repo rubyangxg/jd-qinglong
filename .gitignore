@@ -162,5 +162,5 @@ target
 .idea
 
 env.properties
-qqbot/qqbot.yml
 qqbot
+docker-allinone/notify

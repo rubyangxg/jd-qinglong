@@ -9,7 +9,7 @@
         "path": "/",
         "limit": 100,
         "privileged": true,
-        "env" : ["LANG=en_US.UTF-8", "LANGUAGE=us:en", "LC_ALL=en_US.UTF-8", "limit=10"]
+        "env" : ["LANG=en_US.UTF-8", "LANGUAGE=us:en", "LC_ALL=en_US.UTF-8"]
       }
     }
   }
