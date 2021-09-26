@@ -12,7 +12,7 @@ COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY config /etc/selenoid
 
 RUN mkdir -p /go-cqhttp/qqbot-data
-COPY config.template.yml /go-cqhttp
+COPY config.yml /go-cqhttp
 COPY go-cqhttp /go-cqhttp
 
 RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \

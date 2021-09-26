@@ -164,3 +164,4 @@ target
 env.properties
 qqbot
 docker-allinone/notify
+.docker
