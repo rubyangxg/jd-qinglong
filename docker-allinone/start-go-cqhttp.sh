@@ -10,5 +10,5 @@ else
   echo "go-cqhttp已存在"
 fi
 
-cd /go-cqhttp/
+cd /go-cqhttp
 ./go-cqhttp
