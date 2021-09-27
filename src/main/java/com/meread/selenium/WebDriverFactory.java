@@ -673,14 +673,19 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         myChromeClient.setLoginType(loginType);
         myChromeClient.setJdLoginType(jdLoginType);
         myChromeClient.setUserTrackId(userTrackId);
+        boolean success = false;
         for (MyChrome myChrome : chromes.values()) {
             if (myChrome.getUserTrackId() == null) {
                 //双向绑定
                 myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
                 myChromeClient.setMyChrome(myChrome);
                 myChrome.setUserTrackId(userTrackId);
+                success = true;
                 break;
             }
+        }
+        if (success) {
+            clients.put(userTrackId, myChromeClient);
         }
         return myChromeClient;
     }
