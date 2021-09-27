@@ -15,7 +15,7 @@ import javax.servlet.http.Cookie;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AssignSessionIdStatus {
-    private String assignSessionId;
+    private String assignChromeSessionId;
     private boolean isNew;
-    private String clientSessionId;
+    private String clientChromeSessionId;
 }

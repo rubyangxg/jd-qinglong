@@ -13,6 +13,5 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 public class MyChrome {
     private RemoteWebDriver webDriver;
     private JSONObject sessionInfoJson;
-    private String selenoidSessionId;
-    private String clientSessionId;
+    private String clientChromeSessionId;
 }

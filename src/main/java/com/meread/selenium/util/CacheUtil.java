@@ -2,13 +2,12 @@ package com.meread.selenium.util;
 
 import com.meread.selenium.WebDriverFactory;
 import com.meread.selenium.bean.StringCache;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import java.util.Map;
+import javax.servlet.http.HttpSession;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,7 +71,7 @@ public class CacheUtil {
   
         @Override
         public void run() {
-            String value = object.getValue();
+            String value = object.getChromeSessionId();
             factory.releaseWebDriver(value);
             remove(key);
             log.warn("timer clear session " + key + " value = " + object);
@@ -81,21 +80,6 @@ public class CacheUtil {
     }
   
     //==================缓存的增删改查
-  
-    /**
-     * <pre>
-     *     添加缓存
-     * <pre>
-     */
-    public boolean put(String key, StringCache object) {
-        if (checkCapacity()) {
-            map.put(key, object);
-            //默认缓存时间
-            timer.schedule(new ClearTask(key,object), DEFAULT_TIMEOUT);
-            return true;
-        }
-        return false;
-    }
   
     /**
      * <pre>
@@ -147,9 +131,24 @@ public class CacheUtil {
      *     获取缓存
      * <pre>
      */
-    public String get(String key) {
+    private String get(String key) {
         StringCache cache = map.get(key);
-        return cache == null ? null : cache.getValue();
+        return cache == null ? null : cache.getChromeSessionId();
+    }
+
+    /**
+     * 根据用户标识取分配给用户的chrome driver
+     * 如果网页途径，则用户标识是HttpSession的id
+     * 如果qq途径，则用户标识是QQ号
+     */
+    public String getAssociatedChromeSessionIdByUser(HttpSession session, long qq) {
+        String cacheChromeSessionId = null;
+        if (session != null) {
+            cacheChromeSessionId = get("servlet:session:" + session.getId());
+        } else if (qq > 0) {
+            cacheChromeSessionId = get("servlet:session:" + qq);
+        }
+        return cacheChromeSessionId;
     }
 
     /**
@@ -161,12 +160,4 @@ public class CacheUtil {
         return map.get(key);
     }
   
-    /**
-     * <pre>
-     *     是否包含某个缓存
-     * <pre>
-     */
-    public boolean isContain(String key) {
-        return map.contains(key);
-    }
 }

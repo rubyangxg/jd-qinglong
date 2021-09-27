@@ -381,7 +381,8 @@ public class JDService {
         }
     }
 
-    public void jdLogin(String sessionId) throws IOException, InterruptedException {
+    public boolean jdLogin(String sessionId) throws IOException, InterruptedException {
+        boolean res = false;
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
         JDScreenBean screen = getScreen(sessionId);
         if (screen.isCanClickLogin()) {
@@ -390,11 +391,13 @@ public class JDService {
             try {
                 element = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']")));
                 element.click();
+                res = true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         WebDriverUtil.waitForJStoLoad(webDriver);
+        return res;
     }
 
     public void reset(String sessionId) {
@@ -450,7 +453,7 @@ public class JDService {
         List<MyChrome> chromes = driverFactory.getChromes();
         int availChrome = 0;
         for (MyChrome chrome : chromes) {
-            String cookie = chrome.getClientSessionId();
+            String cookie = chrome.getClientChromeSessionId();
             if (cookie == null) {
                 availChrome++;
             }
@@ -490,7 +493,7 @@ public class JDService {
         String closeSessionId = null;
         try {
             if (webDriver == null) {
-                String newSessionId = driverFactory.assignSessionId(null, true, null).getAssignSessionId();
+                String newSessionId = driverFactory.assignSessionId(null, true, null,0).getAssignChromeSessionId();
                 log.info("getUserNamePasswordToken newSessionId " + newSessionId);
                 if (newSessionId != null) {
                     webDriver = driverFactory.getDriverBySessionId(newSessionId);

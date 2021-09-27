@@ -5,12 +5,16 @@
  */
 package com.meread.selenium.util;
 
+import org.springframework.web.socket.WebSocketSession;
+
 /**
  * 公共参数
  */
 public final class CommonAttributes {
 
     public static final String TMPDIR = System.getProperty("java.io.tmpdir");
+
+    public static WebSocketSession webSocketSession;
 
     /**
      * 日期格式配比

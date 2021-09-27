@@ -2,14 +2,17 @@ package com.meread.selenium.ws;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.BotService;
 import com.meread.selenium.bean.qq.PrivateMessage;
+import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
@@ -44,11 +47,36 @@ import java.util.regex.Pattern;
 @Slf4j
 public class EventHandler extends TextWebSocketHandler {
 
+    @Autowired
+    private BotService botService;
+
     @Value("${go-cqhttp.dir}")
     private String goCqHttpDir;
 
     private static final Pattern PATTERN = Pattern.compile("(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}");
     private static final Pattern PATTERN2 = Pattern.compile("\\d{6}");
+
+    /**
+     * socket 建立成功事件
+     */
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        String webSocketSessionId = session.getId();
+        log.info("afterConnectionEstablished " + webSocketSessionId);
+        CommonAttributes.webSocketSession = session;
+    }
+
+    /**
+     * socket 断开连接时
+     *
+     * @param session
+     * @param status
+     */
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        String webSocketSessionId = session.getId();
+        log.info("afterConnectionClosed " + webSocketSessionId + ", CloseStatus" + status);
+    }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -63,15 +91,15 @@ public class EventHandler extends TextWebSocketHandler {
         YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
         yamlFactory.setResources(new FileSystemResource(configPath));
         Properties props = yamlFactory.getObject();
-        String selfQQ = props.getProperty("account.uin");
+        String selfQQ = props.getProperty("account.uin", "0");
 
         String payload = message.getPayload();
         JSONObject jsonObject = JSON.parseObject(payload);
         String post_type = jsonObject.getString("post_type");
-        log.info("payload = " + payload);
         if (!"message".equals(post_type)) {
             return;
         }
+        log.info("payload = " + payload);
         //处理私聊消息
         PrivateMessage privateMessage = JSON.parseObject(payload, PrivateMessage.class);
         String content = privateMessage.getMessage();
@@ -98,11 +126,14 @@ public class EventHandler extends TextWebSocketHandler {
         } else if (matcher.matches()) {
             log.info("处理给手机号" + content + "发验证码逻辑");
             params.put("message", "正在准备发送验证码...");
+            botService.doSendSMS(senderQQ, content);
         } else if (matcher2.matches()) {
             log.info("接受了验证码" + content + "，处理登录逻辑");
             params.put("message", "正在处理登录...");
+            botService.doLogin(senderQQ, content);
         }
 
         session.sendMessage(new TextMessage(jo.toJSONString()));
     }
+
 }

@@ -14,7 +14,7 @@ import java.io.Serializable;
 public class StringCache implements Serializable {
 
     private long createTime;
-    private String value;
+    private String chromeSessionId;
     private int expire;
 
     public long getRemainSeconds() {
