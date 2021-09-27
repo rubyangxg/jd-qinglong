@@ -540,7 +540,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
                 } else if (verify2) {
                     boolean result = false;
                     try {
-                        result = initInnerQingLong(qlConfig);
+                        result = initInnerQingLong(driver,qlConfig);
                         qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
                         jdService.fetchCurrentCKS_count(driver, qlConfig, "");
                     } catch (Exception e) {
@@ -595,13 +595,8 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         return false;
     }
 
-    public boolean initInnerQingLong(QLConfig qlConfig) {
+    public boolean initInnerQingLong(RemoteWebDriver webDriver, QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
-        MyChrome chrome = chromes.entrySet().iterator().next().getValue();
-        if (chrome == null) {
-            throw new RuntimeException("请检查资源配置，资源数太少");
-        }
-        RemoteWebDriver webDriver = chrome.getWebDriver();
         webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         try {
             String token = null;
@@ -635,8 +630,6 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
             }
         } catch (Exception e) {
             log.error(qlUrl + "测试登录失败，请检查配置");
-        } finally {
-            webDriver.quit();
         }
         return qlConfig.getQlToken() != null && qlConfig.getQlToken().getToken() != null;
     }
