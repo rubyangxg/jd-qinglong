@@ -7,6 +7,7 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
@@ -158,14 +159,21 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         return chromeOptions;
     }
 
-    @Scheduled(initialDelay = 180000, fixedDelay = 60000)
+    @Scheduled(initialDelay = 180000, fixedDelay = 30 * 60000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {
                 int oldSize = qlConfig.getRemain();
-                jdService.fetchCurrentCKS_count(qlConfig, "");
-                int newSize = qlConfig.getRemain();
-                log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
+                Boolean exec = exec(webDriver -> {
+                    jdService.fetchCurrentCKS_count(webDriver, qlConfig, "");
+                    return true;
+                });
+                if (exec) {
+                    int newSize = qlConfig.getRemain();
+                    log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
+                } else {
+                    log.error("syncCK_count 执行失败");
+                }
             }
         }
     }
@@ -500,46 +508,58 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     private void initQLConfig() {
         Iterator<QLConfig> iterator = qlConfigs.iterator();
-        while (iterator.hasNext()) {
-            QLConfig qlConfig = iterator.next();
-            if (StringUtils.isEmpty(qlConfig.getLabel())) {
-                qlConfig.setLabel("请配置QL_LABEL_" + qlConfig.getId() + "");
-            }
-
-            boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
-            boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
-            boolean verify3 = verify1 && !StringUtils.isEmpty(qlConfig.getQlClientID()) && !StringUtils.isEmpty(qlConfig.getQlClientSecret());
-
-            boolean result_token = false;
-            boolean result_usernamepassword = false;
-            if (verify3) {
-                boolean success = getToken(qlConfig);
-                if (success) {
-                    result_token = true;
-                    qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
-                    jdService.fetchCurrentCKS_count(qlConfig, "");
-                } else {
-                    log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
+        RemoteWebDriver driver = null;
+        try {
+            for (MyChrome chrome : chromes.values()) {
+                if (chrome.getMyChromeClient() == null) {
+                    driver = chrome.getWebDriver();
+                    break;
                 }
             }
-            if (verify2) {
-                boolean result = false;
-                try {
-                    result = initInnerQingLong(qlConfig);
-                    qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
-                    jdService.fetchCurrentCKS_count(qlConfig, "");
-                } catch (Exception e) {
-                    e.printStackTrace();
+            while (iterator.hasNext()) {
+                QLConfig qlConfig = iterator.next();
+                if (StringUtils.isEmpty(qlConfig.getLabel())) {
+                    qlConfig.setLabel("请配置QL_LABEL_" + qlConfig.getId() + "");
                 }
-                if (result) {
-                    result_usernamepassword = true;
-                } else {
-                    log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
+
+                boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
+                boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
+                boolean verify3 = verify1 && !StringUtils.isEmpty(qlConfig.getQlClientID()) && !StringUtils.isEmpty(qlConfig.getQlClientSecret());
+
+                boolean result_token = false;
+                boolean result_usernamepassword = false;
+                if (verify3) {
+                    boolean success = getToken(qlConfig);
+                    if (success) {
+                        result_token = true;
+                        qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
+                        jdService.fetchCurrentCKS_count(driver, qlConfig, "");
+                    } else {
+                        log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
+                    }
+                } else if (verify2) {
+                    boolean result = false;
+                    try {
+                        result = initInnerQingLong(qlConfig);
+                        qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
+                        jdService.fetchCurrentCKS_count(driver, qlConfig, "");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (result) {
+                        result_usernamepassword = true;
+                    } else {
+                        log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
+                    }
+                }
+
+                if (!result_token && !result_usernamepassword) {
+                    iterator.remove();
                 }
             }
-
-            if (!result_token && !result_usernamepassword) {
-                iterator.remove();
+        } finally {
+            if (driver != null) {
+                driver.quit();
             }
         }
 
@@ -737,5 +757,25 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     @Override
     public void afterPropertiesSet() {
         init();
+    }
+
+    public <T> T exec(WebDriverOpCallBack<T> executor) {
+        RemoteWebDriver webDriver = null;
+        for (MyChrome chrome : chromes.values()) {
+            if (chrome.getMyChromeClient() == null) {
+                webDriver = chrome.getWebDriver();
+                break;
+            }
+        }
+        if (webDriver != null) {
+            try {
+                return executor.doBusiness(webDriver);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                webDriver.quit();
+            }
+        }
+        return null;
     }
 }

@@ -460,7 +460,7 @@ public class JDService {
             if (maxRetry == 0) {
                 break;
             }
-            token = getUserNamePasswordToken(myChromeClient, qlConfig);
+            token = getUserNamePasswordToken(myChromeClient.getMyChrome().getWebDriver(), qlConfig);
             if (token != null) {
                 break;
             }
@@ -474,9 +474,7 @@ public class JDService {
         return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
     }
 
-    private String getUserNamePasswordToken(MyChromeClient myChromeClient, QLConfig qlConfig) {
-        log.info("getUserNamePasswordToken " + myChromeClient.getUserTrackId());
-        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
+    private String getUserNamePasswordToken(RemoteWebDriver webDriver, QLConfig qlConfig) {
         try {
             webDriver.get(qlConfig.getQlUrl() + "/login");
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
@@ -512,7 +510,7 @@ public class JDService {
         return null;
     }
 
-    public JSONArray getCurrentCKS(MyChromeClient myChromeClient, QLConfig qlConfig, String searchValue) {
+    public JSONArray getCurrentCKS(RemoteWebDriver webDriver, QLConfig qlConfig, String searchValue) {
         int maxRetry = 3;
         while (true) {
             maxRetry--;
@@ -520,7 +518,7 @@ public class JDService {
                 break;
             }
             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                String token = getUserNamePasswordToken(myChromeClient, qlConfig);
+                String token = getUserNamePasswordToken(webDriver, qlConfig);
                 log.info(qlConfig.getQlUrl() + " 更新token " + token);
                 qlConfig.setQlToken(new QLToken(token));
             }
@@ -552,8 +550,8 @@ public class JDService {
         return null;
     }
 
-    public void fetchCurrentCKS_count(QLConfig qlConfig, String searchValue) {
-        JSONArray currentCKS = getCurrentCKS(null, qlConfig, searchValue);
+    public void fetchCurrentCKS_count(RemoteWebDriver driver, QLConfig qlConfig, String searchValue) {
+        JSONArray currentCKS = getCurrentCKS(driver, qlConfig, searchValue);
         int ckSize = 0;
         if (currentCKS != null) {
             for (int i = 0; i < currentCKS.size(); i++) {
@@ -578,7 +576,7 @@ public class JDService {
         boolean update = false;
         String updateId = "";
         String updateRemark = null;
-        JSONArray data = getCurrentCKS(myChromeClient, qlConfig, "");
+        JSONArray data = getCurrentCKS(myChromeClient.getMyChrome().getWebDriver(), qlConfig, "");
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
@@ -639,7 +637,7 @@ public class JDService {
                 }
 
                 if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                    String token = getUserNamePasswordToken(myChromeClient, qlConfig);
+                    String token = getUserNamePasswordToken(myChromeClient.getMyChrome().getWebDriver(), qlConfig);
                     log.info(qlConfig.getQlUrl() + " 更新token " + token);
                     qlConfig.setQlToken(new QLToken(token));
                 }
