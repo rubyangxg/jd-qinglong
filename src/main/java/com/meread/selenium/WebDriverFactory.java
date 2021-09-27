@@ -511,7 +511,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         RemoteWebDriver driver = null;
         try {
             for (MyChrome chrome : chromes.values()) {
-                if (chrome.getMyChromeClient() == null) {
+                if (chrome.getUserTrackId() == null) {
                     driver = chrome.getWebDriver();
                     break;
                 }
@@ -667,7 +667,6 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     }
 
     public synchronized MyChromeClient createNewMyChromeClient(String userTrackId, LoginType loginType, JDLoginType jdLoginType) {
-        AssignSessionIdStatus status = new AssignSessionIdStatus();
         //客户端传过来的sessionid为空，可能是用户重新刷新了网页，或者新开了一个浏览器，那么就需要跟踪会话缓存来找到之前的ChromeSessionId
         MyChromeClient myChromeClient = null;
         myChromeClient = new MyChromeClient();
@@ -675,11 +674,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         myChromeClient.setJdLoginType(jdLoginType);
         myChromeClient.setUserTrackId(userTrackId);
         for (MyChrome myChrome : chromes.values()) {
-            if (myChrome.getMyChromeClient() == null) {
+            if (myChrome.getUserTrackId() == null) {
                 //双向绑定
                 myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
                 myChromeClient.setMyChrome(myChrome);
-                myChrome.setMyChromeClient(myChromeClient);
+                myChrome.setUserTrackId(userTrackId);
+                break;
             }
         }
         return myChromeClient;
@@ -755,7 +755,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;
         for (MyChrome chrome : chromes.values()) {
-            if (chrome.getMyChromeClient() == null) {
+            if (chrome.getUserTrackId() == null) {
                 webDriver = chrome.getWebDriver();
                 break;
             }

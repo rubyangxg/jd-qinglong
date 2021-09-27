@@ -60,7 +60,6 @@
         <#if jdLoginType == 'phone'>
             <form method="post" class="needs-validation" novalidate id="mainForm">
                 <h2 class="text-center">阿东CK自助获取</h2>
-                <input type="hidden" name="clientSessionId" value="${clientSessionId}">
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -138,7 +137,6 @@
 </#if>
 </body>
 <script>
-    var clientSessionId = "${clientSessionId}";
     var phone;
     var qlUploadDirect = ${qlUploadDirect};
     var remark;
@@ -164,7 +162,6 @@
                 async: false,
                 data: {
                     ck: $("#ck").text(),
-                    "clientSessionId": clientSessionId,
                     "phone": phone,
                     "remark": remark
                 },
@@ -193,7 +190,7 @@
     function uploadQingLong(qlUploadDirect) {
         var data = $("#chooseQL_form").serialize();
         if (qlUploadDirect) {
-            data = {ck: $("#ck").text(), "clientSessionId": clientSessionId, "phone": phone, "remark": remark};
+            data = {ck: $("#ck").text(), "phone": phone, "remark": remark};
         }
         $.ajax({
             type: "POST",
@@ -286,7 +283,7 @@
             d = new Date();
             $.ajax({
                 type: "get",
-                url: '${base}/getScreen?clientSessionId=' + clientSessionId + "&t=" + d.getTime(),
+                url: '${base}/getScreen?t=' + d.getTime(),
                 async: false,
                 loading: false,
                 success: function (data) {
@@ -308,7 +305,7 @@
                                 chooseQingLong();
                             }, btn2: function () {
                                 layer.msg('请手动复制');
-                                $.get("/releaseSession?clientSessionId=" + clientSessionId, function (data, status) {
+                                $.get("/releaseSession, function (data, status) {
                                     console.log("releaseSession data : " + data);
                                     console.log("releaseSession status : " + status);
                                 });
@@ -377,7 +374,7 @@
                     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
                         let loadIndex = '';
                         $.ajax({
-                            url: "/crackCaptcha?clientSessionId=" + clientSessionId,
+                            url: "/crackCaptcha",
                             async: true,
                             loading: false,
                             beforeSend: function () {
@@ -424,8 +421,7 @@
                 async: false,
                 data: {
                     currId: currId,
-                    currValue: currValue,
-                    clientSessionId: clientSessionId
+                    currValue: currValue
                 },
                 success: function (data) {
                     if (data === -1) {
@@ -439,7 +435,7 @@
         $("#reset").bind("click", function (event) {
             $.ajax({
                 type: "get",
-                url: '/?reset=1&clientSessionId=' + clientSessionId,
+                url: '/?reset=1',
                 async: false,
                 success: function (data) {
                     window.location.reload();
@@ -459,7 +455,7 @@
             sendingAuthCode = true;
             $.ajax({
                 type: "get",
-                url: '/sendAuthCode?clientSessionId=' + clientSessionId,
+                url: '/sendAuthCode',
                 async: false,
                 success: function (data) {
                     var success = data.success;

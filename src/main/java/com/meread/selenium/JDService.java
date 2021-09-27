@@ -441,7 +441,7 @@ public class JDService {
         Collection<MyChrome> chromes = driverFactory.getChromes().values();
         int availChrome = 0;
         for (MyChrome chrome : chromes) {
-            if (chrome.getMyChromeClient() == null) {
+            if (chrome.getUserTrackId() == null) {
                 availChrome++;
             }
         }

@@ -15,7 +15,7 @@ public class MyChrome {
     private RemoteWebDriver webDriver;
     private JSONObject sessionInfoJson;
     private long expireTime;
-    private MyChromeClient myChromeClient;
+    private String userTrackId;
 
     public boolean isExpire() {
         return expireTime < System.currentTimeMillis();

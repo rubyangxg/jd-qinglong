@@ -108,7 +108,10 @@ public class HelloController {
     }
 
     @GetMapping({"/"})
-    public String index(@RequestParam(value = "jdLoginType", defaultValue = "phone") String jdLoginType, @RequestAttribute HttpServletRequest request, Model model) {
+    public String index(
+            @RequestParam(defaultValue = "phone") String jdLoginType,
+            @RequestParam(defaultValue = "0") String reset,
+                        HttpSession session, Model model) {
         model.addAttribute("debug", this.debug);
         int qlUploadDirect = qlUploadDirect();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
@@ -123,14 +126,14 @@ public class HelloController {
         } catch (IllegalArgumentException e) {
             jdLoginType = "phone";
         }
+        model.addAttribute("jdLoginType", jdLoginType);
 
-        String servletSessionId = request.getSession().getId();
+        String servletSessionId = session.getId();
         MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(servletSessionId);
         if (cacheMyChromeClient == null) {
             cacheMyChromeClient = factory.createNewMyChromeClient(servletSessionId, LoginType.WEB, JDLoginType.valueOf(jdLoginType));
         }
 
-        String reset = request.getParameter("reset");
         if ("1".equals(reset)) {
             service.toJDlogin(cacheMyChromeClient);
         }
