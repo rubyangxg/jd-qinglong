@@ -2,9 +2,8 @@ package com.meread.selenium;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.meread.selenium.bean.AssignSessionIdStatus;
-import com.meread.selenium.bean.JDCookie;
-import com.meread.selenium.bean.JDScreenBean;
+import com.meread.selenium.bean.*;
+import com.meread.selenium.util.CacheUtil;
 import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,9 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.UUID;
+
+import static com.meread.selenium.WebDriverFactory.CLIENT_SESSION_ID_KEY;
+import static com.meread.selenium.WebDriverFactory.SERVLET_OR_QQ_SESSION_ID_KEY;
 
 /**
  * @author yangxg
@@ -33,6 +35,9 @@ public class BotService {
     @Autowired
     private JDService jdService;
 
+    @Autowired
+    private CacheUtil cacheUtil;
+
     public void doSendSMS(long senderQQ, String phone) {
         WebSocketSession webSocketSession = CommonAttributes.webSocketSession;
         if (webSocketSession == null || !webSocketSession.isOpen()) {
@@ -43,7 +48,7 @@ public class BotService {
         AssignSessionIdStatus status = driverFactory.assignSessionId(null, true, null, senderQQ);
         //请求一个sessionId
         log.info("doSendSMS : " + JSON.toJSONString(status));
-        if (status.getAssignChromeSessionId() == null) {
+        if (status.getMyChromeClient() == null) {
             //分配sessionid失败
             //使前端垃圾cookie失效
             if (status.getClientChromeSessionId() != null) {
@@ -57,9 +62,12 @@ public class BotService {
                 log.info("与客户端qq : " + senderQQ + "通信失败");
             }
         } else {
-            String assignChromeSessionId = status.getAssignChromeSessionId();
+            String assignChromeSessionId = status.getMyChromeClient();
+            QQCache qqCache = QQCache.builder().qq(senderQQ).phone(phone).build();
             if (status.isNew()) {
-                driverFactory.bindSessionId(assignChromeSessionId);
+                driverFactory.bindSessionId(assignChromeSessionId, qqCache);
+            } else {
+                cacheUtil.updateQQCache(CLIENT_SESSION_ID_KEY + ":" + assignChromeSessionId, qqCache);
             }
             threadPoolTaskExecutor.execute(() -> {
                 try {
@@ -122,7 +130,7 @@ public class BotService {
         AssignSessionIdStatus status = driverFactory.assignSessionId(null, false, null, senderQQ);
         //请求一个sessionId
         log.info("doSendSMS : " + JSON.toJSONString(status));
-        if (status.getAssignChromeSessionId() == null) {
+        if (status.getMyChromeClient() == null) {
             //分配sessionid失败
             //使前端垃圾cookie失效
             if (status.getClientChromeSessionId() != null) {
@@ -136,9 +144,17 @@ public class BotService {
                 log.info("与客户端qq : " + senderQQ + "通信失败 : ");
             }
         } else {
-            String assignChromeSessionId = status.getAssignChromeSessionId();
+            String assignChromeSessionId = status.getMyChromeClient();
+            StringCache cache = cacheUtil.getCache(SERVLET_OR_QQ_SESSION_ID_KEY + ":"  + senderQQ);
+            QQCache qqCache = null;
+            if (cache != null) {
+                qqCache = cache.getQqCache();
+                if (qqCache != null) {
+                    qqCache.setAuthCode(authCode);
+                }
+            }
             if (status.isNew()) {
-                driverFactory.bindSessionId(assignChromeSessionId);
+                driverFactory.bindSessionId(assignChromeSessionId, qqCache);
             }
             threadPoolTaskExecutor.execute(() -> {
                 jdService.controlChrome(assignChromeSessionId, "sms_code", authCode);
@@ -151,8 +167,10 @@ public class BotService {
                         while (retry++ < 10) {
                             JDCookie jdCookies = jdService.getJDCookies(assignChromeSessionId);
                             if (!jdCookies.isEmpty()) {
+                                StringCache cache1 = cacheUtil.getCache(SERVLET_OR_QQ_SESSION_ID_KEY + ":" + senderQQ);
                                 webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, jdCookies.toString())));
                                 success = true;
+                                driverFactory.releaseWebDriver(assignChromeSessionId);
                                 break;
                             }
                             Thread.sleep(1000);

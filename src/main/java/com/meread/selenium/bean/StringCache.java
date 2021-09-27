@@ -16,6 +16,7 @@ public class StringCache implements Serializable {
     private long createTime;
     private String chromeSessionId;
     private int expire;
+    private QQCache qqCache;
 
     public long getRemainSeconds() {
         long res = (createTime + expire * 1000 - System.currentTimeMillis()) / 1000;

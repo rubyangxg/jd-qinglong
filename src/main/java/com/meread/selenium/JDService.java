@@ -450,7 +450,7 @@ public class JDService {
         }
         Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
         bean.setSessionTimeOut(expire);
-        List<MyChrome> chromes = driverFactory.getChromes();
+        Collection<MyChrome> chromes = driverFactory.getChromes().values();
         int availChrome = 0;
         for (MyChrome chrome : chromes) {
             String cookie = chrome.getClientChromeSessionId();
@@ -493,7 +493,7 @@ public class JDService {
         String closeSessionId = null;
         try {
             if (webDriver == null) {
-                String newSessionId = driverFactory.assignSessionId(null, true, null,0).getAssignChromeSessionId();
+                String newSessionId = driverFactory.assignSessionId(null, true, null,0).getMyChromeClient();
                 log.info("getUserNamePasswordToken newSessionId " + newSessionId);
                 if (newSessionId != null) {
                     webDriver = driverFactory.getDriverBySessionId(newSessionId);

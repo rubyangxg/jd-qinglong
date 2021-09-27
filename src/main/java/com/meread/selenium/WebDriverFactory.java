@@ -16,7 +16,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.SessionId;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +74,9 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     @Value("${op.timeout}")
     private int opTimeout;
 
+    @Value("${chrome.timeout}")
+    private int chromeTimeout;
+
     @Value("#{environment.SE_NODE_MAX_SESSIONS}")
     private String maxSessionFromSystemEnv;
 
@@ -83,7 +85,10 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     private String maxSessionFromEnvFile;
 
+    //标识客户端与服务器之间的会话,chromeSessionId--》stringcache
     public static final String CLIENT_SESSION_ID_KEY = "client:session";
+    //标识浏览器会话key和chromeSessionId的关联，httpsessionid/qq--》chromeSessionId
+    public static final String SERVLET_OR_QQ_SESSION_ID_KEY = "user:session";
 
     private List<QLConfig> qlConfigs;
 
@@ -99,10 +104,22 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     public volatile boolean initSuccess = false;
     public volatile boolean runningSchedule = false;
 
-    private List<MyChrome> chromes;
+    /**
+     * chromeSessionId-->MyChrome
+     */
+    private Map<String, MyChrome> chromes;
 
-    public List<MyChrome> getChromes() {
+    /**
+     * userTrackId --> MyChromeClient
+     */
+    private Map<String, MyChromeClient> clients = new HashMap<>();
+
+    public Map<String, MyChrome> getChromes() {
         return chromes;
+    }
+
+    public Map<String, MyChromeClient> getClients() {
+        return clients;
     }
 
     public ChromeOptions chromeOptions;
@@ -119,11 +136,14 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         chromeOptions.setCapability("browserVersion", "89.0");
         chromeOptions.setCapability("screenResolution", "1280x1024x24");
         chromeOptions.setCapability("enableVideo", false);
+        if (chromeTimeout < 60) {
+            chromeTimeout = 60;
+        }
         chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(
                 "enableVNC", debug,
                 "enableVideo", false,
                 "enableLog", debug,
-                "sessionTimeout", "5m"
+                "sessionTimeout", chromeTimeout + "s"
 //                "applicationContainers", new String[]{"webapp"}
         ));
         if (!debug) {
@@ -177,28 +197,15 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         runningSchedule = true;
         if (!stopSchedule) {
             SelenoidStatus nss = getGridStatus();
-            Iterator<MyChrome> iterator = chromes.iterator();
+            Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
             while (iterator.hasNext()) {
-                MyChrome myChrome = iterator.next();
-                SessionId s = myChrome.getWebDriver().getSessionId();
-                if (s == null) {
-                    iterator.remove();
-                    log.warn("quit a chrome");
-                    continue;
-                }
-                String sessionId = s.toString();
-                boolean find = false;
+                String chromeSessionId = iterator.next().getKey();
                 Map<String, JSONObject> sessions = nss.getSessions();
-                if (sessions != null) {
-                    for (String ss : sessions.keySet()) {
-                        if (sessionId.equals(ss)) {
-                            find = true;
-                            break;
-                        }
-                    }
-                }
-                //如果session不存在，则remove
-                if (!find) {
+                JSONObject jsonObject = sessions.get(chromeSessionId);
+                if (jsonObject != null) {
+                    break;
+                } else {
+                    //如果session不存在，则remove
                     iterator.remove();
                     log.warn("quit a chrome");
                 }
@@ -209,7 +216,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                     MyChrome myChrome = new MyChrome();
                     myChrome.setWebDriver(webDriver);
-                    chromes.add(myChrome);
+                    chromes.put(webDriver.getSessionId().toString(), myChrome);
                     log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -261,12 +268,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         }
     }
 
-    private void inflate(List<MyChrome> chromes, SelenoidStatus statusList) {
+    private void inflate(Map<String, MyChrome> chromes, SelenoidStatus statusList) {
         Map<String, JSONObject> sessions = statusList.getSessions();
         if (sessions == null || sessions.isEmpty()) {
             return;
         }
-        for (MyChrome chrome : chromes) {
+        for (MyChrome chrome : chromes.values()) {
             String currSessionId = chrome.getWebDriver().getSessionId().toString();
             JSONObject sessionInfo = sessions.get(currSessionId);
             if (sessionInfo != null) {
@@ -280,7 +287,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     public void run(String... args) throws MalformedURLException {
 
         stopSchedule = true;
-        chromes = Collections.synchronizedList(new ArrayList<>());
+        chromes = Collections.synchronizedMap(new HashMap<>());
 
         log.info("解析配置不初始化");
         parseMultiQLConfig();
@@ -335,7 +342,9 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome();
                     myChrome.setWebDriver(webDriver);
-                    chromes.add(myChrome);
+                    //计算chrome实例的最大存活时间
+                    myChrome.setExpireTime(System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } finally {
@@ -573,7 +582,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     public boolean initInnerQingLong(QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
-        String sessionId = assignSessionId(null, true, null, 0).getAssignChromeSessionId();
+        String sessionId = assignSessionId(null, true, null, 0).getMyChromeClient();
         MyChrome chrome = null;
         if (sessionId != null) {
             chrome = getMyChromeBySessionId(sessionId);
@@ -648,11 +657,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
 
     public MyChrome getMyChromeBySessionId(String sessionId) {
         if (chromes != null && chromes.size() > 0) {
-            for (MyChrome myChrome : chromes) {
-                if (myChrome.getWebDriver().getSessionId().toString().equals(sessionId)) {
-                    return myChrome;
-                }
-            }
+            return chromes.get(sessionId);
         }
         return null;
     }
@@ -660,68 +665,31 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     /**
      * @param clientChromeSessionId 客户端传过来的chromeSessionId
      * @param create                如果获取不到是否创建浏览器
-     * @param session               网页获取方式，会话对象
+     * @param httpSession           网页获取方式，会话对象
      * @param qq                    qq获取方式，QQ号
      */
-    public synchronized AssignSessionIdStatus assignSessionId(String clientChromeSessionId, boolean create, HttpSession session, long qq) {
+    public synchronized AssignSessionIdStatus assignSessionId(String userTrackId, LoginType loginType, JDLoginType jdLoginType, boolean create) {
         AssignSessionIdStatus status = new AssignSessionIdStatus();
-
         //客户端传过来的sessionid为空，可能是用户重新刷新了网页，或者新开了一个浏览器，那么就需要跟踪会话缓存来找到之前的ChromeSessionId
-        if (clientChromeSessionId == null) {
-            String cacheChromeSessionId = cacheUtil.getAssociatedChromeSessionIdByUser(session, qq);
-            if (!StringUtils.isEmpty(cacheChromeSessionId)) {
-                clientChromeSessionId = cacheChromeSessionId;
-            } else {
-                if (session != null) {
-                    log.info(session.getId() + " 会话失效!准备重新创建");
-                }
-                if (qq > 0) {
-                    log.info(qq + " 会话失效!准备重新创建");
-                }
-                create = true;
+        MyChromeClient myChromeClient = null;
+        if (userTrackId != null) {
+            myChromeClient = clients.get(userTrackId);
+            if (myChromeClient != null) {
+                status.setMyChromeClient(myChromeClient);
             }
-        }
-
-        if (clientChromeSessionId != null) {
-            status.setClientChromeSessionId(clientChromeSessionId);
-            MyChrome myChrome = getMyChromeBySessionId(clientChromeSessionId);
-            if (myChrome != null && myChrome.getClientChromeSessionId() != null) {
-                status.setNew(false);
-                status.setAssignChromeSessionId(myChrome.getClientChromeSessionId());
-                Long expire = cacheUtil.getExpire(CLIENT_SESSION_ID_KEY + ":" + clientChromeSessionId);
-                if (expire != null && expire < 0) {
-                    log.info("force expire " + status.getAssignChromeSessionId());
-                    //强制3分钟过期一个sessionId
-                    closeSession(myChrome.getClientChromeSessionId());
-                    status.setAssignChromeSessionId(null);
-                    myChrome.setClientChromeSessionId(null);
-                    create = false;
-                } else {
-                    return status;
-                }
-            }
-        }
-        if (create) {
-            log.info("开始创建sessionId ");
-            if (chromes != null) {
-                if (chromes.size() == 0) {
-                    createChrome();
-                }
-                for (MyChrome myChrome : chromes) {
-                    String oldClientSessionId = myChrome.getClientChromeSessionId() == null ? null : myChrome.getClientChromeSessionId();
-                    log.info("当前sessionId = " + myChrome.getWebDriver().getSessionId().toString() + ", oldClientSessionId = " + oldClientSessionId);
-                    if (oldClientSessionId == null) {
-                        String s = myChrome.getWebDriver().getSessionId().toString();
-                        status.setAssignChromeSessionId(s);
-                        status.setNew(true);
-                        if (session != null) {
-                            cacheUtil.put("servlet:session:" + session.getId(), new StringCache(System.currentTimeMillis(), s, 300), 300);
-                        }
-                        if (qq > 0) {
-                            cacheUtil.put("servlet:session:" + qq, new StringCache(System.currentTimeMillis(), s, 300), 300);
-                        }
-                        return status;
-                    }
+        } else if (create) {
+            myChromeClient = new MyChromeClient();
+            myChromeClient.setLoginType(loginType);
+            myChromeClient.setJdLoginType(jdLoginType);
+            myChromeClient.setUserTrackId(userTrackId);
+            for (MyChrome myChrome : chromes.values()) {
+                if (myChrome.getMyChromeClient() == null) {
+                    //双向绑定
+                    myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
+                    myChromeClient.setMyChrome(myChrome);
+                    myChrome.setMyChromeClient(myChromeClient);
+                    status.setNew(true);
+                    status.setMyChromeClient(myChromeClient);
                 }
             }
         }
@@ -732,12 +700,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void releaseWebDriver(String chromeSessionId) {
-        Iterator<MyChrome> iterator = chromes.iterator();
         cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + chromeSessionId);
         log.info("releaseWebDriver " + chromeSessionId);
 
+        Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
-            MyChrome myChrome = iterator.next();
+            MyChrome myChrome = iterator.next().getValue();
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
             if (sessionId.equals(chromeSessionId)) {
                 try {
@@ -752,24 +720,22 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         }
     }
 
-    public synchronized void bindSessionId(String chromeSessionId) {
-        for (MyChrome myChrome : chromes) {
-            if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(chromeSessionId)) {
-                myChrome.setClientChromeSessionId(chromeSessionId);
-                cacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + chromeSessionId, new StringCache(System.currentTimeMillis(),
-                        chromeSessionId,
-                        opTimeout), opTimeout);
-                break;
-            }
+    public synchronized void bindSessionId(String chromeSessionId, QQCache qqCache) {
+        MyChrome myChrome = chromes.get(chromeSessionId);
+        if (myChrome != null) {
+            myChrome.setClientChromeSessionId(chromeSessionId);
+            cacheUtil.put(CLIENT_SESSION_ID_KEY + ":" + chromeSessionId, new StringCache(System.currentTimeMillis(),
+                    chromeSessionId,
+                    opTimeout, qqCache), opTimeout);
         }
     }
 
     public synchronized void unBindSessionId(String chromeSessionId, HttpSession httpSession) {
-        Iterator<MyChrome> iterator = chromes.iterator();
+        Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         String servletSessionId = httpSession.getId();
-        cacheUtil.remove("servlet:session:" + servletSessionId);
+        cacheUtil.remove(SERVLET_OR_QQ_SESSION_ID_KEY + ":" + servletSessionId);
         while (iterator.hasNext()) {
-            MyChrome myChrome = iterator.next();
+            MyChrome myChrome = iterator.next().getValue();
             if (myChrome != null && myChrome.getWebDriver().getSessionId().toString().equals(chromeSessionId)) {
                 myChrome.setClientChromeSessionId(null);
                 cacheUtil.remove(CLIENT_SESSION_ID_KEY + ":" + chromeSessionId);

@@ -11,7 +11,17 @@ import org.openqa.selenium.remote.RemoteWebDriver;
  */
 @Data
 public class MyChrome {
+    //这两个字段会随着创建chrome自动更新
     private RemoteWebDriver webDriver;
     private JSONObject sessionInfoJson;
-    private String clientChromeSessionId;
+    private long expireTime;
+    private MyChromeClient myChromeClient;
+
+    public boolean isExpire() {
+        return expireTime < System.currentTimeMillis();
+    }
+
+    public String getChromeSessionId() {
+        return webDriver.getSessionId().toString();
+    }
 }

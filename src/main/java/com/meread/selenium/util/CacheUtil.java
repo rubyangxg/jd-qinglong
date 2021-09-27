@@ -1,6 +1,7 @@
 package com.meread.selenium.util;
 
 import com.meread.selenium.WebDriverFactory;
+import com.meread.selenium.bean.QQCache;
 import com.meread.selenium.bean.StringCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,9 @@ import javax.servlet.http.HttpSession;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-  
+
+import static com.meread.selenium.WebDriverFactory.SERVLET_OR_QQ_SESSION_ID_KEY;
+
 /**
  * <pre>
  *     基于concurrentHash的本地缓存工具类
@@ -30,9 +33,6 @@ public class CacheUtil {
   
     // 最大缓存大小
     private static final int MAX_CAPACITY = 10000;
-  
-    //默认缓存过期时间
-    private static final long DEFAULT_TIMEOUT = 300;
   
     //1000毫秒
     private static final long SECOND_TIME = 1000;
@@ -53,6 +53,13 @@ public class CacheUtil {
             return cache.getRemainSeconds();
         }
         return -1L;
+    }
+
+    public void updateQQCache(String assignChromeSessionId, QQCache qqCache) {
+        StringCache cache = getCache(assignChromeSessionId);
+        if (cache != null) {
+            cache.setQqCache(qqCache);
+        }
     }
 
     /**
@@ -144,9 +151,9 @@ public class CacheUtil {
     public String getAssociatedChromeSessionIdByUser(HttpSession session, long qq) {
         String cacheChromeSessionId = null;
         if (session != null) {
-            cacheChromeSessionId = get("servlet:session:" + session.getId());
+            cacheChromeSessionId = get(SERVLET_OR_QQ_SESSION_ID_KEY + ":"  + session.getId());
         } else if (qq > 0) {
-            cacheChromeSessionId = get("servlet:session:" + qq);
+            cacheChromeSessionId = get(SERVLET_OR_QQ_SESSION_ID_KEY + ":"  + qq);
         }
         return cacheChromeSessionId;
     }
