@@ -21,7 +21,6 @@ sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -e "SE_NODE_MAX_SESSIONS=8" \
 -v /var/run/docker.sock:/var/run/docker.sock \ 
 -v [你的路径]/env.properties:/env.properties:ro \ 
--v [你的路径]/go-cqhttp:/go-cqhttp \ 
 rubyangxg/jd-qinglong:1.1
 ```
 例如：**_注意这是1条命令，全部复制执行_**
@@ -30,7 +29,6 @@ sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -e "SE_NODE_MAX_SESSIONS=8" \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v "$(pwd)"/env.properties:/env.properties:ro \
--v "$(pwd)"/go-cqhttp:/go-cqhttp \ 
 rubyangxg/jd-qinglong:1.1
 ``` 
 ### 更新教程：
