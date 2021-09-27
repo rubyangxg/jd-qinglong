@@ -114,13 +114,11 @@ public class HelloController {
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", factory.isInitSuccess());
-        MyChromeClient myChromeClient = new MyChromeClient();
-        myChromeClient.setLoginType(LoginType.WEB);
-        myChromeClient.setJdLoginType(JDLoginType.valueOf(jdLoginType));
-        myChromeClient.setUserTrackId(request.getSession().getId());
-
+        if (!factory.isInitSuccess()) {
+            return "login";
+        }
         //请求一个sessionId
-        AssignSessionIdStatus status = factory.assignSessionId(request.getParameter("clientSessionId"), true, request.getSession(), 0);
+        AssignSessionIdStatus status = factory.assignSessionId(request.getSession().getId(), LoginType.WEB, JDLoginType.valueOf(jdLoginType), true);
         log.info("index : " + JSON.toJSONString(status));
         if (status.getMyChromeClient() == null) {
             //分配sessionid失败
