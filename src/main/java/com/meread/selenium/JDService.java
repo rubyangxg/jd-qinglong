@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
-import com.meread.selenium.util.CacheUtil;
 import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -58,9 +57,6 @@ public class JDService {
     @Value("${jd.debug}")
     private boolean debug;
 
-    @Autowired
-    CacheUtil cacheUtil;
-
     @Value("${login.type}")
     private JDLoginType jdLoginType;
 
@@ -103,7 +99,7 @@ public class JDService {
 //    cURL --request DELETE 'http://172.18.0.8:5555/se/grid/node/session/a73dade333fd8b68224ca762f087d676' --header 'X-REGISTRATION-SECRET;'
 //    cURL --request GET 'http://<node-URL>/se/grid/node/owner/<session-id>' --header 'X-REGISTRATION-SECRET;'
 
-    public JDCookie getJDCookies(String chromeSessionId) {
+    public JDCookie getJDCookies(MyChromeClient myChromeClient) {
         JDCookie ck = new JDCookie();
         String mockCookie = System.getenv("mockCookie");
         if ("1".equals(mockCookie)) {
@@ -112,7 +108,7 @@ public class JDService {
             ck.setPtKey(uuid);
             return ck;
         }
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(chromeSessionId);
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
         if (webDriver != null) {
             String currentUrl = webDriver.getCurrentUrl();
             if (!currentUrl.startsWith("data:")) {
@@ -136,8 +132,8 @@ public class JDService {
 
     static Pattern pattern = Pattern.compile("data:image.*base64,(.*)");
 
-    private JDScreenBean getScreenInner(String sessionId) throws IOException, InterruptedException {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
+    private JDScreenBean getScreenInner(MyChromeClient myChromeClient) throws IOException, InterruptedException {
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
 
         String screenBase64 = null;
         byte[] screen = null;
@@ -166,7 +162,7 @@ public class JDService {
             element = webDriver.findElement(By.id("app"));
         }
 
-        JDCookie jdCookies = getJDCookies(sessionId);
+        JDCookie jdCookies = getJDCookies(myChromeClient);
         if (!jdCookies.isEmpty()) {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
         }
@@ -197,7 +193,7 @@ public class JDService {
                 pageText = webDriver.findElement(By.tagName("body")).getText();
             }
 
-            jdCookies = getJDCookies(sessionId);
+            jdCookies = getJDCookies(myChromeClient);
             if (!jdCookies.isEmpty()) {
                 return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
             }
@@ -219,7 +215,7 @@ public class JDService {
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
 
-            JDCookie jd = getJDCookies(sessionId);
+            JDCookie jd = getJDCookies(myChromeClient);
             System.out.println(jd.toString());
 
             WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
@@ -308,8 +304,7 @@ public class JDService {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.VERIFY_FAILED_MAX);
         }
 
-//        Long expire = redisTemplate.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
-        Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = myChromeClient.getExpireSeconds();
         JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, 0);
         if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
@@ -318,7 +313,7 @@ public class JDService {
         return bean;
     }
 
-    public void crackCaptcha(String sessionId) throws IOException {
+    public void crackCaptcha(MyChromeClient sessionId) throws IOException {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
         WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
         if (!img_tips_wraper.isDisplayed()) {
@@ -360,15 +355,15 @@ public class JDService {
         }
     }
 
-    public void toJDlogin(String sessionId) {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
+    public void toJDlogin(MyChromeClient myChromeClient) {
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
         webDriver.manage().deleteAllCookies();
         webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
         WebDriverUtil.waitForJStoLoad(webDriver);
     }
 
-    public void controlChrome(String sessionId, String currId, String currValue) {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
+    public void controlChrome(MyChromeClient myChromeClient, String currId, String currValue) {
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient);
         WebElement element = null;
         if ("phone".equals(currId)) {
             element = webDriver.findElement(By.xpath("//input[@type='tel']"));
@@ -381,10 +376,10 @@ public class JDService {
         }
     }
 
-    public boolean jdLogin(String sessionId) throws IOException, InterruptedException {
+    public boolean jdLogin(MyChromeClient myChromeClient) throws IOException, InterruptedException {
         boolean res = false;
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        JDScreenBean screen = getScreen(sessionId);
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
+        JDScreenBean screen = getScreen(myChromeClient);
         if (screen.isCanClickLogin()) {
             WebDriverWait wait = new WebDriverWait(webDriver, 5);
             WebElement element = null;
@@ -400,22 +395,15 @@ public class JDService {
         return res;
     }
 
-    public void reset(String sessionId) {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        webDriver.manage().deleteAllCookies();
-        webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
-        WebDriverUtil.waitForJStoLoad(webDriver);
-    }
-
-    public void click(String sessionId, By xpath) {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
+    public void click(MyChromeClient myChromeClient, By xpath) {
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
         WebElement sureButton = webDriver.findElement(xpath);
         sureButton.click();
     }
 
-    public boolean sendAuthCode(String sessionId) throws IOException, InterruptedException {
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        JDScreenBean screen = getScreen(sessionId);
+    public boolean sendAuthCode(MyChromeClient myChromeClient) throws IOException, InterruptedException {
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
+        JDScreenBean screen = getScreen(myChromeClient);
         if (screen.isCanSendAuth()) {
             WebElement sendAuthCodeBtn = webDriver.findElement(By.xpath("//button[@report-eventid='MLoginRegister_SMSReceiveCode']"));
             sendAuthCodeBtn.click();
@@ -425,36 +413,35 @@ public class JDService {
         }
     }
 
-    public JDScreenBean getScreen(String sessionId) {
+    public JDScreenBean getScreen(MyChromeClient myChromeClient) {
         JDScreenBean bean = null;
         try {
-            bean = getScreenInner(sessionId);
+            bean = getScreenInner(myChromeClient);
             if (bean.getPageStatus() == JDScreenBean.PageStatus.EMPTY_URL) {
-                toJDlogin(sessionId);
+                toJDlogin(myChromeClient);
 //            } else if (bean.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
 //                service.crackCaptcha();
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.VERIFY_FAILED_MAX) {
-                click(sessionId, By.xpath("//div[@class='alert-sure']"));
+                click(myChromeClient, By.xpath("//div[@class='alert-sure']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.VERIFY_CODE_MAX) {
-                click(sessionId, By.xpath("//button[@class='dialog-sure']"));
+                click(myChromeClient, By.xpath("//button[@class='dialog-sure']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.SWITCH_SMS_LOGIN) {
-                click(sessionId, By.xpath("//span[@report-eventid='MLoginRegister_SMSVerification']"));
+                click(myChromeClient, By.xpath("//span[@report-eventid='MLoginRegister_SMSVerification']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.AGREE_AGREEMENT) {
-                click(sessionId, By.xpath("//input[@class='policy_tip-checkbox']"));
+                click(myChromeClient, By.xpath("//input[@class='policy_tip-checkbox']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_REFRESH) {
-                toJDlogin(sessionId);
+                toJDlogin(myChromeClient);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return null;
         }
-        Long expire = cacheUtil.getExpire(WebDriverFactory.CLIENT_SESSION_ID_KEY + ":" + sessionId);
+        Long expire = (myChromeClient.getExpireTime() - System.currentTimeMillis())/1000;
         bean.setSessionTimeOut(expire);
         Collection<MyChrome> chromes = driverFactory.getChromes().values();
         int availChrome = 0;
         for (MyChrome chrome : chromes) {
-            String cookie = chrome.getClientChromeSessionId();
-            if (cookie == null) {
+            if (chrome.getMyChromeClient() == null) {
                 availChrome++;
             }
         }
@@ -462,7 +449,7 @@ public class JDService {
         return bean;
     }
 
-    public QLUploadStatus uploadQingLong(String sessionId, String ck, String phone, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLong(MyChromeClient myChromeClient, String ck, String phone, String remark, QLConfig qlConfig) {
         int res = -1;
         if (qlConfig.getRemain() <= 0) {
             return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
@@ -473,35 +460,24 @@ public class JDService {
             if (maxRetry == 0) {
                 break;
             }
-            token = getUserNamePasswordToken(sessionId, qlConfig);
+            token = getUserNamePasswordToken(myChromeClient, qlConfig);
             if (token != null) {
                 break;
             }
             maxRetry--;
         }
         if (token != null) {
-            return uploadQingLongWithToken(sessionId, ck, phone, remark, qlConfig);
+            return uploadQingLongWithToken(myChromeClient, ck, phone, remark, qlConfig);
         } else {
             res = 0;
         }
         return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
     }
 
-    private String getUserNamePasswordToken(String sessionId, QLConfig qlConfig) {
-        log.info("getUserNamePasswordToken " + sessionId);
-        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(sessionId);
-        String closeSessionId = null;
+    private String getUserNamePasswordToken(MyChromeClient myChromeClient, QLConfig qlConfig) {
+        log.info("getUserNamePasswordToken " + myChromeClient.getUserTrackId());
+        RemoteWebDriver webDriver = myChromeClient.getMyChrome().getWebDriver();
         try {
-            if (webDriver == null) {
-                String newSessionId = driverFactory.assignSessionId(null, true, null,0).getMyChromeClient();
-                log.info("getUserNamePasswordToken newSessionId " + newSessionId);
-                if (newSessionId != null) {
-                    webDriver = driverFactory.getDriverBySessionId(newSessionId);
-                } else {
-                    return null;
-                }
-                closeSessionId = newSessionId;
-            }
             webDriver.get(qlConfig.getQlUrl() + "/login");
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
@@ -532,15 +508,11 @@ public class JDService {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (closeSessionId != null) {
-                driverFactory.releaseWebDriver(closeSessionId);
-            }
         }
         return null;
     }
 
-    public JSONArray getCurrentCKS(String sessionId, QLConfig qlConfig, String searchValue) {
+    public JSONArray getCurrentCKS(MyChromeClient myChromeClient, QLConfig qlConfig, String searchValue) {
         int maxRetry = 3;
         while (true) {
             maxRetry--;
@@ -548,7 +520,7 @@ public class JDService {
                 break;
             }
             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                String token = getUserNamePasswordToken(sessionId, qlConfig);
+                String token = getUserNamePasswordToken(myChromeClient, qlConfig);
                 log.info(qlConfig.getQlUrl() + " 更新token " + token);
                 qlConfig.setQlToken(new QLToken(token));
             }
@@ -595,7 +567,7 @@ public class JDService {
         }
     }
 
-    public QLUploadStatus uploadQingLongWithToken(String sessionId, String ck, String phone, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLongWithToken(MyChromeClient myChromeClient, String ck, String phone, String remark, QLConfig qlConfig) {
         JDCookie jdCookie = JDCookie.parse(ck);
         int res = -1;
         String pushRes = "";
@@ -606,7 +578,7 @@ public class JDService {
         boolean update = false;
         String updateId = "";
         String updateRemark = null;
-        JSONArray data = getCurrentCKS(sessionId, qlConfig, "");
+        JSONArray data = getCurrentCKS(myChromeClient, qlConfig, "");
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
@@ -667,7 +639,7 @@ public class JDService {
                 }
 
                 if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                    String token = getUserNamePasswordToken(sessionId, qlConfig);
+                    String token = getUserNamePasswordToken(myChromeClient, qlConfig);
                     log.info(qlConfig.getQlUrl() + " 更新token " + token);
                     qlConfig.setQlToken(new QLToken(token));
                 }

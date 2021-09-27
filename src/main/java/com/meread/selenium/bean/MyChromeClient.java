@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 /**
  * Created by yangxg on 2021/9/27
  *
@@ -30,5 +28,9 @@ public class MyChromeClient {
 
     public boolean isExpire() {
         return expireTime < System.currentTimeMillis();
+    }
+
+    public long getExpireSeconds() {
+        return (expireTime - System.currentTimeMillis()) / 1000;
     }
 }
