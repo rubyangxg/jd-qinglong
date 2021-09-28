@@ -6,6 +6,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
 import com.meread.selenium.util.CommonAttributes;
+import com.meread.selenium.util.FreemarkerUtils;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -28,6 +31,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -84,6 +88,9 @@ public class JDService {
         NODEJS_PUSH_KEYS.add("GOBOT_TOKEN");
         NODEJS_PUSH_KEYS.add("GOBOT_QQ");
     }
+
+    @Autowired
+    private FreeMarkerConfigurer freeMarkerConfigurer;
 
     //关闭hub：http://{hubhost}:{hubport}/lifecycle-manager/LifecycleServlet?action=shutdown
     //关闭node：http://localhost:5557/extra/LifecycleServlet?action=shutdown
@@ -441,7 +448,104 @@ public class JDService {
         return bean;
     }
 
-    public QLUploadStatus uploadQingLong(MyChromeClient myChromeClient, String ck, String phone, String remark, QLConfig qlConfig) {
+    public int getQLUploadDirectConfig() {
+        String ql_upload_direct = System.getenv("QL_UPLOAD_DIRECT");
+        int qlUploadDirect = 0;
+        if (!StringUtils.isEmpty(ql_upload_direct)) {
+            try {
+                qlUploadDirect = Integer.parseInt(ql_upload_direct);
+            } catch (NumberFormatException e) {
+            }
+        }
+        if (driverFactory.getQlConfigs() != null && driverFactory.getQlConfigs().size() <= 1) {
+            return 1;
+        }
+        return qlUploadDirect;
+    }
+
+    public JSONObject uploadQingLong(Set<Integer> chooseQLId, String phone, String remark, String ck, String chromeSessionId, int qlUploadDirect) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("status", 0);
+
+        if ((chooseQLId != null && chooseQLId.size() > 0) || qlUploadDirect == 1) {
+            List<QLUploadStatus> uploadStatuses = new ArrayList<>();
+            if (driverFactory.getQlConfigs() != null) {
+                for (QLConfig qlConfig : driverFactory.getQlConfigs()) {
+                    if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
+                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
+                            QLUploadStatus status = uploadQingLongWithToken(chromeSessionId, ck, phone, remark, qlConfig);
+                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
+                            uploadStatuses.add(status);
+                        }
+                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
+                            QLUploadStatus status = uploadQingLong(chromeSessionId, ck, phone, remark, qlConfig);
+                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
+                            uploadStatuses.add(status);
+                        }
+                    }
+                }
+            }
+
+            driverFactory.releaseWebDriver(chromeSessionId);
+
+            if (qlUploadDirect != 1) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("uploadStatuses", uploadStatuses);
+                try {
+                    Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/uploadRes.ftl");
+                    String process = FreemarkerUtils.process(template, map);
+                    log.debug(process);
+                    jsonObject.put("html", process);
+                    jsonObject.put("status", 1);
+                } catch (IOException | TemplateException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                StringBuilder errorMsg = new StringBuilder();
+                StringBuilder successMsg = new StringBuilder();
+                for (QLUploadStatus uploadStatus : uploadStatuses) {
+                    String label = uploadStatus.getQlConfig().getLabel();
+                    if (uploadStatus.getUploadStatus() <= 0) {
+                        if (!StringUtils.isEmpty(label)) {
+                            errorMsg.append(label);
+                        } else {
+                            errorMsg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
+                        }
+                        errorMsg.append("上传失败<br/>");
+                    }
+                    if (uploadStatus.isFull()) {
+                        if (!StringUtils.isEmpty(label)) {
+                            errorMsg.append(label);
+                        } else {
+                            errorMsg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
+                        }
+                        errorMsg.append("超容量了<br/>");
+                    }
+                    if (uploadStatus.getUploadStatus() > 0) {
+                        if (!StringUtils.isEmpty(label)) {
+                            successMsg.append(label);
+                        } else {
+                            successMsg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
+                        }
+                        successMsg.append("上传成功<br/>");
+                    }
+                }
+                if (errorMsg.length() > 0) {
+                    jsonObject.put("status", -2);
+                    jsonObject.put("html", errorMsg.toString());
+                    return jsonObject;
+                }
+                jsonObject.put("status", 2);
+                jsonObject.put("successMsg", successMsg.toString());
+            }
+
+        } else {
+            jsonObject.put("status", 0);
+        }
+        return null;
+    }
+
+    public QLUploadStatus uploadQingLong(String chromeSessionId, String ck, String phone, String remark, QLConfig qlConfig) {
         int res = -1;
         if (qlConfig.getRemain() <= 0) {
             return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, "", "");
@@ -452,14 +556,14 @@ public class JDService {
             if (maxRetry == 0) {
                 break;
             }
-            token = getUserNamePasswordToken(driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId()), qlConfig);
+            token = getUserNamePasswordToken(driverFactory.getDriverBySessionId(chromeSessionId), qlConfig);
             if (token != null) {
                 break;
             }
             maxRetry--;
         }
         if (token != null) {
-            return uploadQingLongWithToken(myChromeClient, ck, phone, remark, qlConfig);
+            return uploadQingLongWithToken(chromeSessionId, ck, phone, remark, qlConfig);
         } else {
             res = 0;
         }
@@ -557,7 +661,7 @@ public class JDService {
         }
     }
 
-    public QLUploadStatus uploadQingLongWithToken(MyChromeClient myChromeClient, String ck, String phone, String remark, QLConfig qlConfig) {
+    public QLUploadStatus uploadQingLongWithToken(String chromeSessionId, String ck, String phone, String remark, QLConfig qlConfig) {
         JDCookie jdCookie = JDCookie.parse(ck);
         int res = -1;
         String pushRes = "";
@@ -568,7 +672,7 @@ public class JDService {
         boolean update = false;
         String updateId = "";
         String updateRemark = null;
-        JSONArray data = getCurrentCKS(driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId()), qlConfig, "");
+        JSONArray data = getCurrentCKS(driverFactory.getDriverBySessionId(chromeSessionId), qlConfig, "");
         if (data != null && data.size() > 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
@@ -629,7 +733,7 @@ public class JDService {
                 }
 
                 if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                    String token = getUserNamePasswordToken(driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId()), qlConfig);
+                    String token = getUserNamePasswordToken(driverFactory.getDriverBySessionId(chromeSessionId), qlConfig);
                     log.info(qlConfig.getQlUrl() + " 更新token " + token);
                     qlConfig.setQlToken(new QLToken(token));
                 }

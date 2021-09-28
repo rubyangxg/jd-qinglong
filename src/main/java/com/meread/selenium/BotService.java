@@ -7,11 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -170,9 +172,66 @@ public class BotService {
     public String getQLStatus() {
         StringBuilder sb = new StringBuilder();
         List<QLConfig> qlConfigs = driverFactory.getQlConfigs();
-        for (QLConfig ql : qlConfigs) {
-            sb.append(ql.getLabel() + ":剩余容量" + ql.getRemain() + ",登录方式" + ql.getQlLoginType().getDesc() + "\n");
+        int size = qlConfigs.size();
+        for (int i = 0; i < size; i++) {
+            QLConfig ql = qlConfigs.get(i);
+            sb.append(ql.getLabel()).append(":剩余容量->").append(ql.getRemain()).append(",登录方式->").append(ql.getQlLoginType().getDesc());
+            if (i != size - 1) {
+                sb.append("\n");
+            }
         }
         return sb.toString();
+    }
+
+    public void doUploadQinglong(long senderQQ, Set<Integer> chooseQLId) {
+        WebSocketSession webSocketSession = CommonAttributes.webSocketSession;
+        if (webSocketSession == null || !webSocketSession.isOpen()) {
+            log.warn("webSocketSession not open");
+            return;
+        }
+        threadPoolTaskExecutor.execute(() -> {
+            MyChromeClient myChromeClient = driverFactory.getCacheMyChromeClient(String.valueOf(senderQQ));
+            if (myChromeClient == null) {
+                int retry = 0;
+                while (retry++ <= 3) {
+                    try {
+                        webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "资源消耗殆尽，请稍后再试!")));
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        log.info("与客户端qq : " + senderQQ + "通信失败 : ");
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                        }
+                    }
+                }
+            } else {
+                String phone = myChromeClient.getTrackPhone();
+                String remark = myChromeClient.getTrackRemark();
+                String ck = myChromeClient.getTrackCK();
+                int qlUploadDirect = 1;
+                JSONObject jsonObject = jdService.uploadQingLong(chooseQLId, phone, remark, ck, myChromeClient.getChromeSessionId(), qlUploadDirect);
+                String html = jsonObject.getString("html");
+                log.info(jsonObject.toJSONString());
+                if (!StringUtils.isEmpty(html)) {
+                    html = html.replaceAll("<br/>", "\n");
+                }
+                int retry = 0;
+                while (retry++ <= 3) {
+                    try {
+                        webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, html)));
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        log.info("与客户端qq : " + senderQQ + "通信失败 : ");
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                        }
+                    }
+                }
+            }
+        });
     }
 }

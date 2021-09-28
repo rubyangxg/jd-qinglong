@@ -114,7 +114,7 @@ public class HelloController {
             @RequestParam(defaultValue = "0") String reset,
             HttpSession session, Model model) {
         model.addAttribute("debug", this.debug);
-        int qlUploadDirect = qlUploadDirect();
+        int qlUploadDirect = service.getQLUploadDirectConfig();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", factory.isInitSuccess());
@@ -154,21 +154,6 @@ public class HelloController {
         return "login";
     }
 
-    private int qlUploadDirect() {
-        String ql_upload_direct = System.getenv("QL_UPLOAD_DIRECT");
-        int qlUploadDirect = 0;
-        if (!StringUtils.isEmpty(ql_upload_direct)) {
-            try {
-                qlUploadDirect = Integer.parseInt(ql_upload_direct);
-            } catch (NumberFormatException e) {
-            }
-        }
-        if (factory.getQlConfigs() != null && factory.getQlConfigs().size() <= 1) {
-            return 1;
-        }
-        return qlUploadDirect;
-    }
-
     @PostMapping({"/jdLogin"})
     @ResponseBody
     public String login(HttpSession session, @RequestParam("phone") String phone) {
@@ -193,83 +178,14 @@ public class HelloController {
                                      @RequestParam(value = "remark", defaultValue = "") String remark,
                                      @RequestParam("ck") String ck,
                                      HttpSession httpSession) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("status", 0);
-
-        // 在session中保存用户信息
-
         MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(httpSession.getId());
         if (cacheMyChromeClient == null) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("status", 0);
             return jsonObject;
         }
-        int qlUploadDirect = qlUploadDirect();
-
-        if ((chooseQLId != null && chooseQLId.size() > 0) || qlUploadDirect == 1) {
-            List<QLUploadStatus> uploadStatuses = new ArrayList<>();
-            if (factory.getQlConfigs() != null) {
-                for (QLConfig qlConfig : factory.getQlConfigs()) {
-                    if (qlUploadDirect == 1 || chooseQLId.contains(qlConfig.getId())) {
-                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                            QLUploadStatus status = service.uploadQingLongWithToken(cacheMyChromeClient, ck, phone, remark, qlConfig);
-                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
-                            uploadStatuses.add(status);
-                        }
-                        if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
-                            QLUploadStatus status = service.uploadQingLong(cacheMyChromeClient, ck, phone, remark, qlConfig);
-                            log.info("上传" + qlConfig.getQlUrl() + "结果" + status.getUploadStatus());
-                            uploadStatuses.add(status);
-                        }
-                    }
-                }
-            }
-
-            factory.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
-
-            if (qlUploadDirect != 1) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("uploadStatuses", uploadStatuses);
-                try {
-                    Template template = freeMarkerConfigurer.getConfiguration().getTemplate("fragment/uploadRes.ftl");
-                    String process = FreemarkerUtils.process(template, map);
-                    log.debug(process);
-                    jsonObject.put("html", process);
-                    jsonObject.put("status", 1);
-                } catch (IOException | TemplateException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                StringBuilder msg = new StringBuilder();
-                for (QLUploadStatus uploadStatus : uploadStatuses) {
-                    String label = uploadStatus.getQlConfig().getLabel();
-                    if (uploadStatus.getUploadStatus() <= 0) {
-                        if (!StringUtils.isEmpty(label)) {
-                            msg.append(label);
-                        } else {
-                            msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
-                        }
-                        msg.append("上传失败<br/>");
-                    }
-                    if (uploadStatus.isFull()) {
-                        if (!StringUtils.isEmpty(label)) {
-                            msg.append(label);
-                        } else {
-                            msg.append("QL_URL_").append(uploadStatus.getQlConfig().getId());
-                        }
-                        msg.append("超容量了<br/>");
-                    }
-                }
-                if (msg.length() > 0) {
-                    jsonObject.put("status", -2);
-                    jsonObject.put("html", msg.toString());
-                    return jsonObject;
-                }
-                jsonObject.put("status", 2);
-            }
-
-        } else {
-            jsonObject.put("status", 0);
-        }
-        return jsonObject;
+        int qlUploadDirect = service.getQLUploadDirectConfig();
+        return service.uploadQingLong(chooseQLId, phone, remark, ck, cacheMyChromeClient.getChromeSessionId(),qlUploadDirect);
     }
 
     @PostMapping({"/chooseQingLong"})

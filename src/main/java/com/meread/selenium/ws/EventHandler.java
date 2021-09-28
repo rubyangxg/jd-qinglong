@@ -18,7 +18,9 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +58,7 @@ public class EventHandler extends TextWebSocketHandler {
 
     private static final Pattern PATTERN = Pattern.compile("(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}");
     private static final Pattern PATTERN2 = Pattern.compile("\\d{6}");
+    private static final Pattern PATTERN3 = Pattern.compile("青龙(\\d+)");
 
     /**
      * socket 建立成功事件
@@ -121,6 +124,7 @@ public class EventHandler extends TextWebSocketHandler {
 
         Matcher matcher = PATTERN.matcher(content);
         Matcher matcher2 = PATTERN2.matcher(content);
+        Matcher matcher3 = PATTERN3.matcher(content);
         if ("登录".equals(content) || "登陆".equals(content)) {
             log.info("处理" + senderQQ + "登录逻辑...");
             params.put("message", "请输入手机号：");
@@ -133,9 +137,17 @@ public class EventHandler extends TextWebSocketHandler {
             params.put("message", "正在处理登录...");
             botService.doLogin(senderQQ, content);
         } else if ("青龙状态".equals(content)) {
-            log.info("接受了验证码" + content + "，处理登录逻辑");
             String qlStatus = botService.getQLStatus();
             params.put("message", qlStatus);
+        } else if (matcher3.matches()) {
+            char[] chars = matcher3.group(1).toCharArray();
+            Set<Integer> qlIds = new HashSet<>();
+            for (char c : chars) {
+                int qlId = Integer.parseInt(String.valueOf(c));
+                qlIds.add(qlId);
+            }
+            params.put("message", "正在上传...");
+            botService.doUploadQinglong(senderQQ, qlIds);
         }
 
         if (!StringUtils.isEmpty(params.getString("message"))) {

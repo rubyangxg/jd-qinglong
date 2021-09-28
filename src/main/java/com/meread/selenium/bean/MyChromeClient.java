@@ -22,6 +22,7 @@ public class MyChromeClient {
     //用户缓存
     private String trackPhone;
     private long trackQQ;
+    private String trackRemark;
     private String trackCK;
     private String chromeSessionId;
     private long expireTime;
