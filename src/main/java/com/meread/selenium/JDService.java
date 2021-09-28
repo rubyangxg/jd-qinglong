@@ -61,9 +61,6 @@ public class JDService {
     @Value("${jd.debug}")
     private boolean debug;
 
-    @Value("${login.type}")
-    private JDLoginType jdLoginType;
-
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
 
     static {
@@ -144,7 +141,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (debug || jdLoginType == JDLoginType.qr) {
+        if (debug || myChromeClient.getJdLoginType() == JDLoginType.qr) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
@@ -181,12 +178,12 @@ public class JDService {
             }
         }
 
-        if (pageText.contains("其他登录方式") && jdLoginType == JDLoginType.qr) {
+        if (pageText.contains("其他登录方式") && myChromeClient.getJdLoginType() == JDLoginType.qr) {
             webDriver.findElement(By.xpath("//a[@report-eventid=\"MLoginRegister_SMSQQLogin\"]")).click();
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.NORMAL);
         }
 
-        if (jdLoginType == JDLoginType.qr) {
+        if (myChromeClient.getJdLoginType() == JDLoginType.qr) {
             int retry = 1;
             while (pageText.contains("服务异常")) {
                 log.info("尝试第" + retry + "次刷新");

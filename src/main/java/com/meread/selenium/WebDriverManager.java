@@ -798,16 +798,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         return null;
     }
 
-    public int getAvailChrome() {
-        int availChrome = 0;
-        for (MyChrome chrome : chromes.values()) {
-            if (chrome.getUserTrackId() == null) {
-                availChrome++;
-            }
-        }
-        return availChrome;
-    }
-
     public StatClient getStatClient() {
         int availChromeCount = 0;
         int webSessionCount = 0;

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,7 +18,9 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -141,6 +142,8 @@ public class HelloController {
         if (cacheMyChromeClient == null) {
             model.addAttribute("error", "1");
             return "login";
+        } else {
+            cacheMyChromeClient.setJdLoginType(JDLoginType.valueOf(jdLoginType));
         }
 
         if ("1".equals(reset)) {
@@ -193,7 +196,7 @@ public class HelloController {
             return jsonObject;
         }
         int qlUploadDirect = service.getQLUploadDirectConfig();
-        return service.uploadQingLong(chooseQLId, phone, remark, ck, cacheMyChromeClient.getChromeSessionId(),qlUploadDirect);
+        return service.uploadQingLong(chooseQLId, phone, remark, ck, cacheMyChromeClient.getChromeSessionId(), qlUploadDirect);
     }
 
     @PostMapping({"/chooseQingLong"})
