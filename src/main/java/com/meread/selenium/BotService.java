@@ -44,7 +44,7 @@ public class BotService {
             }
             if (myChromeClient == null) {
                 try {
-                    webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "找不到资源，请稍后再试!")));
+                    webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "资源消耗殆尽，请稍后再试!")));
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.info("与客户端qq : " + senderQQ + "通信失败");
@@ -118,7 +118,7 @@ public class BotService {
         MyChromeClient myChromeClient = driverFactory.getCacheMyChromeClient(String.valueOf(senderQQ));
         if (myChromeClient == null) {
             try {
-                webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "找不到资源，请稍后再试!")));
+                webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "资源消耗殆尽，请稍后再试!")));
             } catch (IOException e) {
                 e.printStackTrace();
                 log.info("与客户端qq : " + senderQQ + "通信失败 : ");
