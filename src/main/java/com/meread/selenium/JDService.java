@@ -536,13 +536,16 @@ public class JDService {
                     return jsonObject;
                 }
                 jsonObject.put("status", 2);
-                jsonObject.put("successMsg", successMsg.toString());
+                String s = successMsg.toString();
+                if (s.endsWith("<br/>")) {
+                    s = s.substring(0, s.length() - 5);
+                }
+                jsonObject.put("html", s);
             }
-
         } else {
             jsonObject.put("status", 0);
         }
-        return null;
+        return jsonObject;
     }
 
     public QLUploadStatus uploadQingLong(String chromeSessionId, String ck, String phone, String remark, QLConfig qlConfig) {
@@ -614,7 +617,6 @@ public class JDService {
             }
             if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
                 String token = getUserNamePasswordToken(webDriver, qlConfig);
-                log.info(qlConfig.getQlUrl() + " 更新token " + token);
                 qlConfig.setQlToken(new QLToken(token));
             }
             if (qlConfig.getQlToken() == null) {
@@ -733,7 +735,6 @@ public class JDService {
 
                 if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.USERNAME_PASSWORD) {
                     String token = getUserNamePasswordToken(driverFactory.getDriverBySessionId(chromeSessionId), qlConfig);
-                    log.info(qlConfig.getQlUrl() + " 更新token " + token);
                     qlConfig.setQlToken(new QLToken(token));
                 }
                 if (qlConfig.getQlToken() == null) {

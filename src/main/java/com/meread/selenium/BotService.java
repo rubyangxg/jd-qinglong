@@ -126,6 +126,10 @@ public class BotService {
         if (myChromeClient == null) {
             sendMsgWithRetry(senderQQ, getNoChromeMsg());
         } else {
+            if (myChromeClient.isExpire()) {
+                sendMsgWithRetry(senderQQ, "超时了，请重新开始...");
+                return;
+            }
             sendMsgWithRetry(senderQQ, "正在准备登录...");
             threadPoolTaskExecutor.execute(() -> {
                 jdService.controlChrome(myChromeClient, "sms_code", authCode);
@@ -197,6 +201,10 @@ public class BotService {
             if (myChromeClient == null) {
                 sendMsgWithRetry(senderQQ, getNoChromeMsg());
             } else {
+                if (myChromeClient.isExpire()) {
+                    sendMsgWithRetry(senderQQ, "超时了，请重新开始...");
+                    return;
+                }
                 sendMsgWithRetry(senderQQ, "正在上传...");
                 String phone = myChromeClient.getTrackPhone();
                 if (StringUtils.isEmpty(phone)) {
@@ -257,6 +265,10 @@ public class BotService {
         if (myChromeClient == null) {
             sendMsgWithRetry(senderQQ, "请重新开始吧!");
         } else {
+            if (myChromeClient.isExpire()) {
+                sendMsgWithRetry(senderQQ, "超时了，请重新开始...");
+                return;
+            }
             remark = strSpecialFilter(remark);
             myChromeClient.setTrackRemark(StringUtils.isEmpty(remark) ? myChromeClient.getTrackPhone() : remark);
             sendMsgWithRetry(senderQQ, "设置备注成功!");
