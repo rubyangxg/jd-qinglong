@@ -1,6 +1,5 @@
 package com.meread.selenium;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
@@ -14,9 +13,6 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.util.UUID;
 
-import static com.meread.selenium.WebDriverFactory.CLIENT_SESSION_ID_KEY;
-import static com.meread.selenium.WebDriverFactory.SERVLET_OR_QQ_SESSION_ID_KEY;
-
 /**
  * @author yangxg
  * @date 2021/9/26
@@ -26,7 +22,7 @@ import static com.meread.selenium.WebDriverFactory.SERVLET_OR_QQ_SESSION_ID_KEY;
 public class BotService {
 
     @Autowired
-    private WebDriverFactory driverFactory;
+    private WebDriverManager driverFactory;
 
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -130,7 +126,7 @@ public class BotService {
                             if (!jdCookies.isEmpty()) {
                                 webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, jdCookies.toString())));
                                 success = true;
-                                driverFactory.releaseWebDriver(myChromeClient);
+                                driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId());
                                 break;
                             }
                             Thread.sleep(1000);

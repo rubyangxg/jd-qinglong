@@ -305,7 +305,7 @@
                                 chooseQingLong();
                             }, btn2: function () {
                                 layer.msg('请手动复制');
-                                $.get("/releaseSession, function (data, status) {
+                                $.get("/releaseSession", function (data, status) {
                                     console.log("releaseSession data : " + data);
                                     console.log("releaseSession status : " + status);
                                 });

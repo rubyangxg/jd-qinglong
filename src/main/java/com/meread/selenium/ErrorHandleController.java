@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 public class ErrorHandleController implements ErrorController {
 
     @Autowired
-    private WebDriverFactory webDriverFactory;
+    private WebDriverManager webDriverManager;
 
     @Override
     public String getErrorPath() {
@@ -24,7 +23,7 @@ public class ErrorHandleController implements ErrorController {
     public String handleError(HttpServletRequest request, Model model) {
         //获取statusCode
         Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
-        model.addAttribute("initSuccess", webDriverFactory.isInitSuccess());
+        model.addAttribute("initSuccess", webDriverManager.isInitSuccess());
         if (statusCode == 404) {
             return "/error/404";
         } else {

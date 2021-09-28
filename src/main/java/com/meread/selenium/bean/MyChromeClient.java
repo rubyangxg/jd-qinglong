@@ -23,7 +23,7 @@ public class MyChromeClient {
     private String trackPhone;
     private long trackQQ;
     private String trackCK;
-    private MyChrome myChrome;
+    private String chromeSessionId;
     private long expireTime;
 
     public boolean isExpire() {

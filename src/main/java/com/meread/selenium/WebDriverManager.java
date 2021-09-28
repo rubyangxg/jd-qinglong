@@ -47,7 +47,7 @@ import java.util.concurrent.*;
  */
 @Component
 @Slf4j
-public class WebDriverFactory implements CommandLineRunner, InitializingBean {
+public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -103,20 +103,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     /**
      * chromeSessionId-->MyChrome
      */
-    private Map<String, MyChrome> chromes;
+    private Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * userTrackId --> MyChromeClient
      */
-    private Map<String, MyChromeClient> clients = new HashMap<>();
-
-    public Map<String, MyChrome> getChromes() {
-        return chromes;
-    }
-
-    public Map<String, MyChromeClient> getClients() {
-        return clients;
-    }
+    private Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
 
     public ChromeOptions chromeOptions;
 
@@ -201,6 +193,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         if (!stopSchedule) {
             SelenoidStatus nss = getGridStatus();
             Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
+            Set<String> removedChromeSessionId = new HashSet<>();
             while (iterator.hasNext()) {
                 String chromeSessionId = iterator.next().getKey();
                 Map<String, JSONObject> sessions = nss.getSessions();
@@ -210,9 +203,11 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
                 } else {
                     //如果session不存在，则remove
                     iterator.remove();
+                    removedChromeSessionId.add(chromeSessionId);
                     log.warn("quit a chrome");
                 }
             }
+            cleanClients(removedChromeSessionId);
             int shouldCreate = CAPACITY - chromes.size();
             if (shouldCreate > 0) {
                 try {
@@ -228,6 +223,17 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
             }
         }
         runningSchedule = false;
+    }
+
+    private void cleanClients(Set<String> removedChromeSessionId) {
+        Iterator<Map.Entry<String, MyChromeClient>> iterator = clients.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, MyChromeClient> entry = iterator.next();
+            String chromeSessionId = entry.getValue().getChromeSessionId();
+            if (chromeSessionId == null || removedChromeSessionId.contains(chromeSessionId)) {
+                iterator.remove();
+            }
+        }
     }
 
     @Autowired
@@ -290,7 +296,6 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     public void run(String... args) throws MalformedURLException {
 
         stopSchedule = true;
-        chromes = Collections.synchronizedMap(new HashMap<>());
 
         log.info("解析配置不初始化");
         parseMultiQLConfig();
@@ -327,6 +332,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         initQLConfig();
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
+        }
+
+        if (chromes.isEmpty()) {
+            //防止配置资源数过少时(比如1)，因为初始化青龙后，导致无chrome实例,来不及等定时任务创建
+            createChrome();
+            inflate(chromes, getGridStatus());
         }
 
         log.info("启动成功!");
@@ -540,7 +551,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
                 } else if (verify2) {
                     boolean result = false;
                     try {
-                        result = initInnerQingLong(driver,qlConfig);
+                        result = initInnerQingLong(driver, qlConfig);
                         qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
                         jdService.fetchCurrentCKS_count(driver, qlConfig, "");
                     } catch (Exception e) {
@@ -559,7 +570,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
             }
         } finally {
             if (driver != null) {
-                driver.quit();
+                releaseWebDriver(driver.getSessionId().toString());
             }
         }
 
@@ -651,17 +662,17 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         return false;
     }
 
-    public RemoteWebDriver getDriverBySessionId(MyChromeClient sessionId) {
-        MyChrome myChromeBySessionId = getMyChromeBySessionId(sessionId);
+    public RemoteWebDriver getDriverBySessionId(String chromeSessionId) {
+        MyChrome myChromeBySessionId = getMyChromeBySessionId(chromeSessionId);
         if (myChromeBySessionId != null) {
             return myChromeBySessionId.getWebDriver();
         }
         return null;
     }
 
-    public MyChrome getMyChromeBySessionId(MyChromeClient sessionId) {
+    public MyChrome getMyChromeBySessionId(String chromeSessionId) {
         if (chromes != null && chromes.size() > 0) {
-            return chromes.get(sessionId);
+            return chromes.get(chromeSessionId);
         }
         return null;
     }
@@ -678,7 +689,7 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
             if (myChrome.getUserTrackId() == null) {
                 //双向绑定
                 myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
-                myChromeClient.setMyChrome(myChrome);
+                myChromeClient.setChromeSessionId(myChrome.getChromeSessionId());
                 myChrome.setUserTrackId(userTrackId);
                 success = true;
                 break;
@@ -700,12 +711,12 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    public void releaseWebDriver(MyChromeClient myChromeClient) {
+    public void releaseWebDriver(String chromeSessionId) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next().getValue();
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
-            if (sessionId.equals(myChromeClient.getMyChrome().getChromeSessionId())) {
+            if (sessionId.equals(chromeSessionId)) {
                 try {
                     iterator.remove();
                     threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
@@ -720,13 +731,13 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
         Iterator<Map.Entry<String, MyChromeClient>> iterator2 = clients.entrySet().iterator();
         while (iterator2.hasNext()) {
             MyChromeClient curr = iterator2.next().getValue();
-            if (curr.getUserTrackId().equals(myChromeClient.getUserTrackId())) {
+            if (curr.getChromeSessionId().equals(chromeSessionId)) {
                 try {
                     iterator2.remove();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                log.info("remove MyChromeClient : " + myChromeClient.getUserTrackId());
+                log.info("remove MyChromeClient : " + chromeSessionId);
                 break;
             }
         }
@@ -775,5 +786,15 @@ public class WebDriverFactory implements CommandLineRunner, InitializingBean {
             }
         }
         return null;
+    }
+
+    public int getAvailChrome() {
+        int availChrome = 0;
+        for (MyChrome chrome : chromes.values()) {
+            if (chrome.getUserTrackId() == null) {
+                availChrome++;
+            }
+        }
+        return availChrome;
     }
 }

@@ -17,10 +17,10 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {
         ApplicationContext context = event.getApplicationContext();
-        WebDriverFactory webDriverFactory = context.getBean(WebDriverFactory.class);
+        WebDriverManager webDriverManager = context.getBean(WebDriverManager.class);
 
-        webDriverFactory.stopSchedule = true;
-        while (webDriverFactory.runningSchedule) {
+        webDriverManager.stopSchedule = true;
+        while (webDriverManager.runningSchedule) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -29,16 +29,16 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
             log.info("wait WebDriverFactory schedule destroy...");
         }
 
-        SelenoidStatus status = webDriverFactory.getGridStatus();
+        SelenoidStatus status = webDriverManager.getGridStatus();
         Map<String, JSONObject> sessions = status.getSessions();
         if (sessions != null) {
             for (String sessionId : sessions.keySet()) {
                 if (sessionId != null) {
                     log.info("destroy chrome " + sessionId);
-                    webDriverFactory.closeSession(sessionId);
+                    webDriverManager.closeSession(sessionId);
                 }
             }
         }
-        webDriverFactory.cleanDockerContainer();
+        webDriverManager.cleanDockerContainer();
     }
 }

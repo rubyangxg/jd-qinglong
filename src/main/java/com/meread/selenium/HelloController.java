@@ -14,7 +14,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class HelloController {
     private JDService service;
 
     @Autowired
-    private WebDriverFactory factory;
+    private WebDriverManager factory;
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
@@ -223,7 +222,7 @@ public class HelloController {
                 }
             }
 
-            factory.releaseWebDriver(cacheMyChromeClient);
+            factory.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
 
             if (qlUploadDirect != 1) {
                 Map<String, Object> map = new HashMap<>();
@@ -308,7 +307,7 @@ public class HelloController {
         if (myChromeClient == null) {
             return -1;
         }
-        factory.releaseWebDriver(myChromeClient);
+        factory.releaseWebDriver(myChromeClient.getChromeSessionId());
         return 1;
     }
 
