@@ -146,7 +146,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         return chromeOptions;
     }
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 60000, fixedDelay = 30 * 60000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {

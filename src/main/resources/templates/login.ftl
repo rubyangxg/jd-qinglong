@@ -286,7 +286,7 @@
             //不断展示屏幕流，一直到获取到ck后，清除定时器
             var screenTimer = setInterval(function () {
                 getScreen();
-            }, <#if jdLoginType == 'qr'>6000<#else>2000</#if>);
+            }, 2000);
         }
 
         var timeoutTimer = setInterval(function () {
