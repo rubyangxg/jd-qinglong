@@ -3,8 +3,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>阿东账号登录</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><#if indexTitle??>${indexTitle}<#else>阿东CK自助获取</#if></title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
     <link href="${base}/css/main.css" rel="stylesheet">
@@ -41,7 +42,7 @@
         </div>
     </div>
 <#else>
-    <div class="login-form">
+    <div class="container">
         <div class="alert alert-primary" role="alert">
             操作有效期：<span id="sessionTimeout" style="color: red"></span>秒，总资源数：<span id="totalChromeCount"
                                                                                      style="color: green"></span>, 可用资源个数：<span id="availChromeCount"

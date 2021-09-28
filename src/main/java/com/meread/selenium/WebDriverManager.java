@@ -342,7 +342,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     private void createChrome() {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        int create = (CAPACITY == 1 ? 2 : CAPACITY) / 2;
+        int create = CAPACITY == 1 ? 1 : CAPACITY / 2;
         CountDownLatch cdl = new CountDownLatch(create);
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
@@ -628,7 +628,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                         RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
                         LocalStorage storage = webStorage.getLocalStorage();
                         token = storage.getItem("token");
-                        log.info("qinglong token " + token);
                         qlConfig.setQlToken(new QLToken(token));
                         readPassword(qlConfig);
                     }

@@ -575,7 +575,6 @@ public class JDService {
             webDriver.get(qlConfig.getQlUrl() + "/login");
             boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
             if (b) {
-                log.info(webDriver.getTitle() + ", url = " + webDriver.getCurrentUrl());
                 if (!webDriver.getCurrentUrl().endsWith("/login")) {
 //                    new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
                     String token = new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().getItem("token");
