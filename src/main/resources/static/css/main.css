@@ -1,8 +1,29 @@
-.login-form {
-    width: 40%;
-    margin: 20px auto;
-    font-size: 15px;
+/*媒体查询：注意and后面空格的添加*/
+/*iphone: w < 768px*/
+@media screen and (max-width: 768px){
+    .login-form {
+        width: 100%;
+        margin: 20px auto;
+        font-size: 15px;
+    }
 }
+/*pad: w >= 768  && w< 992*/
+@media screen and (max-width: 992px) and (min-width: 768px) {
+    .login-form {
+        width: 100%;
+        margin: 20px auto;
+        font-size: 15px;
+    }
+}
+/*中等屏幕   w >= 992  && w<1200*/
+@media screen and (max-width: 1200px) and (min-width: 992px) {
+    .login-form {
+        width: 50%;
+        margin: 20px auto;
+        font-size: 15px;
+    }
+}
+
 
 .login-form form {
     margin-bottom: 15px;

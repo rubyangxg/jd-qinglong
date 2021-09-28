@@ -41,7 +41,6 @@
         </div>
     </div>
 <#else>
-
     <div class="login-form">
         <div class="alert alert-primary" role="alert">
             操作有效期：<span id="sessionTimeout" style="color: red"></span>秒，总资源数：<span id="totalChromeCount"
@@ -58,9 +57,14 @@
                     data-clipboard-action="copy">点击复制
             </button>
         </div>
+        <#if indexNotice??>
+            <div class="alert alert-warning" role="alert">
+            <i class="bi bi-volume-up"></i>公告：${indexNotice}
+        </div>
+        </#if>
         <#if jdLoginType == 'phone'>
             <form method="post" class="needs-validation" novalidate id="mainForm">
-                <h2 class="text-center">阿东CK自助获取</h2>
+                <h2 class="text-center"><#if indexTitle??>${indexTitle}<#else>阿东CK自助获取</#if></h2>
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -262,12 +266,15 @@
         //临时变量，控制ajax顺序
         let sendingAuthCode = false;
         let cracking = false;
+        let error = ${error!"0"};
 
-        getScreen();
-        //不断展示屏幕流，一直到获取到ck后，清除定时器
-        var screenTimer = setInterval(function () {
+        if (error === 0) {
             getScreen();
-        }, <#if jdLoginType == 'qr'>6000<#else>2000</#if>);
+            //不断展示屏幕流，一直到获取到ck后，清除定时器
+            var screenTimer = setInterval(function () {
+                getScreen();
+            }, <#if jdLoginType == 'qr'>6000<#else>2000</#if>);
+        }
 
         var timeoutTimer = setInterval(function () {
             var oldValue = $("#sessionTimeout").text();

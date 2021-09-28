@@ -58,7 +58,8 @@ public class EventHandler extends TextWebSocketHandler {
 
     private static final Pattern PATTERN = Pattern.compile("(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\\d{8}");
     private static final Pattern PATTERN2 = Pattern.compile("\\d{6}");
-    private static final Pattern PATTERN3 = Pattern.compile("青龙(\\d+)");
+    private static final Pattern PATTERN3 = Pattern.compile("青龙:(\\d+)");
+    private static final Pattern PATTERN4 = Pattern.compile("备注:(.*)");
 
     /**
      * socket 建立成功事件
@@ -125,19 +126,20 @@ public class EventHandler extends TextWebSocketHandler {
         Matcher matcher = PATTERN.matcher(content);
         Matcher matcher2 = PATTERN2.matcher(content);
         Matcher matcher3 = PATTERN3.matcher(content);
-        if ("登录".equals(content) || "登陆".equals(content)) {
+        Matcher matcher4 = PATTERN4.matcher(content);
+        if ("帮助".equals(content) || "help".equals(content) || "h".equals(content) || "hello".equals(content)) {
+            params.put("message", "看文档吧");
+        }else if ("登录".equals(content) || "登陆".equals(content)) {
             log.info("处理" + senderQQ + "登录逻辑...");
             params.put("message", "请输入手机号：");
         } else if (matcher.matches()) {
             log.info("处理给手机号" + content + "发验证码逻辑");
-            params.put("message", "正在准备发送验证码...");
             botService.doSendSMS(senderQQ, content);
         } else if (matcher2.matches()) {
             log.info("接受了验证码" + content + "，处理登录逻辑");
-            params.put("message", "正在处理登录...");
             botService.doLogin(senderQQ, content);
         } else if ("青龙状态".equals(content)) {
-            String qlStatus = botService.getQLStatus();
+            String qlStatus = botService.getQLStatus(false);
             params.put("message", qlStatus);
         } else if (matcher3.matches()) {
             char[] chars = matcher3.group(1).toCharArray();
@@ -146,13 +148,15 @@ public class EventHandler extends TextWebSocketHandler {
                 int qlId = Integer.parseInt(String.valueOf(c));
                 qlIds.add(qlId);
             }
-            params.put("message", "正在上传...");
             botService.doUploadQinglong(senderQQ, qlIds);
+        } else if (matcher4.matches()) {
+            String remark = matcher4.group(1);
+            botService.trackRemark(senderQQ, remark);
+        } else {
+            params.put("message", "无法识别的指令，请重新输入");
         }
-
         if (!StringUtils.isEmpty(params.getString("message"))) {
             session.sendMessage(new TextMessage(jo.toJSONString()));
         }
     }
-
 }

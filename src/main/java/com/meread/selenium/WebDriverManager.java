@@ -155,7 +155,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     jdService.fetchCurrentCKS_count(webDriver, qlConfig, "");
                     return true;
                 });
-                if (exec) {
+                if (exec != null && exec) {
                     int newSize = qlConfig.getRemain();
                     log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
                 } else {

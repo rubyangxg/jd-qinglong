@@ -118,9 +118,8 @@ public class HelloController {
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", factory.isInitSuccess());
-        if (!factory.isInitSuccess()) {
-            return "login";
-        }
+        model.addAttribute("indexNotice", factory.getProperties().getProperty("INDEX.NOTICE"));
+        model.addAttribute("indexTitle", factory.getProperties().getProperty("INDEX.TITLE"));
 
         try {
             JDLoginType.valueOf(jdLoginType);
@@ -129,10 +128,19 @@ public class HelloController {
         }
         model.addAttribute("jdLoginType", jdLoginType);
 
+        if (!factory.isInitSuccess()) {
+            return "login";
+        }
+
         String servletSessionId = session.getId();
         MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(servletSessionId);
         if (cacheMyChromeClient == null) {
             cacheMyChromeClient = factory.createNewMyChromeClient(servletSessionId, LoginType.WEB, JDLoginType.valueOf(jdLoginType));
+        }
+
+        if (cacheMyChromeClient == null) {
+            model.addAttribute("error", "1");
+            return "login";
         }
 
         if ("1".equals(reset)) {
