@@ -680,6 +680,9 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         myChromeClient.setJdLoginType(jdLoginType);
         myChromeClient.setUserTrackId(userTrackId);
         boolean success = false;
+        if (chromes.size() < CAPACITY) {
+            createChrome();
+        }
         for (MyChrome myChrome : chromes.values()) {
             if (myChrome.getUserTrackId() == null) {
                 //双向绑定

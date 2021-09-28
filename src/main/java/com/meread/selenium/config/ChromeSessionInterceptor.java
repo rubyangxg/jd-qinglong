@@ -1,6 +1,7 @@
 package com.meread.selenium.config;
 
 import com.meread.selenium.WebDriverManager;
+import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.MyChromeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,11 @@ public class ChromeSessionInterceptor implements HandlerInterceptor {
             if (cacheMyChromeClient != null && cacheMyChromeClient.isExpire()) {
                 logger.info(cacheMyChromeClient.getChromeSessionId() + "过期了");
                 driverFactory.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
+            }
+            MyChrome myChrome = driverFactory.getMyChromeBySessionId(cacheMyChromeClient.getChromeSessionId());
+            if (myChrome != null && myChrome.isExpire()) {
+                logger.info(myChrome.getChromeSessionId() + "过期了");
+                driverFactory.releaseWebDriver(myChrome.getChromeSessionId());
             }
         } catch (Exception e) {
             e.printStackTrace();
