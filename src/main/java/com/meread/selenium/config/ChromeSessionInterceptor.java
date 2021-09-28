@@ -36,11 +36,6 @@ public class ChromeSessionInterceptor implements HandlerInterceptor {
                 logger.info(cacheMyChromeClient.getChromeSessionId() + "过期了");
                 driverFactory.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
             }
-            MyChrome myChrome = driverFactory.getMyChromeBySessionId(cacheMyChromeClient.getChromeSessionId());
-            if (myChrome != null && myChrome.isExpire()) {
-                logger.info(myChrome.getChromeSessionId() + "过期了");
-                driverFactory.releaseWebDriver(myChrome.getChromeSessionId());
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -36,17 +36,20 @@ public class BotService {
             log.warn("webSocketSession not open");
             return;
         }
-        //和网页获取不同，qq获取方式在获得到手机号以后才创建浏览器，所以create是true
-        MyChromeClient myChromeClient = driverFactory.createNewMyChromeClient(String.valueOf(senderQQ), LoginType.QQBOT, JDLoginType.phone);
-        if (myChromeClient == null) {
-            try {
-                webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "找不到资源，请稍后再试!")));
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.info("与客户端qq : " + senderQQ + "通信失败");
+        threadPoolTaskExecutor.execute(() -> {
+            //和网页获取不同，qq获取方式在获得到手机号以后才创建浏览器，所以create是true
+            MyChromeClient myChromeClient = driverFactory.getCacheMyChromeClient(String.valueOf(senderQQ));
+            if (myChromeClient == null) {
+                myChromeClient = driverFactory.createNewMyChromeClient(String.valueOf(senderQQ), LoginType.QQBOT, JDLoginType.phone);
             }
-        } else {
-            threadPoolTaskExecutor.execute(() -> {
+            if (myChromeClient == null) {
+                try {
+                    webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "找不到资源，请稍后再试!")));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.info("与客户端qq : " + senderQQ + "通信失败");
+                }
+            } else {
                 try {
                     jdService.toJDlogin(myChromeClient);
                     Thread.sleep(1000);
@@ -65,7 +68,11 @@ public class BotService {
                         screen = jdService.getScreen(myChromeClient);
                     }
                     if (!success) {
-                        webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "无法发送验证码")));
+                        if (screen.getPageStatus() == JDScreenBean.PageStatus.SUCCESS_CK) {
+                            webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "已经获取到CK了，你的CK是" + screen.getCk().toString())));
+                        } else {
+                            webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "无法发送验证码")));
+                        }
                         return;
                     }
                     boolean b = jdService.sendAuthCode(myChromeClient);
@@ -93,8 +100,8 @@ public class BotService {
                     e.printStackTrace();
                     log.info("与客户端qq : " + senderQQ + "通信失败");
                 }
-            });
-        }
+            }
+        });
     }
 
     public void doLogin(long senderQQ, String authCode) {
