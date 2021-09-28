@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -131,9 +132,15 @@ public class EventHandler extends TextWebSocketHandler {
             log.info("接受了验证码" + content + "，处理登录逻辑");
             params.put("message", "正在处理登录...");
             botService.doLogin(senderQQ, content);
+        } else if ("青龙状态".equals(content)) {
+            log.info("接受了验证码" + content + "，处理登录逻辑");
+            String qlStatus = botService.getQLStatus();
+            params.put("message", qlStatus);
         }
 
-        session.sendMessage(new TextMessage(jo.toJSONString()));
+        if (!StringUtils.isEmpty(params.getString("message"))) {
+            session.sendMessage(new TextMessage(jo.toJSONString()));
+        }
     }
 
 }

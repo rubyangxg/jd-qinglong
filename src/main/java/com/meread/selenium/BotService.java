@@ -11,6 +11,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -164,5 +165,14 @@ public class BotService {
         params.put("message", content);
         jo.put("params", params);
         return jo.toJSONString();
+    }
+
+    public String getQLStatus() {
+        StringBuilder sb = new StringBuilder();
+        List<QLConfig> qlConfigs = driverFactory.getQlConfigs();
+        for (QLConfig ql : qlConfigs) {
+            sb.append(ql.getLabel() + ":剩余容量" + ql.getRemain() + ",登录方式" + ql.getQlLoginType().getDesc() + "\n");
+        }
+        return sb.toString();
     }
 }

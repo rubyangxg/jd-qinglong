@@ -39,11 +39,21 @@ public class QLConfig {
         /*
             用户名密码登录
          */
-        USERNAME_PASSWORD,
+        USERNAME_PASSWORD("用户名密码"),
         /*
             OpenApi登录
          */
-        TOKEN;
+        TOKEN("openId");
+
+        private String desc;
+
+        QLLoginType(String desc) {
+            this.desc = desc;
+        }
+
+        public String getDesc() {
+            return desc;
+        }
     }
 
     private QLLoginType qlLoginType;
