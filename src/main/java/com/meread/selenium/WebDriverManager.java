@@ -588,9 +588,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     String token = data.getString("token");
                     String tokenType = data.getString("token_type");
                     long expiration = data.getLong("expiration");
-                    log.info(qlUrl + "获取token成功 " + token);
-                    log.info(qlUrl + "获取tokenType成功 " + tokenType);
-                    log.info(qlUrl + "获取expiration成功 " + expiration);
                     qlConfig.setQlToken(new QLToken(token, tokenType, expiration));
                     return true;
                 }
