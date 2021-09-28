@@ -146,7 +146,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         return chromeOptions;
     }
 
-    @Scheduled(initialDelay = 180000, fixedDelay = 30 * 60000)
+    @Scheduled(initialDelay = 60000, fixedDelay = 30 * 60000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {
@@ -792,7 +792,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                webDriver.quit();
+                releaseWebDriver(webDriver.getSessionId().toString());
             }
         }
         return null;
