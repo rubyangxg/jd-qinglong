@@ -52,7 +52,7 @@ public class JDScreenBean {
     //为了防止前端一直占用webdriver，5分钟要释放掉
     private Long sessionTimeOut;
     //当前可用的chrome实例
-    private int availChrome;
+    private StatClient statClient;
 
     public JDScreenBean(String screen,String qr, PageStatus pageStatus) {
         this.screen = screen;

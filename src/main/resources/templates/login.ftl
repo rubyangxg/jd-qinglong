@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>阿东账号登录</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <link href="${base}/css/main.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <script src="${base}/js/layer/layer.js"></script>
@@ -46,8 +44,11 @@
 
     <div class="login-form">
         <div class="alert alert-primary" role="alert">
-            操作有效期：<span id="sessionTimeout" style="color: red"></span>秒，可用资源个数：<span id="availChrome"
-                                                                                     style="color: green"></span>
+            操作有效期：<span id="sessionTimeout" style="color: red"></span>秒，总资源数：<span id="totalChromeCount"
+                                                                                     style="color: green"></span>, 可用资源个数：<span id="availChromeCount"
+                                                                                     style="color: green"></span>(网页占用：<span id="webSessionCount"
+                                                                                                                             style="color: red"></span>，QQ占用：<span id="qqSessionCount"
+                                                                                                                                                                     style="color: red"></span>)
         </div>
         <div class="alert alert-success" role="alert" style="display: none" id="ckDiv">
             获取到的ck：
@@ -107,7 +108,7 @@
         </#if>
         <#if qlConfigs?has_content>
             <div class="row">
-                <div class="col-sm-10 mx-auto text-center">
+                <div class="mx-auto text-center">
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -171,7 +172,7 @@
                         layer.open({
                             type: 1,
                             skin: 'layui-layer-rim', //加上边框
-                            area: screen() < 2 ? ['50%', '30%'] : ['600px', '400px'], //宽高
+                            area: ['60%', '60%'], //宽高
                             content: data.html,
                             btn: ['确定'],
                             yes: function (index, layero) {
@@ -335,7 +336,10 @@
                     canClickLogin = data.canClickLogin;
                     canSendAuth = data.canSendAuth;
                     sessionTimeOut = data.sessionTimeOut;
-                    availChrome = data.availChrome;
+                    var totalChromeCount = data.statClient.totalChromeCount;
+                    var availChromeCount = data.statClient.availChromeCount;
+                    var webSessionCount = data.statClient.webSessionCount;
+                    var qqSessionCount = data.statClient.qqSessionCount;
 
                     if (pageStatus === 'SESSION_EXPIRED') {
                         clearInterval(screenTimer);
@@ -346,7 +350,9 @@
                     if (sessionTimeOut) {
                         $("#sessionTimeout").text(sessionTimeOut);
                     }
-                    $("#availChrome").text(availChrome);
+                    $("#availChromeCount").text(availChromeCount);
+                    $("#webSessionCount").text(webSessionCount);
+                    $("#qqSessionCount").text(qqSessionCount);
                     <#if debug == true>
                     if (screen) {
                         $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);

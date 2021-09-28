@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.*;
@@ -110,7 +112,7 @@ public class HelloController {
     public String index(
             @RequestParam(defaultValue = "phone") String jdLoginType,
             @RequestParam(defaultValue = "0") String reset,
-                        HttpSession session, Model model) {
+            HttpSession session, Model model) {
         model.addAttribute("debug", this.debug);
         int qlUploadDirect = qlUploadDirect();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
@@ -169,10 +171,9 @@ public class HelloController {
 
     @PostMapping({"/jdLogin"})
     @ResponseBody
-    public String login(@RequestParam("clientSessionId") String clientSessionId, HttpServletResponse response, @RequestParam("phone") String phone,
-                        @RequestParam("sms_code") String sms_code, Model model) {
+    public String login(HttpSession session, @RequestParam("phone") String phone) {
         // 在session中保存用户信息
-        MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(clientSessionId);
+        MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(session.getId());
         if (cacheMyChromeClient == null) {
             return "-1";
         }
@@ -273,8 +274,7 @@ public class HelloController {
 
     @PostMapping({"/chooseQingLong"})
     @ResponseBody
-    public JSONObject chooseQingLong(@RequestParam("clientSessionId") String clientSessionId,
-                                     @RequestParam(value = "phone", defaultValue = "无手机号") String phone,
+    public JSONObject chooseQingLong(@RequestParam(value = "phone", defaultValue = "无手机号") String phone,
                                      @RequestParam(value = "remark", defaultValue = "") String remark,
                                      @RequestParam("ck") String ck) {
         JSONObject jsonObject = new JSONObject();
@@ -282,7 +282,6 @@ public class HelloController {
         Map<String, Object> map = new HashMap<>();
         if (factory.getQlConfigs() != null && !factory.getQlConfigs().isEmpty()) {
             map.put("qlConfigs", factory.getQlConfigs());
-            map.put("clientSessionId", clientSessionId);
             map.put("phone", phone);
             map.put("ck", ck);
             map.put("remark", remark);

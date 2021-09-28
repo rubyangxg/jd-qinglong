@@ -811,4 +811,28 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         }
         return availChrome;
     }
+
+    public StatClient getStatClient() {
+        int availChromeCount = 0;
+        int webSessionCount = 0;
+        int qqSessionCount = 0;
+        int totalChromeCount = CAPACITY;
+        for (MyChrome chrome : chromes.values()) {
+            if (chrome.getUserTrackId() == null) {
+                availChromeCount++;
+            } else {
+                String userTrackId = chrome.getUserTrackId();
+                MyChromeClient client = clients.get(userTrackId);
+                if (client != null) {
+                    LoginType loginType = client.getLoginType();
+                    if (loginType == LoginType.WEB) {
+                        webSessionCount++;
+                    } else if (loginType == LoginType.QQBOT) {
+                        qqSessionCount++;
+                    }
+                }
+            }
+        }
+        return new StatClient(availChromeCount, webSessionCount, qqSessionCount, totalChromeCount);
+    }
 }
