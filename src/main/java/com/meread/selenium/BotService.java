@@ -65,6 +65,7 @@ public class BotService {
                     boolean success = false;
                     int retry = 0;
                     while (retry++ < 5) {
+                        log.info("正在检测是否可以发送验证码..." + retry);
                         if (screen.isCanSendAuth()) {
                             success = true;
                             break;
@@ -97,10 +98,10 @@ public class BotService {
                     Thread.sleep(1000);
                     retry = 0;
                     while (retry++ < 5) {
+                        screen = jdService.getScreen(myChromeClient);
                         if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
                             webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "正在尝试第" + retry + "次滑块验证")));
                             jdService.crackCaptcha(myChromeClient);
-                            screen = jdService.getScreen(myChromeClient);
                             if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
                                 success = true;
                                 break;
