@@ -353,6 +353,7 @@
                     $("#availChromeCount").text(availChromeCount);
                     $("#webSessionCount").text(webSessionCount);
                     $("#qqSessionCount").text(qqSessionCount);
+                    $("#totalChromeCount").text(totalChromeCount);
                     <#if debug == true>
                     if (screen) {
                         $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);

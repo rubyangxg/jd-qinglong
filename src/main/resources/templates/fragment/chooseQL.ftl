@@ -8,8 +8,7 @@
             <tr>
                 <th scope="col">勾选</th>
                 <th scope="col">青龙</th>
-                <th scope="col">容量</th>
-                <#--                <th scope="col">登录方式</th>-->
+                <th scope="col">可用容量</th>
             </tr>
             </thead>
             <tbody>
@@ -17,12 +16,13 @@
                 <tr>
                     <td>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="defaultCheck${s.id}" name="chooseQLId" value="${s.id}">
+                            <input class="form-check-input" type="checkbox" id="defaultCheck${s.id}" name="chooseQLId"
+                                   value="${s.id}">
                         </div>
                     </td>
                     <td>${s.label!(s.qlUrl)}</td>
                     <td>${s.remain}</td>
-<#--                    <td>${s.qlLoginType}</td>-->
+                    <#--                    <td>${s.qlLoginType}</td>-->
                 </tr>
             </#list>
             </tbody>
