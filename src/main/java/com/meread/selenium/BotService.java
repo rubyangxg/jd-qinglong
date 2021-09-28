@@ -153,7 +153,6 @@ public class BotService {
                                 webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, jdCookies.toString())));
                                 sendMsgWithRetry(senderQQ, "请输入备注，以备注:(英文冒号)开头");
                                 success = true;
-                                driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId());
                                 break;
                             }
                             Thread.sleep(1000);
@@ -236,6 +235,7 @@ public class BotService {
                     html = html.replaceAll("<br/>", "\n");
                     sendMsgWithRetry(senderQQ, html);
                 }
+                driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId());
             }
         });
     }
