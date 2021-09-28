@@ -65,7 +65,7 @@
         </#if>
         <#if jdLoginType == 'phone'>
             <form method="post" class="needs-validation" novalidate id="mainForm">
-                <h2 class="text-center"><#if indexTitle??>${indexTitle}<#else>阿东CK自助获取</#if></h2>
+                <h2 class="text-center"><#if indexTitle??>${indexTitle}<#else>😀阿东CK自助获取😀</#if></h2>
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-prepend">
