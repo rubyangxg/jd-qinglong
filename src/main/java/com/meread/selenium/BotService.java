@@ -1,5 +1,6 @@
 package com.meread.selenium;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
@@ -87,9 +88,14 @@ public class BotService {
                         return;
                     }
                     boolean b = jdService.sendAuthCode(myChromeClient);
-                    Thread.sleep(1000);
-                    log.info(senderQQ + ", 屏幕状态" + screen.getPageStatus() + "-->" + screen.getPageStatus().getDesc());
+                    if (!b) {
+                        log.warn(senderQQ + ", 屏幕状态:" + JSON.toJSONString(screen));
+                        sendMsgWithRetry(senderQQ, "发送验证码失败");
+                        return;
+                    }
                     success = false;
+                    Thread.sleep(1000);
+                    retry = 0;
                     while (retry++ < 5) {
                         if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
                             webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "正在尝试第" + retry + "次滑块验证")));
