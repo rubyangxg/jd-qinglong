@@ -218,9 +218,6 @@ public class JDService {
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
 
-            JDCookie jd = getJDCookies(myChromeClient);
-            System.out.println(jd.toString());
-
             WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
             if (qrElement != null) {
                 element = qrElement;
@@ -251,7 +248,6 @@ public class JDService {
         if (pageText.contains("短信验证码登录")) {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SWITCH_SMS_LOGIN);
         }
-
 
         WebElement loginBtn = webDriver.findElement(By.xpath("//a[@report-eventid='MLoginRegister_SMSLogin']"));
         HashSet<String> loginBtnClasses = new HashSet<>(Arrays.asList(loginBtn.getAttribute("class").split(" ")));
