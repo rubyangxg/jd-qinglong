@@ -81,11 +81,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     private String maxSessionFromEnvFile;
 
-    //标识客户端与服务器之间的会话,chromeSessionId--》stringcache
-    public static final String CLIENT_SESSION_ID_KEY = "client:session";
-    //标识浏览器会话key和chromeSessionId的关联，httpsessionid/qq--》chromeSessionId
-    public static final String SERVLET_OR_QQ_SESSION_ID_KEY = "user:session";
-
     private List<QLConfig> qlConfigs;
 
     public Properties properties = new Properties();
@@ -103,12 +98,12 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     /**
      * chromeSessionId-->MyChrome
      */
-    private Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * userTrackId --> MyChromeClient
      */
-    private Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
 
     public ChromeOptions chromeOptions;
 
@@ -187,7 +182,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     /**
      * 和grid同步chrome状态，清理失效的session，并移除本地缓存
      */
-    @Scheduled(initialDelay = 10000, fixedDelay = 3000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 2000)
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
