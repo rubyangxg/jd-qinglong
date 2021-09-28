@@ -47,7 +47,7 @@ rubyangxg/jd-qinglong:1.2
 root@VM-16-6-ubuntu:~/jd-qinglong# ls
 env.properties  go-cqhttp
    ```
-10. 查看go-cqhttp目录内容，看是否已经安装成功，确保文件大小类似这样
+9. 查看go-cqhttp目录内容，看是否已经安装成功，确保文件大小类似这样
 ```
 root@VM-16-6-ubuntu:~/jd-qinglong# ls -alh go-cqhttp/
 total 16M
@@ -58,30 +58,30 @@ drwxr-xr-x 3 root       root 4.0K Sep 28 15:59 ..
 -rwxr-xr-x 1 lighthouse  121  34K Sep 19 01:36 LICENSE
 -rwxr-xr-x 1 lighthouse  121  20K Sep 19 01:36 README.md
 ```
-11. 进入go-cqhttp目录：
+10. 进入go-cqhttp目录：
 ```
 root@VM-16-6-ubuntu:~/jd-qinglong# cd go-cqhttp/
 ```
-12. 首次安装go-cqhttp后，直接运行，会提示：
+11. 首次安装go-cqhttp后，直接运行，会提示：
 ```
 root@VM-16-6-ubuntu:~/jd-qinglong/go-cqhttp# ./go-cqhttp
 FATA[0000] 配置文件不合法!yaml: unmarshal errors:
   line 4: cannot unmarshal !!str `XXXXXXXXX` into int64 
 ```
-13. 修改配置文件config.yml，填入你自己的qq账号密码，并保存修改后的config.yml：
+12. 修改配置文件config.yml，填入你自己的qq账号密码，并保存修改后的config.yml：
 ```
   uin: XXXXXXXXX # qq号
   password: 'XXXXXXXXX' # qq密码
 ```
-14. 再次执行，按照提示登录qq：
+13. 再次执行，按照提示登录qq：
 ```
 ./go-cqhttp 
 ```
-15. qq登录成功后，control+c退出，重启webapp：
+14. qq登录成功后，control+c退出，重启webapp：
 ```
 docker restart webapp
 ```
-16. **恭喜你安装成功。好用的话给我点个star吧！**
+15. **恭喜你安装成功。好用的话给我点个star吧！**
 ### 更新教程：
 ```
 docker rm -f webapp
