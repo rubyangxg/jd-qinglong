@@ -695,8 +695,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         }
         if (success) {
             clients.put(userTrackId, myChromeClient);
+            return myChromeClient;
+        } else {
+            return null;
         }
-        return myChromeClient;
     }
 
     public MyChromeClient getCacheMyChromeClient(String userTrackId) {

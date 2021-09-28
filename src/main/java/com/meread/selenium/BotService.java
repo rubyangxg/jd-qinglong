@@ -51,6 +51,8 @@ public class BotService {
                 }
             } else {
                 try {
+                    myChromeClient.setTrackQQ(senderQQ);
+                    myChromeClient.setTrackPhone(phone);
                     jdService.toJDlogin(myChromeClient);
                     Thread.sleep(1000);
                     JDScreenBean screen = jdService.getScreen(myChromeClient);
@@ -69,7 +71,9 @@ public class BotService {
                     }
                     if (!success) {
                         if (screen.getPageStatus() == JDScreenBean.PageStatus.SUCCESS_CK) {
-                            webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "已经获取到CK了，你的CK是" + screen.getCk().toString())));
+                            String ck = screen.getCk().toString();
+                            webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "已经获取到CK了，你的CK是" + ck)));
+                            myChromeClient.setTrackCK(ck);
                         } else {
                             webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "无法发送验证码")));
                         }
@@ -131,6 +135,7 @@ public class BotService {
                         while (retry++ < 10) {
                             JDCookie jdCookies = jdService.getJDCookies(myChromeClient);
                             if (!jdCookies.isEmpty()) {
+                                myChromeClient.setTrackCK(jdCookies.toString());
                                 webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, jdCookies.toString())));
                                 success = true;
                                 driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId());

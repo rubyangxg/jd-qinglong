@@ -298,6 +298,7 @@
                         layer.prompt({
                             title: '自定义备注，留空不覆盖原有备注',
                             formType: 0,
+                            closeBtn: 0,
                             btn: ['上传', '不上传'],
                             yes: function (index, layero) {
                                 remark = layero.find(".layui-layer-input").val();
