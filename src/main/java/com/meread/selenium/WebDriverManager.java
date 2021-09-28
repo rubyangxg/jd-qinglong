@@ -146,7 +146,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         return chromeOptions;
     }
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 30 * 60000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
     public void syncCK_count() {
         if (qlConfigs != null) {
             for (QLConfig qlConfig : qlConfigs) {
@@ -780,19 +780,14 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;
-        for (MyChrome chrome : chromes.values()) {
-            if (chrome.getUserTrackId() == null) {
-                webDriver = chrome.getWebDriver();
-                break;
-            }
-        }
-        if (webDriver != null) {
-            try {
-                return executor.doBusiness(webDriver);
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                releaseWebDriver(webDriver.getSessionId().toString());
+        try {
+            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+            return executor.doBusiness(webDriver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (webDriver != null) {
+                webDriver.quit();
             }
         }
         return null;

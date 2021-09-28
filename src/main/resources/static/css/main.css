@@ -19,6 +19,19 @@
     font-weight: bold;
 }
 
+.alert-primary .btn-success {
+    float: right;
+}
+
+.alert-primary span {
+    line-height: 34px;
+}
+
+.alert-primary > div:after {
+    clear: both;
+    content: '';
+    display: table;
+}
 
 #notfound {
     position: relative;
@@ -57,7 +70,7 @@
     text-shadow: 2px 2px 0px #c9c9c9, -2px -2px 0px #c9c9c9;
 }
 
-.notfound .notfound-404 h1>span {
+.notfound .notfound-404 h1 > span {
     text-shadow: 2px 2px 0px #ffab00, -2px -2px 0px #ffab00, 0px 0px 8px #ff8700;
 }
 

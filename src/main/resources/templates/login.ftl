@@ -44,11 +44,18 @@
 <#else>
     <div class="container">
         <div class="alert alert-primary" role="alert">
-            操作有效期：<span id="sessionTimeout" style="color: red"></span>秒，总资源数：<span id="totalChromeCount"
-                                                                                     style="color: green"></span>, 可用资源个数：<span id="availChromeCount"
-                                                                                     style="color: green"></span>(网页占用：<span id="webSessionCount"
-                                                                                                                             style="color: red"></span>，QQ占用：<span id="qqSessionCount"
-                                                                                                                                                                     style="color: red"></span>)
+            <div>
+                <span>
+                操作有效期:<span id="sessionTimeout" style="color: red"></span>秒，总资源数:<span id="totalChromeCount"
+                                                                                       style="color: green"></span>,
+                可用资源个数:<span id="availChromeCount"
+                             style="color: green"></span>(网页占用:<span id="webSessionCount"
+                                                                     style="color: red"></span>，QQ占用:<span
+                            id="qqSessionCount"
+                            style="color: red"></span>)
+                </span>
+                <a href="${base}?jdLoginType=<#if jdLoginType == 'phone'>qr<#else>phone</#if>" class="btn btn-success" role="button">切换<#if jdLoginType == 'phone'>扫码<#else>手机验证码</#if></a>
+            </div>
         </div>
         <div class="alert alert-success" role="alert" style="display: none" id="ckDiv">
             获取到的ck：
@@ -60,8 +67,8 @@
         </div>
         <#if indexNotice??>
             <div class="alert alert-warning" role="alert">
-            <i class="bi bi-volume-up"></i>公告：${indexNotice}
-        </div>
+                <i class="bi bi-volume-up"></i>公告：${indexNotice}
+            </div>
         </#if>
         <#if jdLoginType == 'phone'>
             <form method="post" class="needs-validation" novalidate id="mainForm">
@@ -180,9 +187,14 @@
                             area: ['60%', '60%'], //宽高
                             content: data.html,
                             btn: ['确定'],
+                            closeBtn: 0,
                             yes: function (index, layero) {
                                 layer.close(index);
                                 uploadQingLong(qlUploadDirect);
+                                $.get("/releaseSession", function (data, status) {
+                                    console.log("releaseSession data : " + data);
+                                    console.log("releaseSession status : " + status);
+                                });
                             }
                         });
                     } else if (data.status <= 0) {
