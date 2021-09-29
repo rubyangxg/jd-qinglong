@@ -275,6 +275,8 @@
         let canClickLogin;
         let canSendAuth;
         let sessionTimeOut;
+        let reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/);
+        let reg2 = new RegExp(/^\d{6}$/);
 
         //临时变量，控制ajax顺序
         let sendingAuthCode = false;
@@ -407,7 +409,7 @@
                             loading: false,
                             beforeSend: function () {
                                 cracking = true;
-                                loadIndex = layer.msg('正在破解滑块验证', {
+                                loadIndex = layer.msg('正在进行滑块验证', {
                                     icon: 16,
                                     time: false,
                                     shade: 0.4
@@ -423,7 +425,6 @@
                         $("#send_sms_code").attr("disabled", true);
                     } else {
                         var currValue = $("#phone").val();
-                        var reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/)
                         var res = reg.test(currValue);
                         if (res) {
                             $("#send_sms_code").removeAttr("disabled");
@@ -440,24 +441,36 @@
             });
         }
 
-        $("input[class='form-control']").bind("change", function (event) {
+        $("input[class='form-control']").bind("input propertychange", function (event) {
             var currValue = $(this).val();
             var currId = $(this).attr("id");
-            $.ajax({
-                type: "post",
-                url: '/control',
-                async: false,
-                data: {
-                    currId: currId,
-                    currValue: currValue
-                },
-                success: function (data) {
-                    if (data === -1) {
-                        window.location.reload();
-                    }
-                    getScreen();
+            var valid = 0;
+            if (currId === 'phone') {
+                if (reg.test(currValue)) {
+                    valid = 1;
                 }
-            });
+            } else if(currId === 'sms_code'){
+                if (reg2.test(currValue)) {
+                    valid = 1;
+                }
+            }
+            if (valid) {
+                $.ajax({
+                    type: "post",
+                    url: '/control',
+                    async: false,
+                    data: {
+                        currId: currId,
+                        currValue: currValue
+                    },
+                    success: function (data) {
+                        if (data === -1) {
+                            window.location.reload();
+                        }
+                        getScreen();
+                    }
+                });
+            }
         });
 
         $("#reset").bind("click", function (event) {
