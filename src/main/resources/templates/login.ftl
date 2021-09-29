@@ -108,7 +108,7 @@
         <#else>
             <div class="row">
                 <div class="mx-auto text-center" style="color: red">
-                    或使用京东绑定的QQ扫码登陆
+                    使用京东绑定的QQ扫码登陆
                 </div>
             </div>
             <div class="row">
