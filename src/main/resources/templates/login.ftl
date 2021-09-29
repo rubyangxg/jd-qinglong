@@ -307,7 +307,7 @@
             $.ajax({
                 type: "get",
                 url: '${base}/getScreen?t=' + d.getTime(),
-                async: false,
+                async: true,
                 loading: false,
                 success: function (data) {
                     screen = data.screen;

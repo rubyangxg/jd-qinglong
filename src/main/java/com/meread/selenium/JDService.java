@@ -367,6 +367,7 @@ public class JDService {
                     JDScreenBean screenInner = getScreenInner(myChromeClient);
                     while (screenInner.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_SCANQR) {
                         screenInner = getScreenInner(myChromeClient);
+                        Thread.sleep(1000);
                     }
                     return true;
                 } catch (IOException | InterruptedException e) {
@@ -378,7 +379,6 @@ public class JDService {
                 Boolean res = waitTask.get(6, TimeUnit.SECONDS);
                 return res != null && res;
             } catch (Exception e) {
-                e.printStackTrace();
                 return false;
             }
         } else {
