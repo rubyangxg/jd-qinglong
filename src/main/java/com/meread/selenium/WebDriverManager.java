@@ -662,7 +662,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     }
 
     public MyChrome getMyChromeBySessionId(String chromeSessionId) {
-        if (chromes != null && chromes.size() > 0) {
+        if (chromes.size() > 0) {
             return chromes.get(chromeSessionId);
         }
         return null;

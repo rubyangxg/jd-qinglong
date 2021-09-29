@@ -147,20 +147,25 @@ public class HelloController {
         }
 
         if ("1".equals(reset)) {
-            service.toJDlogin(cacheMyChromeClient);
+            boolean b = service.toJDlogin(cacheMyChromeClient);
+            if (!b) {
+                log.error("跳转登录页失败");
+            }
         }
-        JDCookie ck = null;
+        JDCookie ck;
         try {
             ck = service.getJDCookies(cacheMyChromeClient);
             if (!ck.isEmpty()) {
                 model.addAttribute("ck", ck.toString());
             } else {
-                service.toJDlogin(cacheMyChromeClient);
+                boolean b = service.toJDlogin(cacheMyChromeClient);
+                if (!b) {
+                    log.error("跳转登录页失败");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             log.error("getJDCookies " + cacheMyChromeClient.getUserTrackId() + " error!");
-//            factory.unBindSessionId(cacheMyChromeClient.getUserTrackId());
         }
         return "login";
     }

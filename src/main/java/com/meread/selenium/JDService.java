@@ -37,6 +37,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -354,11 +356,34 @@ public class JDService {
         }
     }
 
-    public void toJDlogin(MyChromeClient myChromeClient) {
+    public boolean toJDlogin(MyChromeClient myChromeClient) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         webDriver.manage().deleteAllCookies();
         webDriver.navigate().to("https://plogin.m.jd.com/login/login?appid=300&returnurl=https%3A%2F%2Fwq.jd.com%2Fpassport%2FLoginRedirect%3Fstate%3D1101624461975%26returnurl%3Dhttps%253A%252F%252Fhome.m.jd.com%252FmyJd%252Fnewhome.action%253Fsceneval%253D2%2526ufc%253D%2526&source=wq_passport");
         WebDriverUtil.waitForJStoLoad(webDriver);
+        if (myChromeClient.getJdLoginType() == JDLoginType.qr) {
+            CompletableFuture<Boolean> waitTask = CompletableFuture.supplyAsync(() -> {
+                try {
+                    JDScreenBean screenInner = getScreenInner(myChromeClient);
+                    while (screenInner.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_SCANQR) {
+                        screenInner = getScreenInner(myChromeClient);
+                    }
+                    return true;
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            });
+            try {
+                Boolean res = waitTask.get(6, TimeUnit.SECONDS);
+                return res != null && res;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
     public void controlChrome(MyChromeClient myChromeClient, String currId, String currValue) {
