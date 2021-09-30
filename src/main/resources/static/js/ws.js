@@ -1,4 +1,6 @@
 var ws;
+// var url = "192.168.125.38:8080";
+var url = window.location.host;
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
@@ -6,11 +8,36 @@ function setConnected(connected) {
 }
 
 function connect() {
-    ws = new WebSocket('ws://localhost:8080/ws/page');
-    ws.onmessage = function (data) {
-        helloWorld(data.data);
+    if ('WebSocket' in window) {
+        ws = new WebSocket("ws://" + url + "/ws/page");//建立连接
+    } else {
+        ws = new SockJS("http://" + url + "/sockjs/ws/page");//建立连接
     }
+    //建立连接处理
+    ws.onopen = onOpen;
+    //接收处理
+    ws.onmessage = onMessage;
+    //错误处理
+    ws.onerror = onError;
+    //断开连接处理
+    ws.onclose = onClose;
     setConnected(true);
+}
+
+function onOpen(openEvent) {
+    console.log("onOpen")
+}
+
+function onError() {
+    console.log("onError")
+}
+
+function onClose() {
+    console.log("onClose")
+}
+
+function onMessage(event) {
+    helloWorld(event.data);
 }
 
 function disconnect() {
@@ -28,6 +55,7 @@ function sendData() {
     ws.send(data);
 }
 
+
 function helloWorld(message) {
     $("#helloworldmessage").append(" " + message + "");
 }
@@ -36,9 +64,7 @@ $(function () {
     $("form").on('submit', function (e) {
         e.preventDefault();
     });
-    $("#connect").click(function () {
-        connect();
-    });
+    connect();
     $("#disconnect").click(function () {
         disconnect();
     });

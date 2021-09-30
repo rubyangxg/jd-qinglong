@@ -34,11 +34,39 @@ public class PageEventHandler extends TextWebSocketHandler {
     private BotService botService;
 
     @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        String webSocketSessionId = session.getId();
+        log.info("PageEventHandler new " + webSocketSessionId);
+    }
+
+    /**
+     * socket 断开连接时
+     *
+     * @param session
+     * @param status
+     */
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        String webSocketSessionId = session.getId();
+        log.info("PageEventHandler close " + webSocketSessionId + ", CloseStatus" + status);
+    }
+
+    @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message)
             throws IOException {
         String id = session.getId();
         String payload = message.getPayload();
         JSONObject jsonObject = JSON.parseObject(payload);
         session.sendMessage(new TextMessage("Hi " + id + " how may we help you?"));
+    }
+
+    // 错误处理（客户端突然关闭等接收到的错误）
+    @Override
+    public void handleTransportError(WebSocketSession arg0, Throwable arg1) throws Exception {
+        if (arg0.isOpen()) {
+            arg0.close();
+        }
+        arg1.printStackTrace();
+        System.out.println("WS connection error,close...");
     }
 }

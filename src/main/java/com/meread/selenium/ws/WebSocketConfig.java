@@ -18,11 +18,14 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
     private PageEventHandler pageEventHandler;
+    @Autowired
+    private MyHandshakeInterceptor myHandshakeInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(qqEventHandler, "ws/event").setAllowedOrigins("*");
-        registry.addHandler(pageEventHandler, "ws/page").setAllowedOrigins("*");
+        registry.addHandler(pageEventHandler, "ws/page").addInterceptors(myHandshakeInterceptor).setAllowedOrigins("*");
+        registry.addHandler(pageEventHandler, "sockjs/ws/page").addInterceptors(myHandshakeInterceptor).setAllowedOrigins("*").withSockJS();
     }
 
 }
