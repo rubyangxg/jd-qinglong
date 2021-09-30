@@ -1,3 +1,22 @@
+//屏幕信息
+var screen;
+let qr;
+let ck;
+let pageStatus;
+let authCodeCountDown;
+let canClickLogin;
+let canSendAuth;
+let sessionTimeOut;
+let reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/);
+let reg2 = new RegExp(/^\d{6}$/);
+//临时变量，控制ajax顺序
+let sendingAuthCode = false;
+let cracking = false;
+let phone;
+let remark;
+var serverHost = window.location.host;
+var ws;
+var screenTimer;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -32,6 +51,22 @@
     }, false);
 })();
 $(function () {
+
+    if ('WebSocket' in window) {
+        ws = new WebSocket("ws://" + serverHost + "/ws/page");//建立连接
+    } else {
+        ws = new SockJS("http://" + serverHost + "/sockjs/ws/page");//建立连接
+    }
+
+    //建立连接处理
+    ws.onopen = onOpen;
+    //接收处理
+    ws.onmessage = onMessage;
+    //错误处理
+    ws.onerror = onError;
+    //断开连接处理
+    ws.onclose = onClose;
+
     $.ajaxSetup({
         layerIndex: -1,
         beforeSend: function () {
@@ -81,7 +116,7 @@ $(function () {
     if (error === 0) {
         getScreen();
         //不断展示屏幕流，一直到获取到ck后，清除定时器
-        var screenTimer = setInterval(function () {
+        screenTimer = setInterval(function () {
             getScreen();
         }, 2000);
     }
@@ -254,7 +289,7 @@ function getScreen() {
     $.ajax({
         type: "get",
         url: base + '/getScreen?t=' + d.getTime(),
-        async: true,
+        async: false,
         loading: false,
         success: function (data) {
             screen = data.screen;
@@ -405,3 +440,18 @@ $("input[class='form-control']").bind("input propertychange", function (event) {
     }
 });
 
+function onOpen(event) {
+    console.log("onOpen" + event);
+}
+
+function onError(event) {
+    console.log("onError" + event);
+}
+
+function onClose(event) {
+    console.log("onClose" + event);
+}
+
+function onMessage(event) {
+    console.log("onMessage" + event);
+}

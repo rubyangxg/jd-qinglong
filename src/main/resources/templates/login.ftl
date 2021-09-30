@@ -143,27 +143,12 @@
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 <script src="${base}/js/layer/layer.js"></script>
 <script>
-    var qlUploadDirect = ${qlUploadDirect};
-    var error = ${error!"0"};
-    var base = "${base}";
-    var debug = "${debug?c}";
-    //屏幕信息
-    var screen;
-    var qr;
-    var ck;
-    var pageStatus;
-    var authCodeCountDown;
-    var canClickLogin;
-    var canSendAuth;
-    var sessionTimeOut;
-    var reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/);
-    var reg2 = new RegExp(/^\d{6}$/);
-    //临时变量，控制ajax顺序
-    var sendingAuthCode = false;
-    var cracking = false;
-    var phone;
-    var remark;
+    let qlUploadDirect = ${qlUploadDirect};
+    let error = ${error!"0"};
+    let base = "${base}";
+    let debug = "${debug?c}";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="${base}/js/common.js"></script>
 <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
