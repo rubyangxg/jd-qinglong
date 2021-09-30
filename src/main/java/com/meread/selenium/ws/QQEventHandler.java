@@ -25,30 +25,9 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * {
- * "font": 0,
- * "message": "登陆",
- * "message_id": 1744012386,
- * "message_type": "private",
- * "post_type": "message",
- * "raw_message": "登陆",
- * "self_id": 1904788864,
- * "sender": {
- * "age": 0,
- * "nickname": "Jude",
- * "sex": "unknown",
- * "user_id": 87272738
- * },
- * "sub_type": "friend",
- * "target_id": 1904788864,
- * "time": 1632709338,
- * "user_id": 87272738
- * }
- */
 @Component
 @Slf4j
-public class EventHandler extends TextWebSocketHandler {
+public class QQEventHandler extends TextWebSocketHandler {
 
     @Autowired
     private BotService botService;

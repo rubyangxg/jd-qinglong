@@ -348,7 +348,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             executorService.execute(() -> {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome();
                     myChrome.setWebDriver(webDriver);
                     //计算chrome实例的最大存活时间
@@ -547,8 +547,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     boolean result = false;
                     try {
                         result = initInnerQingLong(driver, qlConfig);
-                        qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
-                        jdService.fetchCurrentCKS_count(driver, qlConfig, "");
+                        if (result) {
+                            qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
+                            jdService.fetchCurrentCKS_count(driver, qlConfig, "");
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -600,12 +602,13 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     public boolean initInnerQingLong(RemoteWebDriver webDriver, QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
-        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
         try {
             String token = null;
             int retry = 0;
             while (StringUtils.isEmpty(token)) {
                 retry++;
+                log.info("initInnerQingLong-->" + qlConfig.getQlUrl() + "第" + retry + "尝试");
                 if (retry > 2) {
                     break;
                 }

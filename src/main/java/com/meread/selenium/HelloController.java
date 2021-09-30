@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.servlet.http.HttpSession;
@@ -39,6 +36,11 @@ public class HelloController {
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
+
+    @RequestMapping("/websocket")
+    public String getWebSocket() {
+        return "ws";
+    }
 
     @GetMapping(value = "/getScreen")
     @ResponseBody
