@@ -7,6 +7,10 @@ let authCodeCountDown;
 let canClickLogin;
 let canSendAuth;
 let sessionTimeOut;
+let totalChromeCount;
+let availChromeCount;
+let webSessionCount;
+let qqSessionCount;
 let reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/);
 let reg2 = new RegExp(/^\d{6}$/);
 //临时变量，控制ajax顺序
@@ -112,14 +116,14 @@ $(function () {
             }
         })
     });
-
+/*
     if (error === 0) {
         getScreen();
         //不断展示屏幕流，一直到获取到ck后，清除定时器
         screenTimer = setInterval(function () {
             getScreen();
         }, 2000);
-    }
+    }*/
 
     var timeoutTimer = setInterval(function () {
         var oldValue = $("#sessionTimeout").text();
@@ -181,7 +185,7 @@ $(function () {
     });
 });
 
-function screen() {
+function calcScreen() {
     //获取当前窗口的宽度
     var width = $(window).width();
     console.log("屏幕宽度 " + width);
@@ -262,7 +266,7 @@ function uploadQingLong(qlUploadDirect) {
                 layer.open({
                     type: 1,
                     skin: 'layui-layer-rim', //加上边框
-                    area: screen() < 2 ? ['50%', '30%'] : ['600px', '400px'], //宽高
+                    area: calcScreen() < 2 ? ['50%', '30%'] : ['600px', '400px'], //宽高
                     content: data.html,
                     btn: ['确定'],
                     yes: function (index, layero) {
@@ -284,6 +288,7 @@ function uploadQingLong(qlUploadDirect) {
     });
 }
 
+/*
 function getScreen() {
     d = new Date();
     $.ajax({
@@ -327,10 +332,12 @@ function getScreen() {
             canClickLogin = data.canClickLogin;
             canSendAuth = data.canSendAuth;
             sessionTimeOut = data.sessionTimeOut;
-            var totalChromeCount = data.statClient.totalChromeCount;
-            var availChromeCount = data.statClient.availChromeCount;
-            var webSessionCount = data.statClient.webSessionCount;
-            var qqSessionCount = data.statClient.qqSessionCount;
+            if (data.statClient) {
+                totalChromeCount = data.statClient.totalChromeCount;
+                availChromeCount = data.statClient.availChromeCount;
+                webSessionCount = data.statClient.webSessionCount;
+                qqSessionCount = data.statClient.qqSessionCount;
+            }
 
             if (pageStatus === 'SESSION_EXPIRED') {
                 clearInterval(screenTimer);
@@ -407,6 +414,121 @@ function getScreen() {
         }
     });
 }
+*/
+
+function getScreen(data) {
+    screen = data.screen;
+    qr = data.qr;
+    if (ck) {
+        $("#ckDiv").show();
+        $("#ck").html(ck);
+        clearInterval(screenTimer);
+        clearInterval(timeoutTimer);
+
+        layer.prompt({
+            title: '自定义备注，留空不覆盖原有备注',
+            formType: 0,
+            closeBtn: 0,
+            btn: ['上传', '不上传'],
+            yes: function (index, layero) {
+                remark = layero.find(".layui-layer-input").val();
+                layer.close(index);
+                chooseQingLong();
+            }, btn2: function () {
+                layer.msg('请手动复制');
+                $.get("/releaseSession", function (data, status) {
+                    console.log("releaseSession data : " + data);
+                    console.log("releaseSession status : " + status);
+                });
+            }
+        });
+        return true;
+    }
+    if (data.ck && data.ck.ptKey && data.ck.ptPin) {
+        ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin + ";";
+    }
+    pageStatus = data.pageStatus;
+    authCodeCountDown = data.authCodeCountDown;
+    canClickLogin = data.canClickLogin;
+    canSendAuth = data.canSendAuth;
+    sessionTimeOut = data.sessionTimeOut;
+    if (data.statClient) {
+        totalChromeCount = data.statClient.totalChromeCount;
+        availChromeCount = data.statClient.availChromeCount;
+        webSessionCount = data.statClient.webSessionCount;
+        qqSessionCount = data.statClient.qqSessionCount;
+    }
+
+    if (pageStatus === 'SESSION_EXPIRED') {
+        clearInterval(screenTimer);
+        layer.alert("对不起，浏览器sessionId失效，请重新获取", function (index) {
+            window.location.reload();
+        });
+    }
+    if (sessionTimeOut) {
+        $("#sessionTimeout").text(sessionTimeOut);
+    }
+    $("#availChromeCount").text(availChromeCount);
+    $("#webSessionCount").text(webSessionCount);
+    $("#qqSessionCount").text(qqSessionCount);
+    $("#totalChromeCount").text(totalChromeCount);
+    if (debug && screen) {
+        $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);
+    }
+    if (pageStatus === 'WAIT_QR_CONFIRM') {
+        layer.msg("扫描成功，请在手机确认！");
+    }
+    if (qr) {
+        $("#jd-qr").attr('src', 'data:image/png;base64,' + qr);
+    }
+    if (!canClickLogin) {
+        $("#go").attr("disabled", true);
+    } else {
+        $("#go").removeAttr("disabled");
+    }
+    if (pageStatus === 'VERIFY_FAILED_MAX') {
+        layer.alert("验证码错误次数过多，请重新获取");
+    }
+    if (pageStatus === 'REQUIRE_REFRESH') {
+        layer.alert("二维码已失效，请重新扫描!");
+    }
+    if (pageStatus === 'VERIFY_CODE_MAX') {
+        layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
+    }
+    if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
+        let loadIndex = '';
+        $.ajax({
+            url: "/crackCaptcha",
+            async: true,
+            loading: false,
+            beforeSend: function () {
+                cracking = true;
+                loadIndex = layer.msg('正在进行滑块验证', {
+                    icon: 16,
+                    time: false,
+                    shade: 0.4
+                });
+            },
+            complete: function () {
+                layer.close(loadIndex);
+                cracking = false;
+            }
+        });
+    }
+    if (!canSendAuth) {
+        $("#send_sms_code").attr("disabled", true);
+    } else {
+        var currValue = $("#phone").val();
+        var res = reg.test(currValue);
+        if (res) {
+            $("#send_sms_code").removeAttr("disabled");
+        }
+        $("#send_sms_code").text("获取验证码")
+    }
+    if (!canSendAuth && authCodeCountDown > 0) {
+        $("#send_sms_code").html("重新获取(" + authCodeCountDown + "s)");
+    }
+}
 
 $("input[class='form-control']").bind("input propertychange", function (event) {
     var currValue = $(this).val();
@@ -434,7 +556,7 @@ $("input[class='form-control']").bind("input propertychange", function (event) {
                 if (data === -1) {
                     window.location.reload();
                 }
-                getScreen();
+                // getScreen();
             }
         });
     }
@@ -453,5 +575,6 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-    console.log("onMessage" + event);
+    console.log("onMessage" + event.data);
+    getScreen(JSON.parse(event.data));
 }

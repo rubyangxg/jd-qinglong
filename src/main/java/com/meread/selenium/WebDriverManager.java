@@ -7,6 +7,7 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -98,12 +100,12 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     /**
      * chromeSessionId-->MyChrome
      */
-    private final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * userTrackId --> MyChromeClient
      */
-    private final Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
 
     public ChromeOptions chromeOptions;
 
@@ -819,4 +821,5 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         }
         return new StatClient(availChromeCount, webSessionCount, qqSessionCount, totalChromeCount);
     }
+
 }

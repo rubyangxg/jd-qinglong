@@ -18,8 +18,10 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
     public void onApplicationEvent(ContextClosedEvent event) {
         ApplicationContext context = event.getApplicationContext();
         WebDriverManager webDriverManager = context.getBean(WebDriverManager.class);
+        WSManager wsManager = context.getBean(WSManager.class);
 
         webDriverManager.stopSchedule = true;
+        wsManager.stopSchedule = true;
         while (webDriverManager.runningSchedule) {
             try {
                 Thread.sleep(1000);
@@ -27,6 +29,14 @@ public class ContextClosedHandler implements ApplicationListener<ContextClosedEv
                 e.printStackTrace();
             }
             log.info("wait WebDriverFactory schedule destroy...");
+        }
+        while (wsManager.runningSchedule) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            log.info("wait wsManager schedule destroy...");
         }
 
         SelenoidStatus status = webDriverManager.getGridStatus();

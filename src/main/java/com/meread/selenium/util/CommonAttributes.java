@@ -13,6 +13,7 @@ import org.springframework.web.socket.WebSocketSession;
 public final class CommonAttributes {
 
     public static final String TMPDIR = System.getProperty("java.io.tmpdir");
+    public static final String SESSION_ID = "httpSessionId";
 
     public static WebSocketSession webSocketSession;
 
