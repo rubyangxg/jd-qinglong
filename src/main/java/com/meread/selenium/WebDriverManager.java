@@ -344,7 +344,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     private void createChrome() {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        int create = CAPACITY == 1 ? 1 : CAPACITY / 2;
+        int create = CAPACITY == 1 ? 1 : (CAPACITY - chromes.size()) / 2;
         CountDownLatch cdl = new CountDownLatch(create);
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
@@ -719,7 +719,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
             if (sessionId.equals(chromeSessionId)) {
                 try {
-                    iterator.remove();
                     //获取chrome的失效时间
                     long chromeExpireTime = myChrome.getExpireTime();
                     long clientExpireTime = 0;
@@ -733,6 +732,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     if ((chromeExpireTime - clientExpireTime) / 1000 <= opTimeout) {
                         myChrome.setUserTrackId(null);
                     } else {
+                        iterator.remove();
                         threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
                     }
                 } catch (Exception e) {

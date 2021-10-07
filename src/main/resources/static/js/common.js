@@ -128,6 +128,7 @@ $(function () {
 
     timeoutTimer = setInterval(function () {
         var oldValue = $("#sessionTimeout").text();
+        console.log("oldValue " + oldValue)
         if (oldValue) {
             if (Number(oldValue) > 0) {
                 $("#sessionTimeout").text(Number(oldValue) - 1);
@@ -294,6 +295,7 @@ function getScreen(data) {
     screen = data.screen;
     qr = data.qr;
     if (ck) {
+        console.log("ck获取到了")
         ws.close();
         $("#ckDiv").show();
         $("#ck").html(ck);
@@ -325,6 +327,7 @@ function getScreen(data) {
     canClickLogin = data.canClickLogin;
     canSendAuth = data.canSendAuth;
     sessionTimeOut = data.sessionTimeOut;
+    console.log(sessionTimeOut);
     if (data.statClient) {
         totalChromeCount = data.statClient.totalChromeCount;
         availChromeCount = data.statClient.availChromeCount;

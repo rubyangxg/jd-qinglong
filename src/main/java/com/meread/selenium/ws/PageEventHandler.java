@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.WSManager;
 import com.meread.selenium.WebDriverManager;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -17,9 +18,12 @@ import java.io.IOException;
 @Slf4j
 public class PageEventHandler extends TextWebSocketHandler {
 
+    @Autowired
+    private WSManager wsManager;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        WSManager.addNew(session);
+        wsManager.addNew(session);
     }
 
     /**
@@ -32,8 +36,7 @@ public class PageEventHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String webSocketSessionId = session.getId();
         log.info("PageEventHandler close " + webSocketSessionId + ", CloseStatus" + status);
-        WSManager.removeOld(session);
-
+        wsManager.removeOld(session);
     }
 
     @Override
@@ -53,6 +56,6 @@ public class PageEventHandler extends TextWebSocketHandler {
         }
         arg1.printStackTrace();
         System.out.println("WS connection error,close...");
-        WSManager.removeOld(arg0);
+        wsManager.removeOld(arg0);
     }
 }

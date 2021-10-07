@@ -58,15 +58,16 @@ public class WSManager implements DisposableBean {
     public volatile boolean runningSchedule = false;
     public volatile boolean stopSchedule = false;
 
-    public static final Map<String, Map<String, WebSocketSession>>
+    public final Map<String, Map<String, WebSocketSession>>
             socketSessionPool = new ConcurrentHashMap<>();
 
-    public static final Map<String, JDScreenBean> lastPageStatus = new ConcurrentHashMap<>();
+    public final Map<String, JDScreenBean> lastPageStatus = new ConcurrentHashMap<>();
 
-    public static synchronized void addNew(WebSocketSession session) {
+    public synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
+        log.info("addNew " + webSocketSessionId);
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
-        log.info("WebSocket connection established, webSocketSessionId = {} httpSessionId = {} ConnectCount = {}", webSocketSessionId, httpSessionId, WSManager.getConnectionCount());
+        log.info("WebSocket connection established, webSocketSessionId = {} httpSessionId = {} ConnectCount = {}", webSocketSessionId, httpSessionId, getConnectionCount());
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
         if (socketSessionMap == null) {
             socketSessionMap = new HashMap<>();
@@ -75,19 +76,25 @@ public class WSManager implements DisposableBean {
         socketSessionPool.put(httpSessionId, socketSessionMap);
     }
 
-    public static synchronized void removeOld(WebSocketSession session) {
+    public synchronized void removeOld(WebSocketSession session) {
         String webSocketSessionId = session.getId();
+        log.info("removeOld " + webSocketSessionId);
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
         if (socketSessionMap != null) {
             WebSocketSession remove = socketSessionMap.remove(webSocketSessionId);
             if (remove != null && socketSessionMap.isEmpty()) {
                 socketSessionPool.remove(httpSessionId);
+                MyChromeClient cacheMyChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
+                if (cacheMyChromeClient != null) {
+                    driverManager.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
+                }
+
             }
         }
     }
 
-    public static int getConnectionCount() {
+    public int getConnectionCount() {
         return socketSessionPool.size();
     }
 
