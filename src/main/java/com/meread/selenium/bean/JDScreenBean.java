@@ -26,6 +26,8 @@ public class JDScreenBean {
         VERIFY_FAILED_MAX("验证码错误多次，请重新获取"),
         SUCCESS_CK("已经获取到ck了"),
         NORMAL("正常页面"),
+        SHOULD_SEND_AUTH("需要点击发送验证码"),
+        SHOULD_CLICK_LOGIN("需要点击登陆"),
         SWITCH_SMS_LOGIN("需要切换到短信验证码登录"),
         AGREE_AGREEMENT("若您输入的手机号未注册，将为您直接注册，注册即视为同意"),
         INTERNAL_ERROR("抛异常了");

@@ -21,6 +21,7 @@ let remark;
 var serverHost = window.location.host;
 var ws;
 var screenTimer;
+var timeoutTimer;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -125,7 +126,7 @@ $(function () {
         }, 2000);
     }*/
 
-    var timeoutTimer = setInterval(function () {
+    timeoutTimer = setInterval(function () {
         var oldValue = $("#sessionTimeout").text();
         if (oldValue) {
             if (Number(oldValue) > 0) {
@@ -226,10 +227,7 @@ function chooseQingLong() {
                         yes: function (index, layero) {
                             layer.close(index);
                             uploadQingLong(qlUploadDirect);
-                            $.get("/releaseSession", function (data, status) {
-                                console.log("releaseSession data : " + data);
-                                console.log("releaseSession status : " + status);
-                            });
+
                         }
                     });
                 } else if (data.status <= 0) {
@@ -262,6 +260,10 @@ function uploadQingLong(qlUploadDirect) {
         data: data,
         dataType: "json",
         success: function (data) {
+            $.get("/releaseSession", function (data, status) {
+                console.log("releaseSession data : " + data);
+                console.log("releaseSession status : " + status);
+            });
             if (data.status === 1) {
                 layer.open({
                     type: 1,
@@ -288,143 +290,14 @@ function uploadQingLong(qlUploadDirect) {
     });
 }
 
-/*
-function getScreen() {
-    d = new Date();
-    $.ajax({
-        type: "get",
-        url: base + '/getScreen?t=' + d.getTime(),
-        async: false,
-        loading: false,
-        success: function (data) {
-            screen = data.screen;
-            qr = data.qr;
-            if (ck) {
-                $("#ckDiv").show();
-                $("#ck").html(ck);
-                clearInterval(screenTimer);
-                clearInterval(timeoutTimer);
-
-                layer.prompt({
-                    title: '自定义备注，留空不覆盖原有备注',
-                    formType: 0,
-                    closeBtn: 0,
-                    btn: ['上传', '不上传'],
-                    yes: function (index, layero) {
-                        remark = layero.find(".layui-layer-input").val();
-                        layer.close(index);
-                        chooseQingLong();
-                    }, btn2: function () {
-                        layer.msg('请手动复制');
-                        $.get("/releaseSession", function (data, status) {
-                            console.log("releaseSession data : " + data);
-                            console.log("releaseSession status : " + status);
-                        });
-                    }
-                });
-                return true;
-            }
-            if (data.ck && data.ck.ptKey && data.ck.ptPin) {
-                ck = "pt_key=" + data.ck.ptKey + ";pt_pin=" + data.ck.ptPin + ";";
-            }
-            pageStatus = data.pageStatus;
-            authCodeCountDown = data.authCodeCountDown;
-            canClickLogin = data.canClickLogin;
-            canSendAuth = data.canSendAuth;
-            sessionTimeOut = data.sessionTimeOut;
-            if (data.statClient) {
-                totalChromeCount = data.statClient.totalChromeCount;
-                availChromeCount = data.statClient.availChromeCount;
-                webSessionCount = data.statClient.webSessionCount;
-                qqSessionCount = data.statClient.qqSessionCount;
-            }
-
-            if (pageStatus === 'SESSION_EXPIRED') {
-                clearInterval(screenTimer);
-                layer.alert("对不起，浏览器sessionId失效，请重新获取", function (index) {
-                    window.location.reload();
-                });
-            }
-            if (sessionTimeOut) {
-                $("#sessionTimeout").text(sessionTimeOut);
-            }
-            $("#availChromeCount").text(availChromeCount);
-            $("#webSessionCount").text(webSessionCount);
-            $("#qqSessionCount").text(qqSessionCount);
-            $("#totalChromeCount").text(totalChromeCount);
-            if (debug && screen) {
-                $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);
-            }
-            if (pageStatus === 'WAIT_QR_CONFIRM') {
-                layer.msg("扫描成功，请在手机确认！");
-            }
-            if (qr) {
-                $("#jd-qr").attr('src', 'data:image/png;base64,' + qr);
-            }
-            if (!canClickLogin) {
-                $("#go").attr("disabled", true);
-            } else {
-                $("#go").removeAttr("disabled");
-            }
-            if (pageStatus === 'VERIFY_FAILED_MAX') {
-                layer.alert("验证码错误次数过多，请重新获取");
-            }
-            if (pageStatus === 'REQUIRE_REFRESH') {
-                layer.alert("二维码已失效，请重新扫描!");
-            }
-            if (pageStatus === 'VERIFY_CODE_MAX') {
-                layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
-            }
-            if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
-                let loadIndex = '';
-                $.ajax({
-                    url: "/crackCaptcha",
-                    async: true,
-                    loading: false,
-                    beforeSend: function () {
-                        cracking = true;
-                        loadIndex = layer.msg('正在进行滑块验证', {
-                            icon: 16,
-                            time: false,
-                            shade: 0.4
-                        });
-                    },
-                    complete: function () {
-                        layer.close(loadIndex);
-                        cracking = false;
-                    }
-                });
-            }
-            if (!canSendAuth) {
-                $("#send_sms_code").attr("disabled", true);
-            } else {
-                var currValue = $("#phone").val();
-                var res = reg.test(currValue);
-                if (res) {
-                    $("#send_sms_code").removeAttr("disabled");
-                }
-                $("#send_sms_code").text("获取验证码")
-            }
-            if (!canSendAuth && authCodeCountDown > 0) {
-                $("#send_sms_code").html("重新获取(" + authCodeCountDown + "s)");
-            }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            clearInterval(screenTimer);
-        }
-    });
-}
-*/
-
 function getScreen(data) {
     screen = data.screen;
     qr = data.qr;
     if (ck) {
+        ws.close();
         $("#ckDiv").show();
         $("#ck").html(ck);
-        clearInterval(screenTimer);
         clearInterval(timeoutTimer);
-
         layer.prompt({
             title: '自定义备注，留空不覆盖原有备注',
             formType: 0,
@@ -575,6 +448,6 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-    console.log("onMessage" + event.data);
+    console.log("onMessage");
     getScreen(JSON.parse(event.data));
 }
