@@ -61,7 +61,7 @@ public class WSManager implements DisposableBean {
     public static final Map<String, Map<String, WebSocketSession>>
             socketSessionPool = new ConcurrentHashMap<>();
 
-    public static final Map<String, JDScreenBean.PageStatus> lastPageStatus = new ConcurrentHashMap<>();
+    public static final Map<String, JDScreenBean> lastPageStatus = new ConcurrentHashMap<>();
 
     public static synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
@@ -106,9 +106,13 @@ public class WSManager implements DisposableBean {
             MyChromeClient myChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
             if (myChromeClient != null) {
                 JDScreenBean screen = jdService.getScreen(myChromeClient);
-                JDScreenBean.PageStatus pageStatus = lastPageStatus.get(httpSessionId);
-                if (pageStatus == null || pageStatus != screen.getPageStatus()) {
-                    lastPageStatus.put(httpSessionId, screen.getPageStatus());
+                JDScreenBean oldScreen = lastPageStatus.get(httpSessionId);
+                long diff = Integer.MAX_VALUE;
+                if (oldScreen != null) {
+                    diff = System.currentTimeMillis() - oldScreen.getSnapshotTime();
+                }
+                if (oldScreen == null || oldScreen.getPageStatus() == null || oldScreen.getPageStatus() != screen.getPageStatus() || diff > 2000) {
+                    lastPageStatus.put(httpSessionId, screen);
                     for (WebSocketSession socketSession : socketSessionMap.values()) {
                         try {
                             socketSession.sendMessage(new TextMessage(JSON.toJSONString(screen)));

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class JDScreenBean {
     public enum PageStatus {
         EMPTY_URL("空白页面 data:"),
@@ -51,13 +50,16 @@ public class JDScreenBean {
     private boolean canSendAuth;
     //为了防止前端一直占用webdriver，5分钟要释放掉
     private Long sessionTimeOut;
-    //当前可用的chrome实例
+    //统计信息
     private StatClient statClient;
+    //截屏时间
+    private long snapshotTime;
 
     public JDScreenBean(String screen,String qr, PageStatus pageStatus) {
         this.screen = screen;
         this.qr = qr;
         this.pageStatus = pageStatus;
+        this.snapshotTime = System.currentTimeMillis();
     }
 
     public JDScreenBean(String screen,String qr, PageStatus pageStatus,JDCookie ck) {
@@ -65,5 +67,6 @@ public class JDScreenBean {
         this.qr = qr;
         this.pageStatus = pageStatus;
         this.ck = ck;
+        this.snapshotTime = System.currentTimeMillis();
     }
 }

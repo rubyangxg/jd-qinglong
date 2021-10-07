@@ -306,7 +306,7 @@ public class JDService {
         }
 
         Long expire = myChromeClient.getExpireSeconds();
-        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, null);
+        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, JDScreenBean.PageStatus.NORMAL, authCodeCountDown, canClickLogin, canSendAuth, expire, null,System.currentTimeMillis());
         if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
         }
