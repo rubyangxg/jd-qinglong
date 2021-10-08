@@ -40,7 +40,7 @@
                                                                                        style="color: green"></span>,
                 可用资源个数:<span id="availChromeCount"
                              style="color: green"></span>(网页占用:<span id="webSessionCount"
-                                                                     style="color: red"></span>，QQ占用:<span
+                                                                     style="color: red"></span>，QQBot占用:<span
                             id="qqSessionCount"
                             style="color: red"></span>)
                 </span>

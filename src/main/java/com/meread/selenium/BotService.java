@@ -247,7 +247,7 @@ public class BotService {
             return "请重新开始吧！";
         }
         return "资源消耗殆尽，请稍后再试!\n" + "总资源数：" + statClient.getTotalChromeCount() + ", 可用资源个数：" + availChromeCount
-                + "(网页占用：" + statClient.getWebSessionCount() + "，QQ占用：" + statClient.getQqSessionCount() + ")";
+                + "(网页占用：" + statClient.getWebSessionCount() + "，QQBot占用：" + statClient.getQqSessionCount() + ")";
     }
 
     private void sendMsgWithRetry(long senderQQ, String content) {
