@@ -45,6 +45,10 @@ public class PageEventHandler extends TextWebSocketHandler {
         String id = session.getId();
         String payload = message.getPayload();
         JSONObject jsonObject = JSON.parseObject(payload);
+        Boolean push = jsonObject.getBoolean("push");
+        if (!push) {
+            session.getAttributes().put("push", push);
+        }
         session.sendMessage(new TextMessage("Hi " + id + " how may we help you?"));
     }
 

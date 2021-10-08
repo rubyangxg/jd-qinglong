@@ -28,6 +28,8 @@ public class MyChromeClient {
     private String chromeSessionId;
     private long expireTime;
     private String wsId;
+    //是否已经推送到xdd上了
+    private boolean pushedXDD;
 
     public boolean isExpire() {
         return expireTime < System.currentTimeMillis();

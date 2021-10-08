@@ -226,7 +226,6 @@ function chooseQingLong() {
                         yes: function (index, layero) {
                             layer.close(index);
                             uploadQingLong(qlUploadDirect);
-
                         }
                     });
                 } else if (data.status <= 0) {
@@ -260,8 +259,7 @@ function uploadQingLong(qlUploadDirect) {
         dataType: "json",
         success: function (data) {
             $.get("/releaseSession", function (data, status) {
-                console.log("releaseSession data : " + data);
-                console.log("releaseSession status : " + status);
+                ws.close();
             });
             if (data.status === 1) {
                 layer.open({
@@ -293,8 +291,7 @@ function getScreen(data) {
     screen = data.screen;
     qr = data.qr;
     if (ck) {
-        console.log("ck获取到了")
-        ws.close();
+        ws.send('{"push": false}');
         $("#ckDiv").show();
         $("#ck").html(ck);
         clearInterval(timeoutTimer);
@@ -310,8 +307,7 @@ function getScreen(data) {
             }, btn2: function () {
                 layer.msg('请手动复制');
                 $.get("/releaseSession", function (data, status) {
-                    console.log("releaseSession data : " + data);
-                    console.log("releaseSession status : " + status);
+                    ws.close();
                 });
             }
         });

@@ -105,10 +105,13 @@ public class WSManager implements DisposableBean {
                     continue;
                 }
                 JDScreenBean screen = jdService.getScreen(myChromeClient);
-                if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
-                    log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
-                    String xddRes = jdService.doXDDNotify(screen.getCk().toString());
-                    log.info("doXDDNotify res = " + xddRes);
+                if (!myChromeClient.isPushedXDD()) {
+                    if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
+                        log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
+                        String xddRes = jdService.doXDDNotify(screen.getCk().toString());
+                        log.info("doXDDNotify res = " + xddRes);
+                        myChromeClient.setPushedXDD(true);
+                    }
                 }
                 JDScreenBean oldScreen = lastPageStatus.get(httpSessionId);
                 long diff = Integer.MAX_VALUE;
@@ -118,6 +121,10 @@ public class WSManager implements DisposableBean {
                 if (oldScreen == null || oldScreen.getPageStatus() == null || oldScreen.getPageStatus() != screen.getPageStatus() || diff > 2000) {
                     lastPageStatus.put(httpSessionId, screen);
                     for (WebSocketSession socketSession : socketSessionMap.values()) {
+                        Object obj = socketSession.getAttributes().get("push");
+                        if (obj != null && !((boolean) obj)) {
+                            continue;
+                        }
                         try {
                             socketSession.sendMessage(new TextMessage(JSON.toJSONString(screen)));
                         } catch (IOException e) {
