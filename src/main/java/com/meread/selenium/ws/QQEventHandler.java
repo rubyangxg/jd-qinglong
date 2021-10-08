@@ -162,8 +162,6 @@ public class QQEventHandler extends TextWebSocketHandler {
         } else if (matcher4.matches()) {
             String remark = matcher4.group(1);
             botService.trackRemark(senderQQ, remark);
-        } else {
-            params.put("message", "无法识别的指令，请重新输入");
         }
         if (!StringUtils.isEmpty(params.getString("message"))) {
             //随机间隔时间
