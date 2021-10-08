@@ -1,49 +1,24 @@
 package com.meread.selenium;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPath;
-import com.amihaiemil.docker.Container;
-import com.amihaiemil.docker.Containers;
-import com.amihaiemil.docker.UnixDocker;
-import com.meread.selenium.bean.*;
+import com.meread.selenium.bean.JDLoginType;
+import com.meread.selenium.bean.JDScreenBean;
+import com.meread.selenium.bean.LoginType;
+import com.meread.selenium.bean.MyChromeClient;
 import com.meread.selenium.util.CommonAttributes;
-import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.MutableCapabilities;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.html5.LocalStorage;
-import org.openqa.selenium.remote.RemoteExecuteMethod;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
@@ -65,7 +40,6 @@ public class WSManager implements DisposableBean {
 
     public synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
-        log.info("addNew " + webSocketSessionId);
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
         log.info("WebSocket connection established, webSocketSessionId = {} httpSessionId = {} ConnectCount = {}", webSocketSessionId, httpSessionId, getConnectionCount());
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
@@ -74,6 +48,10 @@ public class WSManager implements DisposableBean {
         }
         socketSessionMap.put(webSocketSessionId, session);
         socketSessionPool.put(httpSessionId, socketSessionMap);
+        MyChromeClient cacheMyChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
+        if (cacheMyChromeClient == null) {
+            driverManager.createNewMyChromeClient(httpSessionId, LoginType.WEB, JDLoginType.valueOf("phone"));
+        }
     }
 
     public synchronized void removeOld(WebSocketSession session) {
@@ -89,7 +67,6 @@ public class WSManager implements DisposableBean {
                 if (cacheMyChromeClient != null) {
                     driverManager.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
                 }
-
             }
         }
     }
@@ -108,11 +85,32 @@ public class WSManager implements DisposableBean {
     }
 
     private void doPushScreen() {
-        for (String httpSessionId : socketSessionPool.keySet()) {
-            Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
+        Iterator<Map.Entry<String, Map<String, WebSocketSession>>> it = socketSessionPool.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, Map<String, WebSocketSession>> entry = it.next();
+            String httpSessionId = entry.getKey();
+            Map<String, WebSocketSession> socketSessionMap = entry.getValue();
             MyChromeClient myChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
             if (myChromeClient != null) {
+                if (myChromeClient.isExpire()) {
+                    driverManager.releaseWebDriver(myChromeClient.getChromeSessionId());
+                    for (WebSocketSession socketSession : socketSessionMap.values()) {
+                        try {
+                            socketSession.sendMessage(new TextMessage(JSON.toJSONString(new JDScreenBean("", "", JDScreenBean.PageStatus.SESSION_EXPIRED))));
+                            socketSession.close();
+                            it.remove();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    continue;
+                }
                 JDScreenBean screen = jdService.getScreen(myChromeClient);
+                if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
+                    log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
+                    String xddRes = jdService.doXDDNotify(screen.getCk().toString());
+                    log.info("doXDDNotify res = " + xddRes);
+                }
                 JDScreenBean oldScreen = lastPageStatus.get(httpSessionId);
                 long diff = Integer.MAX_VALUE;
                 if (oldScreen != null) {

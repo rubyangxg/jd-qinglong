@@ -128,7 +128,6 @@ $(function () {
 
     timeoutTimer = setInterval(function () {
         var oldValue = $("#sessionTimeout").text();
-        console.log("oldValue " + oldValue)
         if (oldValue) {
             if (Number(oldValue) > 0) {
                 $("#sessionTimeout").text(Number(oldValue) - 1);
@@ -190,7 +189,6 @@ $(function () {
 function calcScreen() {
     //获取当前窗口的宽度
     var width = $(window).width();
-    console.log("屏幕宽度 " + width);
     if (width > 1200) {
         return 3;   //大屏幕
     } else if (width > 992) {
@@ -327,7 +325,6 @@ function getScreen(data) {
     canClickLogin = data.canClickLogin;
     canSendAuth = data.canSendAuth;
     sessionTimeOut = data.sessionTimeOut;
-    console.log(sessionTimeOut);
     if (data.statClient) {
         totalChromeCount = data.statClient.totalChromeCount;
         availChromeCount = data.statClient.availChromeCount;
@@ -341,7 +338,7 @@ function getScreen(data) {
             window.location.reload();
         });
     }
-    if (sessionTimeOut) {
+    if (sessionTimeOut && sessionTimeOut > 0) {
         $("#sessionTimeout").text(sessionTimeOut);
     }
     $("#availChromeCount").text(availChromeCount);

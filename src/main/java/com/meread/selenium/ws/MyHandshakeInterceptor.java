@@ -22,13 +22,6 @@ import java.util.Map;
 public class MyHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
-                               Exception ex) {
-        log.info("After handshake " + request.getRemoteAddress());
-        super.afterHandshake(request, response, wsHandler, ex);
-    }
-
-    @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler,
                                    Map<String, Object> map) throws Exception {
         log.info("Before handshake " + request.getRemoteAddress());

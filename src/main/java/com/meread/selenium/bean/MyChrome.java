@@ -17,6 +17,11 @@ public class MyChrome {
     private long expireTime;
     private String userTrackId;
 
+    public MyChrome(RemoteWebDriver webDriver, long expireTime) {
+        this.webDriver = webDriver;
+        this.expireTime = expireTime;
+    }
+
     public boolean isExpire() {
         return expireTime < System.currentTimeMillis();
     }

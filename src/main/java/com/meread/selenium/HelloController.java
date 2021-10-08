@@ -42,21 +42,21 @@ public class HelloController {
         return "ws";
     }
 
-    @GetMapping(value = "/getScreen")
-    @ResponseBody
-    public JDScreenBean getScreen(HttpSession session) {
-        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
-        if (myChromeClient == null) {
-            return new JDScreenBean("", "", JDScreenBean.PageStatus.SESSION_EXPIRED);
-        }
-        JDScreenBean screen = service.getScreen(myChromeClient);
-        if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
-            log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
-            String xddRes = service.doXDDNotify(screen.getCk().toString());
-            log.info("doXDDNotify res = " + xddRes);
-        }
-        return screen;
-    }
+//    @GetMapping(value = "/getScreen")
+//    @ResponseBody
+//    public JDScreenBean getScreen(HttpSession session) {
+//        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
+//        if (myChromeClient == null) {
+//            return new JDScreenBean("", "", JDScreenBean.PageStatus.SESSION_EXPIRED);
+//        }
+//        JDScreenBean screen = service.getScreen(myChromeClient);
+//        if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
+//            log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
+//            String xddRes = service.doXDDNotify(screen.getCk().toString());
+//            log.info("doXDDNotify res = " + xddRes);
+//        }
+//        return screen;
+//    }
 
     @GetMapping(value = "/sendAuthCode")
     @ResponseBody
@@ -138,6 +138,7 @@ public class HelloController {
         String servletSessionId = session.getId();
         MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(servletSessionId);
         if (cacheMyChromeClient == null) {
+            log.info("create chrome from index");
             cacheMyChromeClient = factory.createNewMyChromeClient(servletSessionId, LoginType.WEB, JDLoginType.valueOf(jdLoginType));
         }
 

@@ -209,8 +209,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             if (shouldCreate > 0) {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    MyChrome myChrome = new MyChrome();
-                    myChrome.setWebDriver(webDriver);
+                    MyChrome myChrome = new MyChrome(webDriver,System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    //计算chrome实例的最大存活时间
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                     log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
                 } catch (MalformedURLException e) {
@@ -351,10 +351,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome();
+                    MyChrome myChrome = new MyChrome(webDriver,System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     myChrome.setWebDriver(webDriver);
-                    //计算chrome实例的最大存活时间
-                    myChrome.setExpireTime(System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -610,14 +608,13 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             int retry = 0;
             while (StringUtils.isEmpty(token)) {
                 retry++;
-                log.info("initInnerQingLong-->" + qlConfig.getQlUrl() + "第" + retry + "尝试");
+                log.info("initInnerQingLong-->" + qlConfig.getQlUrl() + "第" + retry + "次尝试");
                 if (retry > 2) {
                     break;
                 }
                 String qlUsername = qlConfig.getQlUsername();
                 String qlPassword = qlConfig.getQlPassword();
                 webDriver.get(qlUrl + "/login");
-                log.info("initQingLong start : " + qlUrl + "/login");
                 boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
                 if (b) {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
@@ -712,12 +709,12 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    public void releaseWebDriver(String chromeSessionId) {
+    public void releaseWebDriver(String removeChromeSessionId) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next().getValue();
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
-            if (sessionId.equals(chromeSessionId)) {
+            if (sessionId.equals(removeChromeSessionId)) {
                 try {
                     //获取chrome的失效时间
                     long chromeExpireTime = myChrome.getExpireTime();
@@ -729,8 +726,9 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                         clientExpireTime = client.getExpireTime();
                     }
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
-                    if ((chromeExpireTime - clientExpireTime) / 1000 <= opTimeout) {
+                    if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout) {
                         myChrome.setUserTrackId(null);
+                        clients.remove(userTrackId);
                     } else {
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
@@ -746,13 +744,13 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         Iterator<Map.Entry<String, MyChromeClient>> iterator2 = clients.entrySet().iterator();
         while (iterator2.hasNext()) {
             MyChromeClient curr = iterator2.next().getValue();
-            if (curr.getChromeSessionId().equals(chromeSessionId)) {
+            if (curr.getChromeSessionId().equals(removeChromeSessionId)) {
                 try {
                     iterator2.remove();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                log.info("remove MyChromeClient : " + chromeSessionId);
+                log.info("remove MyChromeClient : " + removeChromeSessionId);
                 break;
             }
         }
