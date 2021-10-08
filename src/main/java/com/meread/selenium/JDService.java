@@ -374,7 +374,7 @@ public class JDService {
                     JDScreenBean screenInner = getScreen(myChromeClient);
                     while (screenInner.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_SCANQR) {
                         screenInner = getScreen(myChromeClient);
-                        Thread.sleep(1000);
+                        Thread.sleep(200);
                     }
                     return true;
                 } catch (InterruptedException e) {
