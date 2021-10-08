@@ -41,7 +41,6 @@ public class WSManager implements DisposableBean {
     public synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
-        log.info("WebSocket connection established, webSocketSessionId = {} httpSessionId = {} ConnectCount = {}", webSocketSessionId, httpSessionId, getConnectionCount());
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
         if (socketSessionMap == null) {
             socketSessionMap = new HashMap<>();
@@ -56,7 +55,6 @@ public class WSManager implements DisposableBean {
 
     public synchronized void removeOld(WebSocketSession session) {
         String webSocketSessionId = session.getId();
-        log.info("removeOld " + webSocketSessionId);
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
         if (socketSessionMap != null) {

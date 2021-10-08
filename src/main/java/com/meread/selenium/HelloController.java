@@ -138,7 +138,6 @@ public class HelloController {
         String servletSessionId = session.getId();
         MyChromeClient cacheMyChromeClient = factory.getCacheMyChromeClient(servletSessionId);
         if (cacheMyChromeClient == null) {
-            log.info("create chrome from index");
             cacheMyChromeClient = factory.createNewMyChromeClient(servletSessionId, LoginType.WEB, JDLoginType.valueOf(jdLoginType));
         }
 

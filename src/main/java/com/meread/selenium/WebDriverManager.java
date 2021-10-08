@@ -352,7 +352,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver,System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
-                    myChrome.setWebDriver(webDriver);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -729,14 +728,16 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
+                        log.info("clean chrome binding: " + sessionId);
                     } else {
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
+                        log.info("destroy chrome : " + sessionId);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                log.info("destroy chrome : " + sessionId);
+
                 break;
             }
         }
