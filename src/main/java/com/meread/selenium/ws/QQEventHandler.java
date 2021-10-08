@@ -84,7 +84,7 @@ public class QQEventHandler extends TextWebSocketHandler {
         yamlFactory.setResources(new FileSystemResource(configPath));
         Properties props = yamlFactory.getObject();
         String selfQQ = props.getProperty("account.uin", "0");
-        String selfGroup = driverManager.getProperties().getProperty("MONITOR.QQ.GROUPID");
+        String selfGroup = driverManager.getProperties().getProperty("MONITOR.QQ.GROUPID","");
 
         String payload = message.getPayload();
         JSONObject jsonObject = JSON.parseObject(payload);
