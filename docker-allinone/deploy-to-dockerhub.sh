@@ -46,6 +46,17 @@ else
   echo "notify已存在"
 fi
 
+#if [ ! -f "$HOME/jd_bean_change" ];then
+#  rm -rf JD_tencent_scf && mkdir JD_tencent_scf
+#  rm -rf jd_bean_change
+#  git clone -b master --depth=1 https://github.com/zero205/JD_tencent_scf.git
+#  npm install
+#  pkg -t node16-linux-x64 jd_bean_change.js
+#  cp jd_bean_change $HOME/jd_bean_change
+#else
+#  echo "jd_bean_change已存在"
+#fi
+
 cd $HOME || exit
 rm -rf .npm
 rm -rf .pkg-cache

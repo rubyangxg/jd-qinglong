@@ -166,3 +166,4 @@ qqbot
 docker-allinone/notify
 .docker
 .DS_Store
+go-cqhttp

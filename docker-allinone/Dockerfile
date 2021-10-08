@@ -7,6 +7,7 @@ ARG JAR_FILE
 
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
+#COPY jd_bean_change /opt/bin/jd_bean_change
 COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
@@ -20,6 +21,7 @@ RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cac
     chmod 755 /opt/bin/start-webapp.sh && \
     chmod 755 /opt/bin/start-go-cqhttp.sh && \
     chmod 755 /opt/bin/notify && \
+#    chmod 755 /opt/bin/jd_bean_change && \
     chmod 755 /usr/bin/selenoid
 
 EXPOSE 4444 8080 6700
