@@ -136,6 +136,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         }
         chromeOptions.addArguments("--no-sandbox");
         chromeOptions.addArguments("--disable-extensions");
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        chromeOptions.setExperimentalOption("prefs", prefs);
         chromeOptions.addArguments("--disable-dev-shm-usage");
         chromeOptions.addArguments("--disable-software-rasterizer");
         chromeOptions.addArguments("--ignore-ssl-errors=yes");

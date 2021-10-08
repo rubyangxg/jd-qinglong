@@ -371,13 +371,13 @@ public class JDService {
         if (myChromeClient.getJdLoginType() == JDLoginType.qr) {
             CompletableFuture<Boolean> waitTask = CompletableFuture.supplyAsync(() -> {
                 try {
-                    JDScreenBean screenInner = getScreenInner(myChromeClient);
+                    JDScreenBean screenInner = getScreen(myChromeClient);
                     while (screenInner.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_SCANQR) {
-                        screenInner = getScreenInner(myChromeClient);
+                        screenInner = getScreen(myChromeClient);
                         Thread.sleep(1000);
                     }
                     return true;
-                } catch (IOException | InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                     return false;
                 }

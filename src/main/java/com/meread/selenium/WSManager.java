@@ -41,6 +41,7 @@ public class WSManager implements DisposableBean {
     public synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
         String httpSessionId = (String) session.getAttributes().get(CommonAttributes.SESSION_ID);
+        String jdLoginType = (String) session.getAttributes().get(CommonAttributes.JD_LOGIN_TYPE);
         Map<String, WebSocketSession> socketSessionMap = socketSessionPool.get(httpSessionId);
         if (socketSessionMap == null) {
             socketSessionMap = new HashMap<>();
@@ -49,7 +50,7 @@ public class WSManager implements DisposableBean {
         socketSessionPool.put(httpSessionId, socketSessionMap);
         MyChromeClient cacheMyChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
         if (cacheMyChromeClient == null) {
-            driverManager.createNewMyChromeClient(httpSessionId, LoginType.WEB, JDLoginType.valueOf("phone"));
+            driverManager.createNewMyChromeClient(httpSessionId, LoginType.WEB, JDLoginType.valueOf(jdLoginType));
         }
     }
 

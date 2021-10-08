@@ -147,6 +147,7 @@
     let error = ${error!"0"};
     let base = "${base}";
     let debug = "${debug?c}";
+    let jdLoginType = "${jdLoginType}";
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="${base}/js/common.js"></script>

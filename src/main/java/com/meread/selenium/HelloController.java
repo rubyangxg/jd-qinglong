@@ -130,7 +130,6 @@ public class HelloController {
             jdLoginType = "phone";
         }
         model.addAttribute("jdLoginType", jdLoginType);
-
         if (!factory.isInitSuccess()) {
             return "login";
         }
@@ -238,7 +237,7 @@ public class HelloController {
         // 在session中保存用户信息
         MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
         if (myChromeClient == null) {
-            return -1;
+            return 1;
         }
         factory.releaseWebDriver(myChromeClient.getChromeSessionId());
         return 1;

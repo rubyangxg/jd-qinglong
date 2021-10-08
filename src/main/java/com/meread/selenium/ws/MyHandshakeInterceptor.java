@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -27,7 +28,13 @@ public class MyHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
         log.info("Before handshake " + request.getRemoteAddress());
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest serverHttpRequest = (ServletServerHttpRequest) request;
-            HttpSession session = serverHttpRequest.getServletRequest().getSession(true);
+
+            HttpServletRequest servletRequest = serverHttpRequest.getServletRequest();
+            HttpSession session = servletRequest.getSession(true);
+
+            String path = request.getURI().getPath();
+            map.put(CommonAttributes.JD_LOGIN_TYPE, path.substring(path.lastIndexOf('/') + 1));
+
             if (session != null) {
                 map.put(CommonAttributes.SESSION_ID, session.getId());
             }

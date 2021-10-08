@@ -58,9 +58,9 @@ var timeoutTimer;
 $(function () {
 
     if ('WebSocket' in window) {
-        ws = new WebSocket("ws://" + serverHost + "/ws/page");//建立连接
+        ws = new WebSocket("ws://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
     } else {
-        ws = new SockJS("http://" + serverHost + "/sockjs/ws/page");//建立连接
+        ws = new SockJS("http://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
     }
 
     //建立连接处理
@@ -117,14 +117,14 @@ $(function () {
             }
         })
     });
-/*
-    if (error === 0) {
-        getScreen();
-        //不断展示屏幕流，一直到获取到ck后，清除定时器
-        screenTimer = setInterval(function () {
+    /*
+        if (error === 0) {
             getScreen();
-        }, 2000);
-    }*/
+            //不断展示屏幕流，一直到获取到ck后，清除定时器
+            screenTimer = setInterval(function () {
+                getScreen();
+            }, 2000);
+        }*/
 
     timeoutTimer = setInterval(function () {
         var oldValue = $("#sessionTimeout").text();
