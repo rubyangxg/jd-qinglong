@@ -9,4 +9,4 @@ do
 done
 #while循环访问url,直到状态码为200跳出循环
 echo "开始启动webapp"
-java -Djava.security.egd=file:/dev/./urandom -jar -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8001,suspend=n -Dserver.port=8080 /app.jar
+java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8001 -Djava.security.egd=file:/dev/./urandom -jar -Dserver.port=8080 /app.jar
