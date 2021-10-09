@@ -194,7 +194,7 @@ public class JDService {
                 }
                 webDriver.navigate().refresh();
                 WebDriverUtil.waitForJStoLoad(webDriver);
-                Thread.sleep(500);
+                Thread.sleep(1000);
                 pageText = webDriver.findElement(By.tagName("body")).getText();
             }
 

@@ -91,16 +91,7 @@ public class WSManager implements DisposableBean {
             Map<String, WebSocketSession> socketSessionMap = entry.getValue();
             MyChromeClient myChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
             if (myChromeClient != null) {
-                JDScreenBean screen = null;
-                try {
-                    screen = jdService.getScreen(myChromeClient);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                if (screen == null) {
-                    myChromeClient.setExpireTime(0);
-                }
+                JDScreenBean screen = jdService.getScreen(myChromeClient);
 
                 if (myChromeClient.isExpire()) {
                     driverManager.releaseWebDriver(myChromeClient.getChromeSessionId());
