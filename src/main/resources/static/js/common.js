@@ -56,21 +56,25 @@ var timeoutTimer;
     }, false);
 })();
 $(function () {
-    let wsProtocolSuffix = location.protocol.match('^https')?"s":""
-    if ('WebSocket' in window) {
-        ws = new WebSocket("ws"+wsProtocolSuffix+"://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
-    } else {
-        ws = new SockJS("http"+wsProtocolSuffix+"://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
-    }
 
-    //建立连接处理
-    ws.onopen = onOpen;
-    //接收处理
-    ws.onmessage = onMessage;
-    //错误处理
-    ws.onerror = onError;
-    //断开连接处理
-    ws.onclose = onClose;
+    console.log(error);
+    if (error === 0) {
+        let wsProtocolSuffix = location.protocol.match('^https')?"s":""
+        if ('WebSocket' in window) {
+            ws = new WebSocket("ws"+wsProtocolSuffix+"://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
+        } else {
+            ws = new SockJS("http"+wsProtocolSuffix+"://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
+        }
+
+        //建立连接处理
+        ws.onopen = onOpen;
+        //接收处理
+        ws.onmessage = onMessage;
+        //错误处理
+        ws.onerror = onError;
+        //断开连接处理
+        ws.onclose = onClose;
+    }
 
     $.ajaxSetup({
         layerIndex: -1,

@@ -736,7 +736,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
                         myChrome.getWebDriver().manage().deleteAllCookies();
-                        myChrome.getWebDriver().get("data:,");
                         log.info("clean chrome binding: " + sessionId);
                     } else {
                         iterator.remove();
