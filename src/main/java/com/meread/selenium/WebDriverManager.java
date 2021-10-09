@@ -7,7 +7,6 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
-import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -128,6 +126,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                 "enableVNC", debug,
                 "enableVideo", false,
                 "enableLog", debug,
+                "env", new String[]{"LANG=zh_CN.UTF-8", "LANGUAGE=zh:cn", "LC_ALL=zh_CN.UTF-8"},
+                "timeZone", "Asia/Shanghai",
                 "sessionTimeout", chromeTimeout + "s"
 //                "applicationContainers", new String[]{"webapp"}
         ));
@@ -213,7 +213,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             if (shouldCreate > 0) {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    MyChrome myChrome = new MyChrome(webDriver,System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     //计算chrome实例的最大存活时间
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                     log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
@@ -355,7 +355,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver,System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
