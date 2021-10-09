@@ -224,7 +224,9 @@ public class JDService {
                 log.info(phone);
                 webDriver.findElement(By.xpath("//a[@class='mode-btn voice-mode']")).click();
                 WebDriverUtil.waitForJStoLoad(webDriver);
-                webDriver.findElement(By.xpath("//button[contains(@class,'getMsg-btn')]")).click();
+                Thread.sleep(1000);
+                webDriver.findElement(By.xpath("//button[@class='getMsg-btn timer active']")).click();
+                Thread.sleep(1000);
                 WebDriverUtil.waitForJStoLoad(webDriver);
                 JDScreenBean jdScreenBean = new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_CUBE_SMSCODE);
                 jdScreenBean.setMsg("请输入手机号" + phone + "获取到的验证码！");
