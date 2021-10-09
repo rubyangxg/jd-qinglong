@@ -143,8 +143,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         prefs.put("credentials_enable_service", false);
         prefs.put("profile.password_manager_enabled", false);
         chromeOptions.setExperimentalOption("prefs", prefs);
-        chromeOptions.addArguments("--disable-dev-shm-usage");
-        chromeOptions.addArguments("--disable-software-rasterizer");
         chromeOptions.addArguments("--ignore-ssl-errors=yes");
         chromeOptions.addArguments("--ignore-certificate-errors");
         chromeOptions.addArguments("--allow-running-insecure-content");
@@ -216,6 +214,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             if (shouldCreate > 0) {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     //计算chrome实例的最大存活时间
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
@@ -357,7 +356,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             executorService.execute(() -> {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
@@ -794,6 +793,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         RemoteWebDriver webDriver = null;
         try {
             webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
             e.printStackTrace();
