@@ -186,73 +186,82 @@ public class JDService {
         }
 
         if (myChromeClient.getJdLoginType() == JDLoginType.qr) {
-            int retry = 1;
-            while (pageText.contains("服务异常")) {
-                log.info("尝试第" + retry + "次刷新");
-                if (retry++ > 10) {
-                    break;
+            boolean interFrame = false;
+            try {
+                int retry = 1;
+                while (pageText.contains("服务异常")) {
+                    log.info("尝试第" + retry + "次刷新");
+                    if (retry++ > 10) {
+                        break;
+                    }
+                    webDriver.navigate().refresh();
+                    Thread.sleep(500);
+                    WebDriverUtil.waitForJStoLoad(webDriver);
+                    pageText = webDriver.findElement(By.tagName("body")).getText();
                 }
-                webDriver.navigate().refresh();
-                WebDriverUtil.waitForJStoLoad(webDriver);
-                Thread.sleep(1000);
-                pageText = webDriver.findElement(By.tagName("body")).getText();
-            }
 
-            jdCookies = getJDCookies(myChromeClient);
-            if (!jdCookies.isEmpty()) {
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
-            }
+                jdCookies = getJDCookies(myChromeClient);
+                if (!jdCookies.isEmpty()) {
+                    return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.SUCCESS_CK, jdCookies);
+                }
 
-            if (pageText.contains("服务异常")) {
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
-            }
-            if (!pageText.contains("请使用QQ手机版扫描二维码") && webDriver.getCurrentUrl().contains("qq.com")) {
-                webDriver.switchTo().frame("ptlogin_iframe");
-                pageText = webDriver.findElement(By.tagName("body")).getText();
-            }
-            if (pageText.contains("二维码失效") && pageText.contains("请点击刷新")) {
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
-            }
-            if (pageText.contains("扫描成功")) {
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_QR_CONFIRM);
-            }
+                if (pageText.contains("服务异常")) {
+                    return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
+                }
 
-            if (pageText.contains("请选择认证方式进行认证")) {
-                String text = webDriver.findElement(By.xpath("//p[@class='page-notice']")).getText();
-                String phone = webDriver.findElement(By.xpath("//span[@class='text-account']")).getText();
-                log.info(text);
-                log.info(phone);
-                webDriver.findElement(By.xpath("//a[@class='mode-btn voice-mode']")).click();
-                WebDriverUtil.waitForJStoLoad(webDriver);
-                Thread.sleep(1000);
-                webDriver.findElement(By.xpath("//button[@class='getMsg-btn timer active']")).click();
-                Thread.sleep(1000);
-                WebDriverUtil.waitForJStoLoad(webDriver);
-                JDScreenBean jdScreenBean = new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_CUBE_SMSCODE);
-                jdScreenBean.setMsg("请输入手机号" + phone + "获取到的验证码！");
-                return jdScreenBean;
-            }
+                if (!pageText.contains("请使用QQ手机版扫描二维码") && webDriver.getCurrentUrl().contains("qq.com")) {
+                    webDriver.switchTo().frame("ptlogin_iframe");
+                    interFrame = true;
+                    pageText = webDriver.findElement(By.tagName("body")).getText();
+                }
+                if (pageText.contains("二维码失效") && pageText.contains("请点击刷新")) {
+                    return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_REFRESH);
+                }
+                if (pageText.contains("扫描成功")) {
+                    return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_QR_CONFIRM);
+                }
 
-            //创建全屏截图
-            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
-            screenBase64 = Base64Utils.encodeToString(screen);
+                if (pageText.contains("请选择认证方式进行认证")) {
+                    String text = webDriver.findElement(By.xpath("//p[@class='page-notice']")).getText();
+                    String phone = webDriver.findElement(By.xpath("//span[@class='text-account']")).getText();
+                    log.info(text);
+                    log.info(phone);
+                    webDriver.findElement(By.xpath("//a[@class='mode-btn voice-mode']")).click();
+                    WebDriverUtil.waitForJStoLoad(webDriver);
+                    Thread.sleep(1000);
+                    webDriver.findElement(By.xpath("//button[@class='getMsg-btn timer active']")).click();
+                    Thread.sleep(1000);
+                    WebDriverUtil.waitForJStoLoad(webDriver);
+                    JDScreenBean jdScreenBean = new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_CUBE_SMSCODE);
+                    jdScreenBean.setMsg("请输入手机号" + phone + "获取到的验证码！");
+                    return jdScreenBean;
+                }
 
-            WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
-            if (qrElement != null) {
-                element = qrElement;
-                //截取某个元素的图，此处为了方便调试和验证，所以如果出现验证码 就只获取验证码的截图
-                BufferedImage subImg = null;
-                Rectangle rect = element.getRect();
-                int w = rect.width + 5;
-                int x = (500 - w) / 2;
-                int h = rect.height + 5;
-                int y = 180;
-                subImg = ImageIO.read(new ByteArrayInputStream(screen)).getSubimage(x, y, w, h);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ImageIO.write(subImg, "png", outputStream);
-                screen = outputStream.toByteArray();
+                //创建全屏截图
+                screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
                 screenBase64 = Base64Utils.encodeToString(screen);
-                return new JDScreenBean("", screenBase64, JDScreenBean.PageStatus.REQUIRE_SCANQR);
+
+                WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
+                if (qrElement != null) {
+                    element = qrElement;
+                    //截取某个元素的图，此处为了方便调试和验证，所以如果出现验证码 就只获取验证码的截图
+                    BufferedImage subImg = null;
+                    Rectangle rect = element.getRect();
+                    int w = rect.width + 5;
+                    int x = (500 - w) / 2;
+                    int h = rect.height + 5;
+                    int y = 180;
+                    subImg = ImageIO.read(new ByteArrayInputStream(screen)).getSubimage(x, y, w, h);
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    ImageIO.write(subImg, "png", outputStream);
+                    screen = outputStream.toByteArray();
+                    screenBase64 = Base64Utils.encodeToString(screen);
+                    return new JDScreenBean("", screenBase64, JDScreenBean.PageStatus.REQUIRE_SCANQR);
+                }
+            }finally {
+                if (interFrame) {
+                    webDriver.switchTo().defaultContent();
+                }
             }
         }
 
