@@ -354,7 +354,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
             executorService.execute(() -> {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
+                    webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
@@ -605,7 +605,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     public boolean initInnerQingLong(RemoteWebDriver webDriver, QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
-        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
+        webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
         try {
             String token = null;
             int retry = 0;
