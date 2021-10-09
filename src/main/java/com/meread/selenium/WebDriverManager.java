@@ -572,7 +572,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                 }
             }
         } finally {
-            if (driver != null) {
+            if (driver != null && driver.getSessionId() != null) {
                 releaseWebDriver(driver.getSessionId().toString());
             }
         }
