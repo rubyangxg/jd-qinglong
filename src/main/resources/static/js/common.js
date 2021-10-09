@@ -361,6 +361,26 @@ function getScreen(data) {
     if (pageStatus === 'REQUIRE_REFRESH') {
         layer.alert("二维码已失效，请重新扫描!");
     }
+    if (pageStatus === 'WAIT_CUBE_SMSCODE') {
+        layer.prompt({title: data.msg, formType: 1}, function (pass, index) {
+            layer.close(index);
+            $.ajax({
+                type: "post",
+                url: base + '/control',
+                async: false,
+                data: {
+                    currId: "cube_sms_code",
+                    currValue: pass
+                },
+                success: function (data) {
+                    if (data === -1) {
+                        window.location.reload();
+                    }
+                    // getScreen();
+                }
+            });
+        });
+    }
     if (pageStatus === 'VERIFY_CODE_MAX') {
         layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
     }

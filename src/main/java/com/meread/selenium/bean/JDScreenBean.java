@@ -21,6 +21,7 @@ public class JDScreenBean {
         REQUIRE_SCANQR("需要扫码"),
         REQUIRE_REFRESH("二维码失效，请点击刷新"),
         WAIT_QR_CONFIRM("扫描成功，请在手机确认"),
+        WAIT_CUBE_SMSCODE("需要用户输入认证魔方发送的验证码"),
 
         VERIFY_CODE_MAX("对不起，短信验证码发送次数已达上限，请24小时后再试"),
         VERIFY_FAILED_MAX("验证码错误多次，请重新获取"),
@@ -56,6 +57,8 @@ public class JDScreenBean {
     private StatClient statClient;
     //截屏时间
     private long snapshotTime;
+    //需要让前端提示的消息
+    private String msg;
 
     public JDScreenBean(String screen,String qr, PageStatus pageStatus) {
         this.screen = screen;

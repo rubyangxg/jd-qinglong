@@ -216,6 +216,21 @@ public class JDService {
             if (pageText.contains("扫描成功")) {
                 return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_QR_CONFIRM);
             }
+
+            if (pageText.contains("请选择认证方式进行认证")) {
+                String text = webDriver.findElement(By.xpath("//p[@class='page-notice']")).getText();
+                String phone = webDriver.findElement(By.xpath("//span[@class='text-account']")).getText();
+                log.info(text);
+                log.info(phone);
+                webDriver.findElement(By.xpath("//a[@class='mode-btn voice-mode']")).click();
+                WebDriverUtil.waitForJStoLoad(webDriver);
+                webDriver.findElement(By.xpath("//button[contains(@class,'getMsg-btn')]")).click();
+                WebDriverUtil.waitForJStoLoad(webDriver);
+                JDScreenBean jdScreenBean = new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.WAIT_CUBE_SMSCODE);
+                jdScreenBean.setMsg("请输入手机号" + phone + "获取到的验证码！");
+                return jdScreenBean;
+            }
+
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
@@ -313,7 +328,7 @@ public class JDService {
         if (canSendAuth) {
             status = JDScreenBean.PageStatus.SHOULD_SEND_AUTH;
         }
-        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, status, authCodeCountDown, canClickLogin, canSendAuth, expire, null,System.currentTimeMillis());
+        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, status, authCodeCountDown, canClickLogin, canSendAuth, expire, null, System.currentTimeMillis(), "");
         if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
         }
@@ -400,10 +415,15 @@ public class JDService {
             element = webDriver.findElement(By.xpath("//input[@type='tel']"));
         } else if ("sms_code".equals(currId)) {
             element = webDriver.findElement(By.id("authcode"));
+        } else if ("cube_sms_code".equals(currId)) {
+            element = webDriver.findElement(By.xpath("//input[@class='acc-input msgCode']"));
         }
         if (element != null) {
             element.sendKeys(Keys.CONTROL + "a");
             element.sendKeys(currValue);
+        }
+        if ("cube_sms_code".equals(currId)) {
+            webDriver.findElement(By.xpath("//a[@class='btn active']")).click();
         }
     }
 
@@ -462,6 +482,8 @@ public class JDService {
                 click(myChromeClient, By.xpath("//input[@class='policy_tip-checkbox']"));
             } else if (bean.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_REFRESH) {
                 toJDlogin(myChromeClient);
+            } else if (bean.getPageStatus() == JDScreenBean.PageStatus.WAIT_CUBE_SMSCODE) {
+                System.out.println("等待用户输入验证码");
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
