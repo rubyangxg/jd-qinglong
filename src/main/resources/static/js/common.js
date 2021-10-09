@@ -362,12 +362,11 @@ function getScreen(data) {
         layer.alert("二维码已失效，请重新扫描!");
     }
     if (pageStatus === 'WAIT_CUBE_SMSCODE') {
-        layer.prompt({title: data.msg, formType: 1}, function (pass, index) {
+        layer.prompt({title: data.msg, formType: 0}, function (pass, index) {
             layer.close(index);
             $.ajax({
                 type: "post",
                 url: base + '/control',
-                async: false,
                 data: {
                     currId: "cube_sms_code",
                     currValue: pass
