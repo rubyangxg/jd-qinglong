@@ -515,7 +515,6 @@ public class JDService {
     public JSONObject uploadQingLong(Set<Integer> chooseQLId, String phone, String remark, String ck, String chromeSessionId, int qlUploadDirect) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("status", 0);
-
         if ((chooseQLId != null && chooseQLId.size() > 0) || qlUploadDirect == 1) {
             List<QLUploadStatus> uploadStatuses = new ArrayList<>();
             if (driverFactory.getQlConfigs() != null) {
@@ -812,8 +811,24 @@ public class JDService {
             ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
             if (exchange.getStatusCode().is2xxSuccessful()) {
                 log.info("update resp content : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
+                String body = exchange.getBody();
+                JSONObject result = JSON.parseObject(body).getJSONObject("data");
+                String enableStatus = "";
+                log.info("ck状态" + result.getString("status"));
+                if (result.getIntValue("status") == 1) {
+                    log.info("开始启用ck" + updateId);
+                    JSONArray enableBody = new JSONArray();
+                    enableBody.add(updateId);
+                    HttpEntity<?> enableRequest = new HttpEntity<>(enableBody.toJSONString(), headers);
+                    String enableUrl = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs/enable?t=" + System.currentTimeMillis();
+                    ResponseEntity<String> enableExchange = restTemplate.exchange(enableUrl, HttpMethod.PUT, enableRequest, String.class);
+                    if (enableExchange.getStatusCode().is2xxSuccessful()) {
+                        log.info("enableCookie resp content : " + enableExchange.getBody() + ", resp code : " + enableExchange.getStatusCode());
+                        enableStatus = "并启用";
+                    }
+                }
                 try {
-                    pushRes = doNodeJSNotify("更新老的CK到" + qlConfig.getLabel(), remarksRes + "->" + phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                    pushRes = doNodeJSNotify("更新" + enableStatus + "老的CK到" + qlConfig.getLabel(), remarksRes + ":" + phone);
                     log.info("pushRes = " + pushRes);
                 } catch (Exception e) {
                     e.printStackTrace();
