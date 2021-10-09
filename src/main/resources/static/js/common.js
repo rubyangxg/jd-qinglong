@@ -56,11 +56,11 @@ var timeoutTimer;
     }, false);
 })();
 $(function () {
-
+    let wsProtocolSuffix = location.protocol.match('^https')?"s":""
     if ('WebSocket' in window) {
-        ws = new WebSocket("ws://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
+        ws = new WebSocket("ws"+wsProtocolSuffix+"://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
     } else {
-        ws = new SockJS("http://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
+        ws = new SockJS("http"+wsProtocolSuffix+"://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
     }
 
     //建立连接处理
