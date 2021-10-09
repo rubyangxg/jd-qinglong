@@ -88,7 +88,7 @@ fi
 rm -rf $HOME/.docker
 cd ..
 docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:1.2
-#docker run -d -p 5701:8080 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -e "SPRING_PROFILES_ACTIVE=debug" -e "env.path=/env.properties" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:1.2
+#docker run -d -p 5701:8080 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -e "SPRING_PROFILES_ACTIVE=debugremote" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:1.2
 
 #mvn clean package -Dmaven.test.skip=true && docker-compose -f docker-compose-debug.yml --env-file=env.properties  build --no-cache webapp
 #docker-compose -f docker-compose-debug.yml --env-file=env.properties  up -d --no-deps && docker logs -f webapp
