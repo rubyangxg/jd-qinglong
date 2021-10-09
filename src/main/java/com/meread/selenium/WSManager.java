@@ -91,6 +91,17 @@ public class WSManager implements DisposableBean {
             Map<String, WebSocketSession> socketSessionMap = entry.getValue();
             MyChromeClient myChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
             if (myChromeClient != null) {
+                JDScreenBean screen = null;
+                try {
+                    screen = jdService.getScreen(myChromeClient);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (screen == null) {
+                    myChromeClient.setExpireTime(0);
+                }
+
                 if (myChromeClient.isExpire()) {
                     driverManager.releaseWebDriver(myChromeClient.getChromeSessionId());
                     for (WebSocketSession socketSession : socketSessionMap.values()) {
@@ -104,7 +115,6 @@ public class WSManager implements DisposableBean {
                     }
                     continue;
                 }
-                JDScreenBean screen = jdService.getScreen(myChromeClient);
                 if (!myChromeClient.isPushedXDD()) {
                     if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
                         log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
