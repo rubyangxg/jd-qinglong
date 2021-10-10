@@ -1,12 +1,6 @@
 FROM adoptopenjdk/openjdk11:alpine
-# Optional Configuration Parameter
-ARG SERVICE_USER
-ARG SERVICE_HOME
 
 ENV TZ=Asia/Shanghai
-# Default Settings
-ENV SERVICE_USER ${SERVICE_USER:-chromium}
-ENV SERVICE_HOME ${SERVICE_HOME:-/home/${SERVICE_USER}}
 
 VOLUME /tmp
 ARG JAR_FILE
@@ -21,7 +15,6 @@ COPY config-template.yml /
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
-    adduser -h ${SERVICE_HOME} -s /sbin/nologin -u 1000 -D ${SERVICE_USER} && \
     set -eux; \
     apk add --no-cache \
         fontconfig \
@@ -34,10 +27,6 @@ RUN \
     chmod 755 /opt/bin/start-go-cqhttp.sh ; \
     chmod 755 /opt/bin/notify
 #    chmod 755 /opt/bin/jd_bean_change && \
-
-USER ${SERVICE_USER}
-WORKDIR ${SERVICE_HOME}
-VOLUME ${SERVICE_HOME}
 
 EXPOSE 8080
 COPY supervisord.conf /etc/supervisord.conf
