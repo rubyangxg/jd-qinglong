@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk11:alpine
 
-ENV TIME_ZONE=Asia/Shanghai
+ENV TZ=Asia/Shanghai
 
 VOLUME /tmp
 ARG JAR_FILE
@@ -15,9 +15,11 @@ COPY config /etc/selenoid
 
 COPY config-template.yml /
 
-RUN apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/shanghai" >> /etc/timezone && \
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
+    set -eux; \
+    apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ >> /etc/timezone && \
     chmod 755 /opt/bin/start-webapp.sh && \
     chmod 755 /opt/bin/start-go-cqhttp.sh && \
     chmod 755 /opt/bin/notify && \

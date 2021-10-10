@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
@@ -21,6 +22,9 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
@@ -47,7 +51,7 @@ import java.util.concurrent.*;
  */
 @Component
 @Slf4j
-public class WebDriverManager implements CommandLineRunner, InitializingBean {
+public class WebDriverManager implements CommandLineRunner, InitializingBean, ApplicationListener<ContextClosedEvent> {
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -58,14 +62,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     @Autowired
     private JDService jdService;
 
-    @Value("${selenium.hub.url}")
-    private String seleniumHubUrl;
-
     @Value("${env.path}")
     private String envPath;
-
-    @Value("${selenium.hub.status.url}")
-    private String seleniumHubStatusUrl;
 
     @Value("${op.timeout}")
     private int opTimeout;
@@ -118,22 +116,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--lang=zh-cn");
-        chromeOptions.setCapability("browserName", "chrome");
-        chromeOptions.setCapability("browserVersion", "89.0");
-        chromeOptions.setCapability("screenResolution", "1280x1024x24");
         chromeOptions.setCapability("enableVideo", false);
         if (chromeTimeout < 60) {
             chromeTimeout = 60;
         }
-        chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(
-                "enableVNC", debug,
-                "enableVideo", false,
-                "enableLog", debug,
-                "env", new String[]{"LANG=zh_CN.UTF-8", "LANGUAGE=zh:cn", "LC_ALL=zh_CN.UTF-8"},
-                "timeZone", "Asia/Shanghai",
-                "sessionTimeout", chromeTimeout + "s"
-//                "applicationContainers", new String[]{"webapp"}
-        ));
         if (!debug) {
             chromeOptions.addArguments("--headless");
         }
@@ -186,161 +172,38 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         }
     }
 
-    /**
-     * 和grid同步chrome状态，清理失效的session，并移除本地缓存
-     */
-    @Scheduled(initialDelay = 10000, fixedDelay = 2000)
-    public void heartbeat() {
-        runningSchedule = true;
-        if (!stopSchedule) {
-            SelenoidStatus nss = getGridStatus();
-            Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
-            Set<String> removedChromeSessionId = new HashSet<>();
-            while (iterator.hasNext()) {
-                String chromeSessionId = iterator.next().getKey();
-                Map<String, JSONObject> sessions = nss.getSessions();
-                JSONObject jsonObject = sessions.get(chromeSessionId);
-                if (jsonObject != null) {
-                    break;
-                } else {
-                    //如果session不存在，则remove
-                    iterator.remove();
-                    removedChromeSessionId.add(chromeSessionId);
-                    log.warn("quit a chrome");
-                }
-            }
-            cleanClients(removedChromeSessionId);
-            int shouldCreate = CAPACITY - chromes.size();
-            if (shouldCreate > 0) {
-                try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
-                    //计算chrome实例的最大存活时间
-                    chromes.put(webDriver.getSessionId().toString(), myChrome);
-                    log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                inflate(chromes, getGridStatus());
-            }
-        }
-        runningSchedule = false;
-    }
-
-    private void cleanClients(Set<String> removedChromeSessionId) {
-        Iterator<Map.Entry<String, MyChromeClient>> iterator = clients.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, MyChromeClient> entry = iterator.next();
-            String chromeSessionId = entry.getValue().getChromeSessionId();
-            if (chromeSessionId == null || removedChromeSessionId.contains(chromeSessionId)) {
-                iterator.remove();
-            }
-        }
-    }
+    @Value("${chrome.driver.path}")
+    private String chromeDriverPath;
 
     @Autowired
     private RestTemplate restTemplate;
 
-    public SelenoidStatus getGridStatus() {
-        SelenoidStatus status = new SelenoidStatus();
-        Map<String, JSONObject> sessions = new HashMap<>();
-        String url = seleniumHubStatusUrl;
-        String json = restTemplate.getForObject(url, String.class);
-        JSONObject data = JSON.parseObject(json);
-        int total = data.getIntValue("total");
-        int used = data.getIntValue("used");
-        int queued = data.getIntValue("queued");
-        int pending = data.getIntValue("pending");
-        List<JSONObject> read = (List<JSONObject>) JSONPath.read(json, "$.browsers.chrome..sessions");
-        if (read != null) {
-            for (JSONObject jo : read) {
-                sessions.put(jo.getString("id"), jo);
-            }
-        }
-        status.setSessions(sessions);
-        status.setUsed(used);
-        status.setTotal(total);
-        status.setQueued(queued);
-        status.setPending(pending);
-        return status;
-    }
-
-    public void closeSession(String sessionId) {
-        String deleteUrl = String.format("%s/session/%s", seleniumHubUrl, sessionId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-REGISTRATION-SECRET", "");
-        HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<String> exchange = null;
-        try {
-            exchange = restTemplate.exchange(deleteUrl, HttpMethod.DELETE, request, String.class);
-            log.info("close sessionId : " + deleteUrl + " resp : " + exchange.getBody() + ", resp code : " + exchange.getStatusCode());
-        } catch (RestClientException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void inflate(Map<String, MyChrome> chromes, SelenoidStatus statusList) {
-        Map<String, JSONObject> sessions = statusList.getSessions();
-        if (sessions == null || sessions.isEmpty()) {
-            return;
-        }
-        for (MyChrome chrome : chromes.values()) {
-            String currSessionId = chrome.getWebDriver().getSessionId().toString();
-            JSONObject sessionInfo = sessions.get(currSessionId);
-            if (sessionInfo != null) {
-                String id = sessionInfo.getString("id");
-                chrome.setSessionInfoJson(sessionInfo);
-            }
-        }
-    }
-
     @Override
     public void run(String... args) throws MalformedURLException {
-
+        System.setProperty("webdriver.chrome.driver", chromeDriverPath);
         stopSchedule = true;
 
         log.info("解析配置不初始化");
         parseMultiQLConfig();
 
-        //获取hub-node状态
-        SelenoidStatus status = getNodeStatuses();
-        if (status == null) {
-            throw new RuntimeException("Selenium 浏览器组初始化失败");
-        }
-
         //清理未关闭的session
         log.info("清理未关闭的session，获取最大容量");
-        Map<String, JSONObject> sessions = status.getSessions();
-        if (sessions != null && sessions.size() > 0) {
-            for (String sessionId : sessions.keySet()) {
-                if (sessionId != null) {
-                    try {
-                        closeSession(sessionId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+        try {
+            long pid = ProcessHandle.current().pid();
+            //排除当前java进程
+            String[] cmd = new String[]{"sh", "-c", "kill -9 $(ps aux | grep -v "+pid+" | grep -i '[c]hrome' | awk '{print $2}')"};
+            Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        //清理未关闭的session
-        log.info("清理未关闭的docker container");
-        cleanDockerContainer();
 
         //初始化一半Chrome实例
         log.info("初始化一半Chrome实例");
         createChrome();
-        inflate(chromes, getGridStatus());
         //借助这一半chrome实例，初始化配置
         initQLConfig();
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
-        }
-
-        if (chromes.isEmpty()) {
-            //防止配置资源数过少时(比如1)，因为初始化青龙后，导致无chrome实例,来不及等定时任务创建
-            createChrome();
-            inflate(chromes, getGridStatus());
         }
 
         log.info("启动成功!");
@@ -350,17 +213,18 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     private void createChrome() {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        int create = CAPACITY == 1 ? 1 : (CAPACITY - chromes.size()) / 2;
+        int create = CAPACITY - chromes.size();
+        if (create <= 0) {
+            return;
+        }
         CountDownLatch cdl = new CountDownLatch(create);
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
                 try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                    ChromeDriver webDriver = new ChromeDriver(chromeOptions);
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
                 } finally {
                     cdl.countDown();
                 }
@@ -391,26 +255,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                 }
             }
         }
-    }
-
-    private SelenoidStatus getNodeStatuses() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture<SelenoidStatus> startSeleniumRes = CompletableFuture.supplyAsync(() -> {
-            while (true) {
-                SelenoidStatus ss = getGridStatus();
-                if (ss.getTotal() > 0) {
-                    return ss;
-                }
-            }
-        }, executor);
-        SelenoidStatus status = null;
-        try {
-            status = startSeleniumRes.get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        executor.shutdown();
-        return status;
     }
 
     private void parseMultiQLConfig() {
@@ -607,7 +451,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
 
     public boolean initInnerQingLong(RemoteWebDriver webDriver, QLConfig qlConfig) {
         String qlUrl = qlConfig.getQlUrl();
-        webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
         try {
             String token = null;
             int retry = 0;
@@ -625,7 +468,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                    Thread.sleep(2000);
                     b = WebDriverUtil.waitForJStoLoad(webDriver);
                     if (b) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
@@ -792,7 +634,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;
         try {
-            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+            webDriver = new ChromeDriver(getOptions());
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
@@ -829,4 +671,32 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean {
         return new StatClient(availChromeCount, webSessionCount, qqSessionCount, totalChromeCount);
     }
 
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        ApplicationContext context = event.getApplicationContext();
+        WebDriverManager webDriverManager = context.getBean(WebDriverManager.class);
+        WSManager wsManager = context.getBean(WSManager.class);
+
+        webDriverManager.stopSchedule = true;
+        wsManager.stopSchedule = true;
+        while (webDriverManager.runningSchedule) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            log.info("wait WebDriverFactory schedule destroy...");
+        }
+        while (wsManager.runningSchedule) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            log.info("wait wsManager schedule destroy...");
+        }
+        for (MyChrome myChrome : chromes.values()) {
+            myChrome.getWebDriver().quit();
+        }
+    }
 }

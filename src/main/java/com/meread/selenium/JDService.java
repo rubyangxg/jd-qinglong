@@ -232,28 +232,13 @@ public class JDService {
                 jdScreenBean.setMsg("请输入手机号" + phone + "获取到的验证码！");
                 return jdScreenBean;
             }
-
-            //创建全屏截图
-            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
-            screenBase64 = Base64Utils.encodeToString(screen);
-
             WebElement qrElement = webDriver.findElement(By.xpath("//span[@class='qrlogin_img_out']"));
             if (qrElement != null) {
-                element = qrElement;
-                //截取某个元素的图，此处为了方便调试和验证，所以如果出现验证码 就只获取验证码的截图
-                BufferedImage subImg = null;
-                Rectangle rect = element.getRect();
-                int w = rect.width + 5;
-                int x = (500 - w) / 2;
-                int h = rect.height + 5;
-                int y = 180;
-                subImg = ImageIO.read(new ByteArrayInputStream(screen)).getSubimage(x, y, w, h);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ImageIO.write(subImg, "png", outputStream);
-                screen = outputStream.toByteArray();
-                screenBase64 = Base64Utils.encodeToString(screen);
-                return new JDScreenBean("", screenBase64, JDScreenBean.PageStatus.REQUIRE_SCANQR);
+                screenBase64 = qrElement.getScreenshotAs(OutputType.BASE64);
+            } else {
+                screenBase64 = webDriver.getScreenshotAs(OutputType.BASE64);
             }
+            return new JDScreenBean("", screenBase64, JDScreenBean.PageStatus.REQUIRE_SCANQR);
         }
 
         if (element == null && jdCookies.isEmpty()) {

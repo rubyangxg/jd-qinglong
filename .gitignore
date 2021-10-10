@@ -167,3 +167,4 @@ docker-allinone/notify
 .docker
 .DS_Store
 go-cqhttp
+chromedriver-94-mac
