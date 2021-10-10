@@ -15,11 +15,20 @@ COPY config-template.yml /
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN set -eux; \
-    apk add --update font-adobe-100dpi ttf-dejavu fontconfig ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver && rm -Rf /var/cache/apk/* && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ >> /etc/timezone && \
-    chmod 755 /opt/bin/start-webapp.sh && \
-    chmod 755 /opt/bin/start-go-cqhttp.sh && \
+    apk add --no-cache \
+        chromium \
+        dumb-init \
+        dbus-x11 \
+        udev \
+        mesa-gl \
+        mesa-dri-swrast \
+        ttf-freefont \
+        ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
+    rm -Rf /var/cache/apk/* ; \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \
+    echo $TZ >> /etc/timezone ; \
+    chmod 755 /opt/bin/start-webapp.sh ; \
+    chmod 755 /opt/bin/start-go-cqhttp.sh ; \
     chmod 755 /opt/bin/notify
 #    chmod 755 /opt/bin/jd_bean_change && \
 
