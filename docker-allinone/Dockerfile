@@ -15,6 +15,7 @@ COPY config-template.yml /
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
     set -eux; \
     apk add --no-cache \
         fontconfig \
