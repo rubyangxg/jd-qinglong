@@ -143,10 +143,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         chromeOptions.addArguments("--window-size=500,700");
     }
 
-    public MutableCapabilities getOptions() {
-        return chromeOptions;
-    }
-
     @Scheduled(initialDelay = 60000, fixedDelay = 30 * 60000)
     public void syncCK_count() {
         if (qlConfigs != null) {
@@ -178,6 +174,26 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
                 }
             }
         }
+    }
+
+    /**
+     * 和grid同步chrome状态，清理失效的session，并移除本地缓存
+     */
+    @Scheduled(initialDelay = 10000, fixedDelay = 2000)
+    public void heartbeat() {
+        runningSchedule = true;
+        if (!stopSchedule) {
+            int shouldCreate = CAPACITY - chromes.size();
+            if (shouldCreate > 0) {
+                ChromeDriver webDriver = new ChromeDriver(chromeOptions);
+                webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+                MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                //计算chrome实例的最大存活时间
+                chromes.put(webDriver.getSessionId().toString(), myChrome);
+                log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
+            }
+        }
+        runningSchedule = false;
     }
 
     @Value("${chrome.driver.path}")
@@ -646,7 +662,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;
         try {
-            webDriver = new ChromeDriver(getOptions());
+            webDriver = new ChromeDriver(chromeOptions);
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
