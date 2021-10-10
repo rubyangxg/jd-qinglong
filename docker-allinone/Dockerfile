@@ -20,7 +20,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     echo $TZ >> /etc/timezone && \
     chmod 755 /opt/bin/start-webapp.sh && \
     chmod 755 /opt/bin/start-go-cqhttp.sh && \
-    chmod 755 /opt/bin/notify && \
+    chmod 755 /opt/bin/notify
 #    chmod 755 /opt/bin/jd_bean_change && \
 
 EXPOSE 4444 8080 6700
