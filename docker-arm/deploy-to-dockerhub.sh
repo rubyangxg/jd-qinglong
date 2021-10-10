@@ -54,8 +54,6 @@ rm -rf qinglong
 docker rm -f webapp
 docker rmi -f rubyangxg/jd-qinglong:arm
 
-
-
 if [ ! -f "$HOME/jd-qinglong-1.0.jar" ];then
   cd ..
   git pull
@@ -69,6 +67,7 @@ fi
 docker build -t rubyangxg/jd-qinglong:arm --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 #docker build -t rubyangxg/jd-qinglong:1.1 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 if [[ $op == 'push' ]]; then
+  docker login
   docker push rubyangxg/jd-qinglong:arm
 #  docker push rubyangxg/jd-qinglong:1.1
 fi
