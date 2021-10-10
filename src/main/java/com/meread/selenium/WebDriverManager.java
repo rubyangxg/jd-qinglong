@@ -471,12 +471,16 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
                 String qlUsername = qlConfig.getQlUsername();
                 String qlPassword = qlConfig.getQlPassword();
                 webDriver.get(qlUrl + "/login");
+                log.info(webDriver.getCurrentUrl());
+                log.info(webDriver.getPageSource());
                 boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
+                log.info("b1 = " + b);
                 if (b) {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
                     b = WebDriverUtil.waitForJStoLoad(webDriver);
+                    log.info("b2 = " + b);
                     if (b) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
                         RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
