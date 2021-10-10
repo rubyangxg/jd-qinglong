@@ -110,12 +110,12 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
         chromeOptions.setExperimentalOption("useAutomationExtension", false);
         chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
-        chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.72 Safari/537.36");
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--lang=zh-cn");
+        chromeOptions.addArguments("lang=zh_CN.UTF-8");
         chromeOptions.setCapability("enableVideo", false);
         if (chromeTimeout < 60) {
             chromeTimeout = 60;
@@ -123,6 +123,12 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         if (!debug) {
             chromeOptions.addArguments("--headless");
         }
+        //ssl证书支持
+        chromeOptions.setCapability("acceptSslCerts", true);
+        //截屏支持
+        chromeOptions.setCapability("takesScreenshot", true);
+        //css搜索支持
+        chromeOptions.setCapability("cssSelectorsEnabled", true);
         chromeOptions.addArguments("--no-sandbox");
         chromeOptions.addArguments("--disable-extensions");
         Map<String, Object> prefs = new HashMap<>();

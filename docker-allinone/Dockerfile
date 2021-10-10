@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:alpine
+FROM openjdk:11
 
 ENV TZ=Asia/Shanghai
 
