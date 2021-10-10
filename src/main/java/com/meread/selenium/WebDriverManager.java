@@ -177,12 +177,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
-            log.info("~~~~~~~~");
-            for (MyChrome chrome : chromes.values()) {
-                ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
-                log.info("port = " + chromeDriverService.getUrl().getPort());
-            }
-            log.info("~~~~~~~~");
+//            for (MyChrome chrome : chromes.values()) {
+//                ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
+//                log.info("port = " + chromeDriverService.getUrl().getPort());
+//            }
             int shouldCreate = CAPACITY - chromes.size();
             if (shouldCreate > 0) {
                 ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
