@@ -343,32 +343,30 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     }
 
     private int parseCapacity() {
-        int res = 0;
+        int res1 = 0;
+        int res2 = 0;
+        int res3 = 0;
         if (!StringUtils.isEmpty(maxSessionFromSystemEnv)) {
             try {
-                res = Integer.parseInt(maxSessionFromSystemEnv);
+                res1 = Integer.parseInt(maxSessionFromSystemEnv);
             } catch (NumberFormatException e) {
             }
         }
 
-        if (res <= 0) {
-            if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
-                try {
-                    res = Integer.parseInt(maxSessionFromEnvFile);
-                } catch (NumberFormatException e) {
-                }
+        if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
+            try {
+                res2 = Integer.parseInt(maxSessionFromEnvFile);
+            } catch (NumberFormatException e) {
             }
         }
 
-        if (res <= 0) {
-            if (!StringUtils.isEmpty(maxSessionFromProps)) {
-                try {
-                    res = Integer.parseInt(maxSessionFromProps);
-                } catch (NumberFormatException e) {
-                }
+        if (!StringUtils.isEmpty(maxSessionFromProps)) {
+            try {
+                res3 = Integer.parseInt(maxSessionFromProps);
+            } catch (NumberFormatException e) {
             }
         }
-        return res;
+        return Math.max(Math.max(res1, res2), res3);
     }
 
     private void initQLConfig() {
