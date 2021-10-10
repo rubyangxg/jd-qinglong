@@ -17,7 +17,7 @@ COPY config-template.yml /
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
     set -eux; \
-    apk add -U ca-certificates tzdata mailcap supervisor curl && rm -Rf /var/cache/apk/* && \
+    apk add -U ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver && rm -Rf /var/cache/apk/* && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ >> /etc/timezone && \
     chmod 755 /opt/bin/start-webapp.sh && \
