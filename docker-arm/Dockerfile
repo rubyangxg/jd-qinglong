@@ -5,6 +5,8 @@ ENV TIME_ZONE=Asia/Shanghai
 VOLUME /tmp
 ARG JAR_FILE
 
+COPY config-template.yml /
+
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change

@@ -5,13 +5,13 @@ ENV TZ=Asia/Shanghai
 VOLUME /tmp
 ARG JAR_FILE
 
+COPY config-template.yml /
+
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
-
-COPY config-template.yml /
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
