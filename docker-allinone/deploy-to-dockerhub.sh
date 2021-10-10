@@ -63,7 +63,7 @@ rm -rf .pkg-cache
 rm -rf qinglong
 
 docker rm -f webapp
-docker rmi -f rubyangxg/jd-qinglong:latest
+#docker rmi -f rubyangxg/jd-qinglong:latest
 docker rmi -f rubyangxg/jd-qinglong:1.3
 
 if [ ! -f "$HOME/jd-qinglong-1.0.jar" ];then
@@ -76,11 +76,12 @@ else
   echo "jd-qinglong-1.0.jar已存在"
 fi
 
-docker build -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
+#docker build -t rubyangxg/jd-qinglong:latest --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 docker build -t rubyangxg/jd-qinglong:1.3 --build-arg JAR_FILE=jd-qinglong-1.0.jar .
 if [[ $op == 'push' ]]; then
   docker login
-  docker push rubyangxg/jd-qinglong:latest && docker push rubyangxg/jd-qinglong:1.3
+#  docker push rubyangxg/jd-qinglong:latest
+  docker push rubyangxg/jd-qinglong:1.3
 fi
 
 rm -rf $HOME/.docker
