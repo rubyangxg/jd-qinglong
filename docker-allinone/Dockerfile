@@ -11,7 +11,6 @@ COPY notify /opt/bin/notify
 COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
-COPY config /etc/selenoid
 
 COPY config-template.yml /
 
@@ -24,7 +23,6 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     chmod 755 /opt/bin/start-go-cqhttp.sh && \
     chmod 755 /opt/bin/notify && \
 #    chmod 755 /opt/bin/jd_bean_change && \
-    chmod 755 /usr/bin/selenoid
 
 EXPOSE 4444 8080 6700
 COPY supervisord.conf /etc/supervisord.conf
