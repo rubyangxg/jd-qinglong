@@ -138,6 +138,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         chromeOptions.addArguments("--ignore-ssl-errors=yes");
         chromeOptions.addArguments("--ignore-certificate-errors");
         chromeOptions.addArguments("--allow-running-insecure-content");
+        chromeOptions.addArguments("--disable-software-rasterizer");
+        chromeOptions.addArguments("--disable-dev-shm-usage");
         chromeOptions.addArguments("--window-size=500,700");
     }
 
