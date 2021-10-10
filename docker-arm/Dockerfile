@@ -7,16 +7,16 @@ ARG JAR_FILE
 
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
-COPY selenoid /usr/bin
+#COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
-COPY config /etc/selenoid
+COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 
 RUN apt-get update && apt-get install -y tzdata ca-certificates tzdata mailcap supervisor curl chromium chromium-driver && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    chmod 755 /opt/bin/start-webapp.sh && \
-    chmod 755 /opt/bin/notify && \
-    chmod 755 /usr/bin/selenoid
+    chmod 755 /opt/bin/start-webapp.sh ; \
+    chmod 755 /opt/bin/start-go-cqhttp.sh ; \
+    chmod 755 /opt/bin/notify
 
-EXPOSE 4444 8080
+EXPOSE 8080
 COPY supervisord.conf /etc/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 #JAVA_OPTS="-server -Xmx2g -Xms2g -Xss512k -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom "

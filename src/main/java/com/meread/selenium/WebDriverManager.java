@@ -2,17 +2,13 @@ package com.meread.selenium;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPath;
-import com.amihaiemil.docker.Container;
-import com.amihaiemil.docker.Containers;
-import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
@@ -27,23 +23,21 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author yangxg
@@ -183,11 +177,18 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
+            log.info("~~~~~~~~");
+            for (MyChrome chrome : chromes.values()) {
+                ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
+                log.info("port = " + chromeDriverService.getUrl().getPort());
+            }
+            log.info("~~~~~~~~");
             int shouldCreate = CAPACITY - chromes.size();
             if (shouldCreate > 0) {
-                ChromeDriver webDriver = new ChromeDriver(chromeOptions);
+                ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
+                ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
                 webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                 //计算chrome实例的最大存活时间
                 chromes.put(webDriver.getSessionId().toString(), myChrome);
                 log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
@@ -215,7 +216,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         try {
             long pid = ProcessHandle.current().pid();
             //排除当前java进程
-            String[] cmd = new String[]{"sh", "-c", "kill -9 $(ps aux | grep -v "+pid+" | grep -i '[c]hrome' | awk '{print $2}')"};
+            String[] cmd = new String[]{"sh", "-c", "kill -9 $(ps aux | grep -v " + pid + " | grep -i '[c]hrome' | awk '{print $2}')"};
             Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
             e.printStackTrace();
@@ -245,9 +246,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
                 try {
-                    ChromeDriver webDriver = new ChromeDriver(chromeOptions);
+                    ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
+                    ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } finally {
                     cdl.countDown();
@@ -264,20 +266,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
 
         if (chromes.isEmpty()) {
             throw new RuntimeException("无法创建浏览器实例");
-        }
-    }
-
-    public void cleanDockerContainer() {
-        Containers containers = new UnixDocker(new File("/var/run/docker.sock")).containers();
-        for (Container container : containers) {
-            String image = container.getString("Image");
-            if (image.startsWith("selenoid/chrome")) {
-                try {
-                    log.info("关闭残留容器" + container.containerId());
-                    container.remove(true, true, false);
-                } catch (Exception e) {
-                }
-            }
         }
     }
 
@@ -493,7 +481,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
                     b = WebDriverUtil.waitForJStoLoad(webDriver);
-                    Thread.sleep(3000);
+                    Thread.sleep(2000);
                     if (b) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
                         RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);

@@ -2,6 +2,7 @@ package com.meread.selenium.bean;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 /**
@@ -13,13 +14,15 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 public class MyChrome {
     //这两个字段会随着创建chrome自动更新
     private RemoteWebDriver webDriver;
+    private ChromeDriverService chromeDriverService;
     private JSONObject sessionInfoJson;
     private long expireTime;
     private String userTrackId;
 
-    public MyChrome(RemoteWebDriver webDriver, long expireTime) {
+    public MyChrome(RemoteWebDriver webDriver, ChromeDriverService chromeDriverService, long expireTime) {
         this.webDriver = webDriver;
         this.expireTime = expireTime;
+        this.chromeDriverService = chromeDriverService;
     }
 
     public boolean isExpire() {

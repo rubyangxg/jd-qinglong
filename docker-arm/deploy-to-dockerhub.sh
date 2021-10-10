@@ -40,7 +40,7 @@ if [ ! -f "$HOME/notify" ];then
     sed -i 's/\/ql\/scripts\/sendNotify.js/..\/sample\/notify.js/' notify.js
   fi
 
-  pkg -t node16-linux-x64 notify.js
+  pkg -t node12-linux-arm64 notify.js
   cp notify $HOME/notify
 else
   echo "notify已存在"
