@@ -8,7 +8,6 @@ ARG JAR_FILE
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
-COPY selenoid /usr/bin
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 
