@@ -24,12 +24,7 @@ RUN \
     adduser -h ${SERVICE_HOME} -s /sbin/nologin -u 1000 -D ${SERVICE_USER} && \
     set -eux; \
     apk add --no-cache \
-        chromium \
-        dumb-init \
-        dbus-x11 \
-        udev \
-        mesa-gl \
-        mesa-dri-swrast \
+        fontconfig \
         ttf-freefont \
         ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
     rm -Rf /var/cache/apk/* ; \
