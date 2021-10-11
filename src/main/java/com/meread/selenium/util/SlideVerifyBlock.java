@@ -43,7 +43,7 @@ public class SlideVerifyBlock {
 
             if (debug) {
                 for (int a = 0; a < 170; a++) {
-                    read.setRGB(intValue, a, Color.GREEN.getRGB());
+                    read.setRGB((int)res, a, Color.GREEN.getRGB());
                 }
                 try {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
