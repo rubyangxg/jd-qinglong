@@ -25,7 +25,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && echo $TZ >> /etc/timezone \
     && apk upgrade -U -a \
     && apk add \
-    openjdk11-jre-headless \
+    openjdk11 \
     libstdc++ \
     chromium \
     chromium-chromedriver \
@@ -33,11 +33,11 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     supervisor \
     net-tools \
     lsof \
-    nss \
-    freetype \
-    ttf-freefont \
-    font-noto-emoji \
-    wqy-zenhei \
+#    nss \
+#    freetype \
+#    ttf-freefont \
+#    font-noto-emoji \
+#    wqy-zenhei \
     && rm -rf /var/cache/* \
     && mkdir /var/cache/apk \
     && chmod 755 /opt/bin/start-webapp.sh \
