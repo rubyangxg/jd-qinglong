@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:alpine
+FROM openjdk:11
 
 ENV TZ=Asia/Shanghai
 
@@ -12,17 +12,17 @@ COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
+COPY MSYH.TTC /usr/share/fonts/
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
     set -eux; \
-    apk add --no-cache \
+    apt-get update && apt-get install \
         fontconfig \
         ttf-freefont \
         net-tools \
         lsof \
         ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
-    rm -Rf /var/cache/apk/* ; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \
     echo $TZ >> /etc/timezone ; \
     chmod 755 /opt/bin/start-webapp.sh ; \
