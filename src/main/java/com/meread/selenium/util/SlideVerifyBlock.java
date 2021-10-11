@@ -1,11 +1,9 @@
 package com.meread.selenium.util;
 
-import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
-import org.springframework.context.annotation.Bean;
 import org.springframework.util.Base64Utils;
 
 import javax.imageio.ImageIO;
@@ -25,18 +23,29 @@ public class SlideVerifyBlock {
     private static final int A_SPEED = 150;
 
     //模拟手动的过程
-    public static void moveWay1(WebDriver driver, WebElement slider, int gap) {
+    public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
         log.info("gap = " + gap);
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.perform();
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
-        gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
+        gap = Math.toIntExact(Math.round(cpc_img.width / ((float)cpc_img.height) * gap));
         List<Double> doubles = moveManualiy(gap);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
+        BufferedImage read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+
         for (int i = 0; i < array.length; i++) {
-            // 由于经常会出现 forbidden
+            if (debug) {
+                try {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    ImageIO.write(read, "png", outputStream);
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
+                    ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             int intValue = array[i].intValue();
             res += (array[i] - intValue);
             actions.moveByOffset(intValue, (i % 2));
@@ -48,7 +57,7 @@ public class SlideVerifyBlock {
     }
 
     // 匀速移动
-    public static void moveWay2(WebDriver driver, WebElement slider, int gap, String uuid,boolean isDebug) throws IOException {
+    public static void moveWay2(WebDriver driver, WebElement slider, int gap, String uuid, boolean isDebug) throws IOException {
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.pause(200);

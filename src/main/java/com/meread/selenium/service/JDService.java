@@ -361,7 +361,7 @@ public class JDService {
 
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
 //                SlideVerifyBlock.moveWay2(webDriver, slider, rect.x(), uuid.toString(),isDebug);
-                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x());
+                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(),uuid.toString(),debug);
 
                 if (debug) {
                     String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));

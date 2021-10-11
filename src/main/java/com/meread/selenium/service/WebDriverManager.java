@@ -712,22 +712,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
 
         webDriverManager.stopSchedule = true;
         wsManager.stopSchedule = true;
-        while (webDriverManager.runningSchedule) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("wait WebDriverFactory schedule destroy...");
-        }
-        while (wsManager.runningSchedule) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("wait wsManager schedule destroy...");
-        }
         for (MyChrome myChrome : chromes.values()) {
             myChrome.getWebDriver().quit();
         }
