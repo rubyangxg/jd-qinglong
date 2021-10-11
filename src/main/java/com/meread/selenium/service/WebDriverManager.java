@@ -66,9 +66,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     @Value("${chrome.timeout}")
     private int chromeTimeout;
 
-    @Value("#{environment.SE_NODE_MAX_SESSIONS}")
-    private String maxSessionFromSystemEnv;
-
     @Value("${SE_NODE_MAX_SESSIONS}")
     private String maxSessionFromProps;
 
@@ -325,7 +322,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
             }
         }
 
-        log.info("最大资源数配置: maxSessionFromEnvFile = " + maxSessionFromEnvFile + ", maxSessionFromSystemEnv = " + maxSessionFromSystemEnv + ", maxSessionFromProps = " + maxSessionFromProps);
+        log.info("最大资源数配置: maxSessionFromEnvFile = " + maxSessionFromEnvFile + " maxSessionFromProps = " + maxSessionFromProps);
 
         CAPACITY = parseCapacity();
         log.info("最大资源数配置: CAPACITY = " + CAPACITY);
@@ -370,10 +367,10 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     private int parseCapacity() {
         int res1 = 0;
         int res2 = 0;
-        int res3 = 0;
-        if (!StringUtils.isEmpty(maxSessionFromSystemEnv)) {
+
+        if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
             try {
-                res1 = Integer.parseInt(maxSessionFromSystemEnv);
+                res1 = Integer.parseInt(maxSessionFromEnvFile);
             } catch (NumberFormatException e) {
             }
         }
@@ -382,24 +379,13 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
             return res1;
         }
 
-        if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
-            try {
-                res2 = Integer.parseInt(maxSessionFromEnvFile);
-            } catch (NumberFormatException e) {
-            }
-        }
-
-        if (res2 > 0) {
-            return res2;
-        }
-
         if (!StringUtils.isEmpty(maxSessionFromProps)) {
             try {
-                res3 = Integer.parseInt(maxSessionFromProps);
+                res2 = Integer.parseInt(maxSessionFromProps);
             } catch (NumberFormatException e) {
             }
         }
-        return res3;
+        return res2;
     }
 
     private void initQLConfig() {
