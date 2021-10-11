@@ -1,6 +1,7 @@
 package com.meread.selenium.util;
 
 import com.meread.selenium.util.CommonAttributes;
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
@@ -18,12 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 public class SlideVerifyBlock {
     //加速度
     private static final int A_SPEED = 150;
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap) {
+        log.info("gap = " + gap);
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.perform();

@@ -362,8 +362,16 @@ public class JDService {
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
 //                SlideVerifyBlock.moveWay2(webDriver, slider, rect.x(), uuid.toString(),isDebug);
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x());
-                FileUtils.deleteQuietly(file1);
-                FileUtils.deleteQuietly(file2);
+
+                if (debug) {
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
+                    webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
+                    FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + "_res.jpg"), bgBytes);
+                }
+                if (!debug) {
+                    FileUtils.deleteQuietly(file1);
+                    FileUtils.deleteQuietly(file2);
+                }
             }
         }
     }
