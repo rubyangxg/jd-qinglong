@@ -36,7 +36,15 @@ public class SlideVerifyBlock {
         BufferedImage read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
 
         for (int i = 0; i < array.length; i++) {
+            int intValue = array[i].intValue();
+            res += (array[i] - intValue);
+            actions.moveByOffset(intValue, (i % 2));
+            actions.perform();
+
             if (debug) {
+                for (int a = 0; a < 170; a++) {
+                    read.setRGB(intValue, a, Color.GREEN.getRGB());
+                }
                 try {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     ImageIO.write(read, "png", outputStream);
@@ -46,11 +54,8 @@ public class SlideVerifyBlock {
                     e.printStackTrace();
                 }
             }
-            int intValue = array[i].intValue();
-            res += (array[i] - intValue);
-            actions.moveByOffset(intValue, (i % 2));
-            actions.perform();
         }
+        ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
         actions.moveByOffset(new Double(res).intValue(), 0);
         actions.pause(200 + new Random().nextInt(300)).release(slider);
         actions.perform();
