@@ -25,6 +25,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     chromium \
     chromium-chromedriver \
     harfbuzz \
+    supervisor \
     net-tools \
     lsof \
     nss \
