@@ -1,4 +1,4 @@
-package com.meread.selenium;
+package com.meread.selenium.config;
 
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.context.annotation.Bean;

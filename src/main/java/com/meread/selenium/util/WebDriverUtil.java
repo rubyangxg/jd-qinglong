@@ -1,4 +1,4 @@
-package com.meread.selenium;
+package com.meread.selenium.util;
 
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.remote.RemoteWebDriver;

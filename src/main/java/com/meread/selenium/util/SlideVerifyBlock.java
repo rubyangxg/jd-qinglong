@@ -1,4 +1,4 @@
-package com.meread.selenium;
+package com.meread.selenium.util;
 
 import com.meread.selenium.util.CommonAttributes;
 import org.openqa.selenium.Rectangle;

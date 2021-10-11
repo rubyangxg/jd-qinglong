@@ -20,6 +20,8 @@ RUN \
     apk add --no-cache \
         fontconfig \
         ttf-freefont \
+        net-tools \
+        lsof \
         ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
     rm -Rf /var/cache/apk/* ; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \

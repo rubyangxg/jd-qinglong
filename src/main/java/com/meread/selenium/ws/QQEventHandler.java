@@ -2,8 +2,8 @@ package com.meread.selenium.ws;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.meread.selenium.BotService;
-import com.meread.selenium.WebDriverManager;
+import com.meread.selenium.service.BotService;
+import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.bean.qq.GroupMessage;
 import com.meread.selenium.bean.qq.PrivateMessage;
 import com.meread.selenium.util.CommonAttributes;
@@ -67,9 +67,6 @@ public class QQEventHandler extends TextWebSocketHandler {
         log.info("afterConnectionClosed " + webSocketSessionId + ", CloseStatus" + status);
     }
 
-    //私聊消息：{"font":0,"message":"哈哈","message_id":-1646834399,"message_type":"private","post_type":"message","raw_message":"哈哈","self_id":1904788864,"sender":{"age":0,"nickname":"Jude","sex":"unknown","user_id":87272738},"sub_type":"friend","target_id":1904788864,"time":1633668649,"user_id":87272738}
-    //{"anonymous":null,"font":0,"group_id":765427218,"message":"登陆","message_id":399686030,"message_seq":33,"message_type":"group","post_type":"message","raw_message":"登陆","self_id":1904788864,"sender":{"age":0,"area":"","card":"","level":"","nickname":"Jude","role":"member","sex":"unknown","title":"","user_id":87272738},"sub_type":"normal","time":1633668694,"user_id":87272738}
-    //{"anonymous":null,"font":0,"group_id":392328820,"message":"登陆","message_id":1092748263,"message_seq":17269,"message_type":"group","post_type":"message","raw_message":"登陆","self_id":1904788864,"sender":{"age":0,"area":"","card":"","level":"","nickname":"Jude","role":"member","sex":"unknown","title":"","user_id":87272738},"sub_type":"normal","time":1633668710,"user_id":87272738}
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         if (goCqHttpDir.endsWith("/")) {

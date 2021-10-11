@@ -1,6 +1,5 @@
-package com.meread.selenium;
+package com.meread.selenium.util;
 
-import com.meread.selenium.util.CommonAttributes;
 import org.apache.commons.io.FilenameUtils;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.opencv.opencv_core.*;

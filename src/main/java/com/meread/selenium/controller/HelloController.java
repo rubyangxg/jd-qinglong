@@ -1,7 +1,9 @@
-package com.meread.selenium;
+package com.meread.selenium.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.service.JDService;
+import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.util.FreemarkerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;

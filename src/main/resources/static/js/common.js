@@ -345,7 +345,7 @@ function getScreen(data) {
     $("#webSessionCount").text(webSessionCount);
     $("#qqSessionCount").text(qqSessionCount);
     $("#totalChromeCount").text(totalChromeCount);
-    if (debug && screen) {
+    if (debug === true && screen) {
         $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);
     }
     if (pageStatus === 'WAIT_QR_CONFIRM') {

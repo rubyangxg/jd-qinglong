@@ -1,9 +1,10 @@
-package com.meread.selenium;
+package com.meread.selenium.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.WebDriverOpCallBack;
+import com.meread.selenium.util.WebDriverUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
@@ -50,8 +51,8 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     @Autowired
     private ResourceLoader resourceLoader;
 
-    @Value("${jd.debug}")
-    private boolean debug;
+    @Value("${chrome.headless}")
+    private boolean headless;
 
     @Autowired
     private JDService jdService;
@@ -114,7 +115,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         if (chromeTimeout < 60) {
             chromeTimeout = 60;
         }
-        if (!debug) {
+        if (headless) {
             chromeOptions.addArguments("--headless");
         }
         //ssl证书支持
@@ -177,10 +178,16 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
-//            for (MyChrome chrome : chromes.values()) {
-//                ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
-//                log.info("port = " + chromeDriverService.getUrl().getPort());
-//            }
+            Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
+            while (iterator.hasNext()) {
+                MyChrome chrome = iterator.next().getValue();
+                if (chrome.getUserTrackId() == null) {
+                    if (chrome.isExpire()) {
+                        iterator.remove();
+                        quit(chrome);
+                    }
+                }
+            }
             int shouldCreate = CAPACITY - chromes.size();
             if (shouldCreate > 0) {
                 ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
@@ -193,6 +200,19 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
             }
         }
         runningSchedule = false;
+    }
+
+    private void quit(MyChrome chrome) {
+        ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
+        int port = chromeDriverService.getUrl().getPort();
+        log.info("kill port = " + port);
+        String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + port + " | awk '/LISTEN/{print $2}')"};
+        try {
+            chrome.getWebDriver().quit();
+            Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Value("${chrome.driver.path}")
@@ -353,11 +373,19 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
             }
         }
 
+        if (res1 > 0) {
+            return res1;
+        }
+
         if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
             try {
                 res2 = Integer.parseInt(maxSessionFromEnvFile);
             } catch (NumberFormatException e) {
             }
+        }
+
+        if (res2 > 0) {
+            return res2;
         }
 
         if (!StringUtils.isEmpty(maxSessionFromProps)) {
@@ -366,7 +394,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
             } catch (NumberFormatException e) {
             }
         }
-        return Math.max(Math.max(res1, res2), res3);
+        return res3;
     }
 
     private void initQLConfig() {
@@ -589,7 +617,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
                         log.info("clean chrome binding: " + sessionId);
                     } else {
                         iterator.remove();
-                        threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
+                        threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);
                     }
                 } catch (Exception e) {

@@ -1,4 +1,4 @@
-package com.meread.selenium;
+package com.meread.selenium.service;
 
 import com.alibaba.fastjson.JSON;
 import com.meread.selenium.bean.JDLoginType;

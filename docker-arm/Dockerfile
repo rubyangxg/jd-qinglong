@@ -13,7 +13,7 @@ COPY notify /opt/bin/notify
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 
-RUN apt-get update && apt-get install -y tzdata ca-certificates tzdata mailcap supervisor curl chromium chromium-driver && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+RUN apt-get update && apt-get install -y lsof tzdata ca-certificates tzdata mailcap supervisor curl chromium chromium-driver && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     chmod 755 /opt/bin/start-webapp.sh ; \
     chmod 755 /opt/bin/start-go-cqhttp.sh ; \
     chmod 755 /opt/bin/notify

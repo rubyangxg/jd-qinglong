@@ -1,4 +1,4 @@
-package com.meread.selenium;
+package com.meread.selenium.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.meread.selenium.JDService.strSpecialFilter;
+import static com.meread.selenium.service.JDService.strSpecialFilter;
 import static com.meread.selenium.util.CommonAttributes.webSocketSession;
 
 /**

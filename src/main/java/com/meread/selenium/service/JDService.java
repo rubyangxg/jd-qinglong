@@ -1,8 +1,11 @@
-package com.meread.selenium;
+package com.meread.selenium.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.util.OpenCVUtil;
+import com.meread.selenium.util.SlideVerifyBlock;
+import com.meread.selenium.util.WebDriverUtil;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
 import com.meread.selenium.util.CommonAttributes;
@@ -700,9 +703,7 @@ public class JDService {
         int res = -1;
         String pushRes = "";
         String xddRes = "";
-        if (qlConfig.getRemain() <= 0) {
-            return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes, xddRes);
-        }
+
         boolean update = false;
         String updateId = "";
         String updateRemark = null;
@@ -734,6 +735,9 @@ public class JDService {
         HttpHeaders headers = getHttpHeaders(qlConfig);
         String url = qlConfig.getQlUrl() + "/" + (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN ? "open" : "api") + "/envs?t=" + System.currentTimeMillis();
         if (!update) {
+            if (qlConfig.getRemain() <= 0) {
+                return new QLUploadStatus(qlConfig, res, qlConfig.getRemain() <= 0, pushRes, xddRes);
+            }
             JSONArray jsonArray = new JSONArray();
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("value", ck);

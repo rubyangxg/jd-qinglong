@@ -1,7 +1,6 @@
 package com.meread.selenium.config;
 
-import com.meread.selenium.WebDriverManager;
-import com.meread.selenium.bean.MyChrome;
+import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.bean.MyChromeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
