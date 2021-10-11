@@ -309,7 +309,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         }
 
         maxSessionFromEnvFile = properties.getProperty("SE_NODE_MAX_SESSIONS");
-        int customChromeTimeout  = Integer.parseInt(properties.getProperty("chrome.timeout"));
+        int customChromeTimeout  = Integer.parseInt(properties.getProperty("chrome.timeout","0"));
         if (customChromeTimeout > 0) {
             chromeTimeout = customChromeTimeout;
         }
