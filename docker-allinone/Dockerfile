@@ -20,7 +20,7 @@ RUN \
         openjdk-11-jdk \
         net-tools \
         lsof \
-        ca-certificates tzdata mailcap supervisor curl chromium-chromedriver ; \
+        ca-certificates tzdata supervisor curl chromium-chromedriver ; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \
     echo $TZ >> /etc/timezone ; \
     chmod 755 /opt/bin/start-webapp.sh ; \
