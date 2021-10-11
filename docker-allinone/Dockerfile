@@ -12,8 +12,8 @@ COPY notify /opt/bin/notify
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 
-RUN apk add --no-cache msttcorefonts-installer fontconfig
-RUN update-ms-fonts
+#RUN apk add --no-cache msttcorefonts-installer fontconfig
+#RUN update-ms-fonts
 COPY MSYH.TTC /usr/share/fonts/
 
 # Installs latest Chromium package.
