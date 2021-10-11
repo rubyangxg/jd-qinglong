@@ -20,12 +20,13 @@ RUN \
         openjdk-11-jdk \
         net-tools \
         lsof \
-        ca-certificates tzdata supervisor curl chromium-chromedriver ; \
+        ca-certificates tzdata supervisor curl chromium chromium-chromedriver ; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \
     echo $TZ >> /etc/timezone ; \
     chmod 755 /opt/bin/start-webapp.sh ; \
     chmod 755 /opt/bin/start-go-cqhttp.sh ; \
-    chmod 755 /opt/bin/notify
+    chmod 755 /opt/bin/notify ; \
+    rm -rf /var/lib/apt/lists/*
 #    chmod 755 /opt/bin/jd_bean_change && \
 
 EXPOSE 8080
