@@ -15,7 +15,6 @@ COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
-    sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
     set -eux; \
     apk add --no-cache \
         net-tools \
