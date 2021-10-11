@@ -100,7 +100,7 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
     public void init() {
         chromeOptions = new ChromeOptions();
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
-        chromeOptions.setExperimentalOption("useAutomationExtension", false);
+        chromeOptions.setExperimentalOption("useAutomationExtension", true);
         chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
