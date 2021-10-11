@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM ubuntu
 
 ENV TZ=Asia/Shanghai
 
@@ -6,7 +6,6 @@ VOLUME /tmp
 ARG JAR_FILE
 
 COPY config-template.yml /
-
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
@@ -17,12 +16,11 @@ COPY MSYH.TTC /usr/share/fonts/
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories; \
 RUN \
     set -eux; \
-    apt-get update && apt-get install \
-        fontconfig \
-        ttf-freefont \
+    apt-get update && apt-get install -y \
+        openjdk-11-jdk \
         net-tools \
         lsof \
-        ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
+        ca-certificates tzdata mailcap supervisor curl chromium-chromedriver ; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime ; \
     echo $TZ >> /etc/timezone ; \
     chmod 755 /opt/bin/start-webapp.sh ; \
