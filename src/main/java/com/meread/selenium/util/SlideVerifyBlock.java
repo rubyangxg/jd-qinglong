@@ -55,8 +55,13 @@ public class SlideVerifyBlock {
                 }
             }
         }
+         actions.moveByOffset(new Double(res).intValue(), 0);
+        if (debug) {
+            for (int a = 0; a < 170; a++) {
+                read.setRGB(new Double(res).intValue(), a, Color.GREEN.getRGB());
+            }
+        }
         ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
-        actions.moveByOffset(new Double(res).intValue(), 0);
         actions.pause(200 + new Random().nextInt(300)).release(slider);
         actions.perform();
     }
