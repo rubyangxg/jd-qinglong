@@ -17,6 +17,8 @@ COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
 RUN \
     set -eux; \
     apk add --no-cache \
+        fontconfig \
+        ttf-freefont \
         net-tools \
         lsof \
         ca-certificates tzdata mailcap supervisor curl chromium chromium-chromedriver ; \
