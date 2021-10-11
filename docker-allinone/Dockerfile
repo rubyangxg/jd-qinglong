@@ -42,12 +42,11 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && chmod 755 /opt/bin/start-go-cqhttp.sh \
     && chmod 755 /opt/bin/notify
 
-COPY local.conf /etc/fonts/local.conf
 # Add Chrome as a user
 RUN mkdir -p /usr/src/app \
     && adduser -D chrome \
-    && chown -R chrome:chrome /usr/src/app
-# Run Chrome as non-privileged
+    && chown -R chrome:chrome /usr/src/app \
+
 USER chrome
 WORKDIR /usr/src/app
 
