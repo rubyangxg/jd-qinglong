@@ -72,6 +72,6 @@ if [[ $op == 'push' ]]; then
 #  docker push rubyangxg/jd-qinglong:1.1
 fi
 
-docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:arm
-#docker run -d -p 5701:8080 -p 8001:8001 --name=webapp --privileged=true -e "SE_NODE_MAX_SESSIONS=8" -e "SPRING_PROFILES_ACTIVE=debugremote" -v /var/run/docker.sock:/var/run/docker.sock -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:arm
-#docker run -d -p 5701:8080 -p 8001:8001 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:arm
+cd /root/run
+docker stop webapp && docker rm webapp
+docker run -d -p 5701:8080 -p 8001:8001 --name=webapp --privileged=true -e "SPRING_PROFILES_ACTIVE=debugremote" -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:arm
