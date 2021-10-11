@@ -418,6 +418,7 @@ public class JDService {
         }
         if (element != null) {
             element.sendKeys(Keys.CONTROL + "a");
+            element.sendKeys(Keys.COMMAND + "a");
             element.sendKeys(currValue);
         }
         if ("cube_sms_code".equals(currId)) {
