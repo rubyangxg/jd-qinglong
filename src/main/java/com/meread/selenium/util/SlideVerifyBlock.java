@@ -29,21 +29,23 @@ public class SlideVerifyBlock {
         actions.clickAndHold(slider);
         actions.perform();
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
-        gap = Math.toIntExact(Math.round(cpc_img.width / ((float)cpc_img.height) * gap));
+        gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
         List<Double> doubles = moveManualiy(gap);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
         BufferedImage read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
 
+        int sum = 0;
         for (int i = 0; i < array.length; i++) {
             int intValue = array[i].intValue();
+            sum += intValue;
             res += (array[i] - intValue);
             actions.moveByOffset(intValue, (i % 2));
             actions.perform();
 
             if (debug) {
                 for (int a = 0; a < 170; a++) {
-                    read.setRGB((int)res, a, Color.GREEN.getRGB());
+                    read.setRGB(sum, a, Color.GREEN.getRGB());
                 }
                 try {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -55,10 +57,11 @@ public class SlideVerifyBlock {
                 }
             }
         }
-         actions.moveByOffset(new Double(res).intValue(), 0);
+        actions.moveByOffset(new Double(res).intValue(), 0);
         if (debug) {
+            sum += new Double(res).intValue();
             for (int a = 0; a < 170; a++) {
-                read.setRGB(new Double(res).intValue(), a, Color.GREEN.getRGB());
+                read.setRGB(sum, a, Color.GREEN.getRGB());
             }
         }
         ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
