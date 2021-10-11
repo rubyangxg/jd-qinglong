@@ -102,7 +102,6 @@ public class WebDriverManager implements CommandLineRunner, InitializingBean, Ap
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
         chromeOptions.setExperimentalOption("useAutomationExtension", false);
         chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
-        chromeOptions.addArguments("user-agent=Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 UBrowser/6.2.4098.3 Safari/537.36");
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
