@@ -1,6 +1,5 @@
-FROM alpine:latest
+FROM adoptopenjdk/openjdk11:alpine
 
-ENV JAVA_HOME="/usr/lib/jvm/default-jvm/"
 ENV TZ=Asia/Shanghai
 
 COPY config-template.yml /
@@ -25,7 +24,6 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && echo $TZ >> /etc/timezone \
     && apk upgrade -U -a \
     && apk add \
-    openjdk11 \
     libstdc++ \
     chromium \
     chromium-chromedriver \
