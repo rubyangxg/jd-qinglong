@@ -43,7 +43,6 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && chmod 755 /opt/bin/notify
 
 COPY local.conf /etc/fonts/local.conf
-ENV PATH=$PATH:${JAVA_HOME}/bin
 # Add Chrome as a user
 RUN mkdir -p /usr/src/app \
     && adduser -D chrome \
