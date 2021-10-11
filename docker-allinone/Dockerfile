@@ -4,6 +4,8 @@ ENV JAVA_HOME="/usr/lib/jvm/default-jvm/"
 ENV TZ=Asia/Shanghai
 
 COPY config-template.yml /
+ARG JAR_FILE
+COPY config-template.yml /
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
