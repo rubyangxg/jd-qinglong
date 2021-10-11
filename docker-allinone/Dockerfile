@@ -20,7 +20,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && echo $TZ >> /etc/timezone \
     && apk upgrade -U -a \
     && apk add \
-    openjdk11 \
+    openjdk11-jre-headless \
     libstdc++ \
     chromium \
     chromium-chromedriver \
