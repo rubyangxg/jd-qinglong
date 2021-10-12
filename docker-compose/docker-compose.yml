@@ -56,8 +56,8 @@ services:
     ports:
       - "5702:8080"
     volumes:
-      - "$(pwd)"/env.properties:/env.properties
-      - "$(pwd)"/go-cqhttp:/go-cqhttp
+      - ./env.properties:/env.properties
+      - ./go-cqhttp:/go-cqhttp
     depends_on:
       - selenoid
 
