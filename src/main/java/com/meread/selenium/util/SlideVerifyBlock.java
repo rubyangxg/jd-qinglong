@@ -40,7 +40,11 @@ public class SlideVerifyBlock {
         List<Double> doubles = moveManualiy(gap);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
-        BufferedImage read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+
+        BufferedImage read = null;
+        if (debug) {
+            read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+        }
 
         int sum = 0;
         Random random = new Random();
