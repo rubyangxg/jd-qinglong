@@ -2,8 +2,13 @@ package com.meread.selenium.util;
 
 import org.apache.commons.io.FilenameUtils;
 import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.opencv_core.*;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.bytedeco.opencv.global.opencv_core.*;
@@ -12,6 +17,19 @@ import static org.bytedeco.opencv.global.opencv_imgcodecs.imwrite;
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
 public class OpenCVUtil {
+
+    public static void test() throws IOException {
+        for (char a = 'a'; a <= 'i'; a++) {
+            long tt1 = System.currentTimeMillis();
+            BufferedImage image = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + ".jpeg")));
+            BufferedImage imageSmall = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + "_small.png")));
+            Mat mat = Java2DFrameUtils.toMat(image);
+            long tt2 = System.currentTimeMillis();
+            Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
+            Rect rect = getOffsetX(mat, matSmall, String.valueOf(a), false);
+            System.out.println("crackCaptcha calc gap " + rect.x() + " end...耗时：" + (tt2 - tt1));
+        }
+    }
 
     public static void main(String[] args) {
         for (char a = 'a'; a <= 'i'; a++) {
