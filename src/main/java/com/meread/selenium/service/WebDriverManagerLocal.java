@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Slf4j
 @Profile("default")
-public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunner, InitializingBean, ApplicationListener<ContextClosedEvent> {
+public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunner, ApplicationListener<ContextClosedEvent> {
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -231,12 +231,12 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
 
     @Override
     public void run(String... args) throws MalformedURLException {
-        init();
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
         stopSchedule = true;
 
         log.info("解析配置不初始化");
         parseMultiQLConfig();
+        init();
 
         //清理未关闭的session
         log.info("清理未关闭的session，获取最大容量");
@@ -681,10 +681,6 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
         return initSuccess;
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        init();
-    }
 
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;

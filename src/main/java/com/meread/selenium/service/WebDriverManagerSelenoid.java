@@ -8,11 +8,9 @@ import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
-import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.bytedeco.opencv.opencv_core.Rect;
 import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebElement;
@@ -57,7 +55,7 @@ import java.util.concurrent.*;
 @Component
 @Slf4j
 @Profile({"debuglocal", "debugremote"})
-public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRunner, InitializingBean {
+public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRunner {
 
     @Autowired
     private ResourceLoader resourceLoader;
@@ -304,12 +302,10 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
 
     @Override
     public void run(String... args) throws MalformedURLException {
-        init();
         stopSchedule = true;
-
         log.info("解析配置不初始化");
-        parseMultiQLConfig();
-
+        parseEnvConfig();
+        init();
         //获取hub-node状态
         SelenoidStatus status = getNodeStatuses();
         if (status == null) {
@@ -420,7 +416,7 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
         return status;
     }
 
-    private void parseMultiQLConfig() {
+    private void parseEnvConfig() {
         qlConfigs = new ArrayList<>();
         if (envPath.startsWith("classpath")) {
             Resource resource = resourceLoader.getResource(envPath);
@@ -805,11 +801,6 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
     @Override
     public boolean isInitSuccess() {
         return initSuccess;
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        init();
     }
 
     public <T> T exec(WebDriverOpCallBack<T> executor) {
