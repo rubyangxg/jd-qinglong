@@ -3,13 +3,9 @@ package com.meread.selenium.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.meread.selenium.util.OpenCVUtil;
-import com.meread.selenium.util.SlideVerifyBlock;
-import com.meread.selenium.util.WebDriverUtil;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
-import com.meread.selenium.util.CommonAttributes;
-import com.meread.selenium.util.FreemarkerUtils;
+import com.meread.selenium.util.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
@@ -352,26 +348,10 @@ public class JDService {
                 FileUtils.writeByteArrayToFile(file1, bgBytes);
                 FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
                 Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
-
-                if (debug) {
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
-                    webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                    FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + ".jpg"), bgBytes);
-                }
-
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
-//                SlideVerifyBlock.moveWay2(webDriver, slider, rect.x(), uuid.toString(),isDebug);
-                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(),uuid.toString(),debug);
-
-                if (debug) {
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(FileUtils.readFileToByteArray(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg")));
-                    webDriver.executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                    FileUtils.writeByteArrayToFile(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_" + rect.x() + "_res.jpg"), bgBytes);
-                }
-                if (!debug) {
-                    FileUtils.deleteQuietly(file1);
-                    FileUtils.deleteQuietly(file2);
-                }
+                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), debug);
+                FileUtils.deleteQuietly(file1);
+                FileUtils.deleteQuietly(file2);
             }
         }
     }
@@ -418,6 +398,11 @@ public class JDService {
         }
         if (element != null) {
             element.sendKeys(Keys.CONTROL + "a");
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             element.sendKeys(currValue);
         }
         if ("cube_sms_code".equals(currId)) {
