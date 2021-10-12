@@ -369,9 +369,14 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
     public void destroyAll() {
         ApplicationContext context = SpringUtils.getApplicationContext();
         WSManager wsManager = context.getBean(WSManager.class);
+        int count = 0;
         while (wsManager.runningSchedule) {
+            if (count > 5) {
+                break;
+            }
             try {
                 Thread.sleep(1000);
+                count++;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

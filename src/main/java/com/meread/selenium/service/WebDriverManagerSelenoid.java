@@ -351,7 +351,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
     }
 
     @Override
-    public void releaseWebDriver(String removeChromeSessionId) {
+    public void releaseWebDriver(String removeChromeSessionId,boolean quit) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next().getValue();
@@ -368,12 +368,13 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
                         clientExpireTime = client.getExpireTime();
                     }
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
-                    if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout) {
+                    if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
+                        clients.remove(userTrackId);
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> myChrome.getWebDriver().quit());
                         log.info("destroy chrome : " + sessionId);

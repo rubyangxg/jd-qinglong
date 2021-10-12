@@ -1,11 +1,9 @@
 package com.meread.selenium.service;
 
-import com.meread.selenium.bean.*;
+import com.meread.selenium.bean.JDLoginType;
+import com.meread.selenium.bean.LoginType;
+import com.meread.selenium.bean.MyChromeClient;
 import com.meread.selenium.util.WebDriverOpCallBack;
-import org.openqa.selenium.remote.RemoteWebDriver;
-
-import java.util.List;
-import java.util.Properties;
 
 /**
  * @author yangxg
@@ -15,7 +13,7 @@ public interface WebDriverManager {
 
     MyChromeClient createNewMyChromeClient(String httpSessionId, LoginType loginType, JDLoginType jdLoginType);
 
-    void releaseWebDriver(String chromeSessionId);
+    void releaseWebDriver(String chromeSessionId, boolean quit);
 
     void createChrome();
 

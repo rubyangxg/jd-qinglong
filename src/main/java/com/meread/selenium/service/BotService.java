@@ -231,7 +231,7 @@ public class BotService {
                     html = html.replaceAll("<br/>", "\n");
                     sendMsgWithRetry(senderQQ, html);
                 }
-                driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId());
+                driverFactory.releaseWebDriver(myChromeClient.getChromeSessionId(),false);
             }
         });
     }

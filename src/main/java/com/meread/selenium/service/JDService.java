@@ -532,7 +532,7 @@ public class JDService implements CommandLineRunner {
                 }
             }
 
-            driverFactory.releaseWebDriver(chromeSessionId);
+            driverFactory.releaseWebDriver(chromeSessionId,false);
 
             if (qlUploadDirect != 1) {
                 Map<String, Object> map = new HashMap<>();
@@ -996,7 +996,7 @@ public class JDService implements CommandLineRunner {
             }
         } finally {
             if (driver != null && driver.getSessionId() != null) {
-                driverFactory.releaseWebDriver(driver.getSessionId().toString());
+                driverFactory.releaseWebDriver(driver.getSessionId().toString(),false);
             }
         }
 

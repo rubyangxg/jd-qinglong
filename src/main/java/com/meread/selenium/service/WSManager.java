@@ -64,7 +64,7 @@ public class WSManager implements DisposableBean {
                 socketSessionPool.remove(httpSessionId);
                 MyChromeClient cacheMyChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
                 if (cacheMyChromeClient != null) {
-                    driverManager.releaseWebDriver(cacheMyChromeClient.getChromeSessionId());
+                    driverManager.releaseWebDriver(cacheMyChromeClient.getChromeSessionId(),false);
                 }
             }
         }
@@ -94,7 +94,7 @@ public class WSManager implements DisposableBean {
                 JDScreenBean screen = jdService.getScreen(myChromeClient);
 
                 if (myChromeClient.isExpire()) {
-                    driverManager.releaseWebDriver(myChromeClient.getChromeSessionId());
+                    driverManager.releaseWebDriver(myChromeClient.getChromeSessionId(),false);
                     for (WebSocketSession socketSession : socketSessionMap.values()) {
                         try {
                             socketSession.sendMessage(new TextMessage(JSON.toJSONString(new JDScreenBean("", "", JDScreenBean.PageStatus.SESSION_EXPIRED))));

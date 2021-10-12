@@ -135,10 +135,9 @@ public class HelloController {
         }
 
         if ("1".equals(reset)) {
-            boolean b = service.toJDlogin(cacheMyChromeClient);
-            if (!b) {
-                log.error("跳转登录页失败");
-            }
+            String chromeSessionId = cacheMyChromeClient.getChromeSessionId();
+            factory.releaseWebDriver(chromeSessionId,true);
+            return "redirect:/";
         }
         JDCookie ck;
         try {
@@ -226,7 +225,7 @@ public class HelloController {
         if (myChromeClient == null) {
             return 1;
         }
-        factory.releaseWebDriver(myChromeClient.getChromeSessionId());
+        factory.releaseWebDriver(myChromeClient.getChromeSessionId(),false);
         return 1;
     }
 
