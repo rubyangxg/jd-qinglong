@@ -8,9 +8,11 @@ import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
+import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.bytedeco.opencv.opencv_core.Rect;
 import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebElement;
@@ -302,6 +304,12 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
 
     @Override
     public void run(String... args) throws MalformedURLException {
+        long l1 = System.currentTimeMillis();
+        String bigF = OpenCVUtil.class.getClassLoader().getResource("static/img/a.jpeg").getFile();
+        String smallF = OpenCVUtil.class.getClassLoader().getResource("static/img/a_small.png").getFile();
+        Rect rect = OpenCVUtil.getOffsetX(bigF, smallF, true);
+        long l2 = System.currentTimeMillis();
+        System.out.println(rect.x() + " 耗时" + (l2 - l1));
 
         init();
         stopSchedule = true;

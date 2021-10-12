@@ -347,8 +347,13 @@ public class JDService {
                 ByteArrayInputStream inSmall = new ByteArrayInputStream(bgSmallBytes);
                 BufferedImage image = ImageIO.read(in);
                 BufferedImage imageSmall = ImageIO.read(inSmall);
+                long tt1 = System.currentTimeMillis();
                 Mat mat = Java2DFrameUtils.toMat(image);
+                long tt2 = System.currentTimeMillis();
+                log.info("crackCaptcha calc gap end...耗时：" + (tt2 - tt1));
                 Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
+                long tt3 = System.currentTimeMillis();
+                log.info("crackCaptcha calc gap end...耗时：" + (tt3 - tt2));
                 long t2 = System.currentTimeMillis();
                 Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
                 long t3 = System.currentTimeMillis();

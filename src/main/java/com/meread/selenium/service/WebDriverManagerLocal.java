@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
+import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.bytedeco.opencv.opencv_core.Rect;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -229,6 +231,14 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
 
     @Override
     public void run(String... args) throws MalformedURLException {
+
+        long l1 = System.currentTimeMillis();
+        String bigF = OpenCVUtil.class.getClassLoader().getResource("static/img/a.jpeg").getFile();
+        String smallF = OpenCVUtil.class.getClassLoader().getResource("static/img/a_small.png").getFile();
+        Rect rect = OpenCVUtil.getOffsetX(bigF, smallF, true);
+        long l2 = System.currentTimeMillis();
+        System.out.println(rect.x() + " 耗时" + (l2 - l1));
+
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
         stopSchedule = true;
 
