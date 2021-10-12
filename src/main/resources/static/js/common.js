@@ -391,7 +391,7 @@ function getScreen(data) {
         let loadIndex = '';
         $.ajax({
             url: "/crackCaptcha",
-            async: false,
+            async: true,
             loading: false,
             beforeSend: function () {
                 cracking = true;
