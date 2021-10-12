@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.service.JDService;
 import com.meread.selenium.service.WebDriverManager;
+import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.FreemarkerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -26,9 +27,6 @@ import java.util.concurrent.TimeUnit;
 @Controller
 @Slf4j
 public class HelloController {
-
-    @Value("${jd.debug}")
-    private boolean debug;
 
     @Autowired
     private JDService service;
@@ -118,7 +116,7 @@ public class HelloController {
             @RequestParam(defaultValue = "phone") String jdLoginType,
             @RequestParam(defaultValue = "0") String reset,
             HttpSession session, Model model) {
-        model.addAttribute("debug", this.debug);
+        model.addAttribute("debug", CommonAttributes.debug);
         int qlUploadDirect = service.getQLUploadDirectConfig();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());

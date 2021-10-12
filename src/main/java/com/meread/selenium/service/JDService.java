@@ -5,10 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
-import com.meread.selenium.util.FreemarkerUtils;
-import com.meread.selenium.util.OpenCVUtil;
-import com.meread.selenium.util.SlideVerifyBlock;
-import com.meread.selenium.util.WebDriverUtil;
+import com.meread.selenium.util.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
@@ -62,9 +59,6 @@ public class JDService {
 
     @Autowired
     private HttpClientUtil httpClientUtil;
-
-    @Value("${jd.debug}")
-    private boolean debug;
 
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
 
@@ -146,7 +140,7 @@ public class JDService {
 
         String screenBase64 = null;
         byte[] screen = null;
-        if (debug || myChromeClient.getJdLoginType() == JDLoginType.qr) {
+        if (CommonAttributes.debug || myChromeClient.getJdLoginType() == JDLoginType.qr) {
             //创建全屏截图
             screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
             screenBase64 = Base64Utils.encodeToString(screen);
@@ -356,12 +350,12 @@ public class JDService {
                 Mat mat = Java2DFrameUtils.toMat(image);
                 Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
                 long t2 = System.currentTimeMillis();
-                Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), debug);
+                Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
                 long t3 = System.currentTimeMillis();
                 log.info("crackCaptcha calc gap end...耗时：" + (t3 - t2));
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
                 long t4 = System.currentTimeMillis();
-                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), debug);
+                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), CommonAttributes.debug);
                 long t5 = System.currentTimeMillis();
                 log.info("crackCaptcha calc move end...耗时：" + (t5 - t4));
             }
@@ -911,10 +905,6 @@ public class JDService {
         headers.add("Accept-Encoding", "gzip, deflate");
         headers.add("Accept-Language", "zh-CN,zh;q=0.9");
         return headers;
-    }
-
-    public void setDebug(boolean isDebug) {
-        this.debug = isDebug;
     }
 
     public void fetchNewOpenIdToken(QLConfig qlConfig) {

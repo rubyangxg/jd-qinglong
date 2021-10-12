@@ -16,6 +16,7 @@ public final class CommonAttributes {
 //    public static final String TMPDIR = "/tmp";
     public static final String SESSION_ID = "HTTP_SESSION_ID";
     public static final String JD_LOGIN_TYPE = "JD_LOGIN_TYPE";
+    public static boolean debug = false;
 
     public static WebSocketSession webSocketSession;
 

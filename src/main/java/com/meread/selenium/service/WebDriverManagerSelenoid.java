@@ -7,6 +7,7 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -58,9 +59,6 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
 
     @Autowired
     private ResourceLoader resourceLoader;
-
-    @Value("${jd.debug}")
-    private boolean debug;
 
     @Autowired
     private JDService jdService;
@@ -133,15 +131,15 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
             chromeTimeout = 60;
         }
         chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(
-                "enableVNC", debug,
+                "enableVNC", CommonAttributes.debug,
                 "enableVideo", false,
-                "enableLog", debug,
+                "enableLog", CommonAttributes.debug,
                 "env", new String[]{"LANG=zh_CN.UTF-8", "LANGUAGE=zh:cn", "LC_ALL=zh_CN.UTF-8"},
                 "timeZone", "Asia/Shanghai",
                 "sessionTimeout", chromeTimeout + "s"
 //                "applicationContainers", new String[]{"webapp"}
         ));
-        if (!debug) {
+        if (!CommonAttributes.debug) {
             chromeOptions.addArguments("--headless");
         }
         chromeOptions.addArguments("--no-sandbox");
@@ -305,6 +303,7 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
     @Override
     public void run(String... args) throws MalformedURLException {
 
+        init();
         stopSchedule = true;
 
         log.info("解析配置不初始化");
@@ -442,6 +441,7 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
         }
 
         maxSessionFromEnvFile = properties.getProperty("SE_NODE_MAX_SESSIONS");
+        CommonAttributes.debug = Boolean.parseBoolean(properties.getProperty("jd.debug", "false"));
         String opTime = properties.getProperty("OP_TIME");
         if (!StringUtils.isEmpty(opTime)) {
             try {

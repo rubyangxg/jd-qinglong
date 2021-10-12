@@ -3,6 +3,7 @@ package com.meread.selenium.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -318,6 +319,7 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
         if (customChromeTimeout > 0) {
             chromeTimeout = customChromeTimeout;
         }
+        CommonAttributes.debug = Boolean.parseBoolean(properties.getProperty("jd.debug", "false"));
 
         String opTime = properties.getProperty("OP_TIME");
         if (!StringUtils.isEmpty(opTime)) {
