@@ -87,7 +87,7 @@ if [[ $op == 'push' ]]; then
 fi
 
 cd /root/run
-docker stop webapp && docker rm webapp && docker rmi rubyangxg/jd-qinglong:1.3
+docker stop webapp && docker rm -f webapp && docker rmi rubyangxg/jd-qinglong:1.3
 docker run -d -p 5701:8080 -p 8001:8001 --name=webapp --privileged=true -e "SPRING_PROFILES_ACTIVE=debugremote" -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:1.3
 #docker run -d -p 5701:8080 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:ro -v "$(pwd)"/go-cqhttp:/go-cqhttp rubyangxg/jd-qinglong:1.3
 

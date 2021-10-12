@@ -21,7 +21,7 @@ import java.util.Random;
 @Slf4j
 public class SlideVerifyBlock {
     //加速度
-    private static final int A_SPEED = 350;
+    private static final int A_SPEED = 300;
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
@@ -30,11 +30,6 @@ public class SlideVerifyBlock {
 
         TouchActions actions = new TouchActions(driver);
         actions.clickAndHold(slider);
-        actions.perform();
-        //闪现20%
-        int firstDistance = (int) (gap * 0.1);
-        gap = gap - firstDistance;
-        actions.moveByOffset(firstDistance, -5);
         actions.perform();
 
         List<Double> doubles = moveManualiy(gap);
@@ -58,26 +53,30 @@ public class SlideVerifyBlock {
             actions.perform();
 
             if (debug) {
-                for (int a = 0; a < 170; a++) {
-                    read.setRGB(sum, a, Color.GREEN.getRGB());
-                }
                 try {
+                    for (int a = 0; a < 170; a++) {
+                        read.setRGB(sum, a, Color.GREEN.getRGB());
+                    }
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     ImageIO.write(read, "png", outputStream);
                     String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
                     ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
         actions.moveByOffset(new Double(res).intValue(), 0);
         if (debug) {
-            sum += new Double(res).intValue();
-            for (int a = 0; a < 170; a++) {
-                read.setRGB(sum, a, Color.GREEN.getRGB());
+            try {
+                sum += new Double(res).intValue();
+                for (int a = 0; a < 170; a++) {
+                    read.setRGB(sum, a, Color.GREEN.getRGB());
+                }
+                ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
         }
         actions.pause(100 + new Random().nextInt(100)).release(slider);
         actions.perform();
@@ -145,7 +144,7 @@ public class SlideVerifyBlock {
             if (current < distance * 0.7) {
                 a = A_SPEED;
             } else {
-                a = -300;
+                a = -200;
             }
             double dis = 0.5 * a * Math.pow((cnt + 1) * (0.1), 2);
             list.add(Double.valueOf(df.format(dis - current)));
