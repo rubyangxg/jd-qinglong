@@ -28,6 +28,7 @@ services:
                "-container-network", "bridge" ]
     ports:
       - "4444:4444"
+    restart: always
 #    networks:
 #      - selenoid
 
@@ -40,6 +41,7 @@ services:
     ports:
       - "8081:8080"
     command: [ "--selenoid-uri", "http://selenoid:4444" ]
+    restart: always
 #    networks:
 #      - selenoid
 
