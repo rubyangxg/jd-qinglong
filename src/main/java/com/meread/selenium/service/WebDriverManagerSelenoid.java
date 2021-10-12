@@ -626,6 +626,7 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
                 String qlPassword = qlConfig.getQlPassword();
                 webDriver.get(qlUrl + "/login");
                 boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
+                Thread.sleep(2000);
                 if (b) {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
