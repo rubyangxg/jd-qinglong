@@ -5,11 +5,15 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
-import com.meread.selenium.util.*;
+import com.meread.selenium.util.FreemarkerUtils;
+import com.meread.selenium.util.OpenCVUtil;
+import com.meread.selenium.util.SlideVerifyBlock;
+import com.meread.selenium.util.WebDriverUtil;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
+import org.bytedeco.javacv.Java2DFrameUtils;
+import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Rect;
 import org.openqa.selenium.*;
 import org.openqa.selenium.html5.LocalStorage;
@@ -323,6 +327,8 @@ public class JDService {
     }
 
     public void crackCaptcha(MyChromeClient myChromeClient) throws IOException {
+        log.info("crackCaptcha start...");
+        long t1 = System.currentTimeMillis();
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
         if (!img_tips_wraper.isDisplayed()) {
@@ -343,17 +349,25 @@ public class JDService {
                 byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
                 byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
                 UUID uuid = UUID.randomUUID();
-                File file1 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.jpg");
-                File file2 = new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha_small.jpg");
-                FileUtils.writeByteArrayToFile(file1, bgBytes);
-                FileUtils.writeByteArrayToFile(file2, bgSmallBytes);
-                Rect rect = OpenCVUtil.getOffsetX(file1.getAbsolutePath(), file2.getAbsolutePath());
+                ByteArrayInputStream in = new ByteArrayInputStream(bgBytes);
+                ByteArrayInputStream inSmall = new ByteArrayInputStream(bgSmallBytes);
+                BufferedImage image = ImageIO.read(in);
+                BufferedImage imageSmall = ImageIO.read(inSmall);
+                Mat mat = Java2DFrameUtils.toMat(image);
+                Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
+                long t2 = System.currentTimeMillis();
+                Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), debug);
+                long t3 = System.currentTimeMillis();
+                log.info("crackCaptcha calc gap end...耗时：" + (t3 - t2));
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
+                long t4 = System.currentTimeMillis();
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), debug);
-                FileUtils.deleteQuietly(file1);
-                FileUtils.deleteQuietly(file2);
+                long t5 = System.currentTimeMillis();
+                log.info("crackCaptcha calc move end...耗时：" + (t5 - t4));
             }
         }
+        long t6 = System.currentTimeMillis();
+        log.info("crackCaptcha end...耗时：" + (t6 - t1));
     }
 
     public boolean toJDlogin(MyChromeClient myChromeClient) {

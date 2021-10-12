@@ -95,19 +95,15 @@ public class BotService {
                         return;
                     }
                     success = false;
-                    Thread.sleep(1000);
                     retry = 0;
                     while (retry++ < 5) {
                         screen = jdService.getScreen(myChromeClient);
                         if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
                             webSocketSession.sendMessage(new TextMessage(buildPrivateMessage(senderQQ, "正在尝试第" + retry + "次滑块验证")));
                             jdService.crackCaptcha(myChromeClient);
-                            if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
-                                success = true;
-                                break;
-                            }
                         } else {
                             success = true;
+                            break;
                         }
                         Thread.sleep(1000);
                     }

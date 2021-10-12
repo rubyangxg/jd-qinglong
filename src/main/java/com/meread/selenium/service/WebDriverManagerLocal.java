@@ -109,12 +109,10 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
         chromeOptions.addArguments("lang=zh-CN,zh,zh-TW,en-US,en");
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
+//        chromeOptions.addArguments("user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
-        chromeOptions.setCapability("browserName", "chrome");
-        chromeOptions.setCapability("browserVersion", "89.0");
-        chromeOptions.setCapability("screenResolution", "1280x1024x24");
         chromeOptions.setCapability("enableVideo", false);
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.addArguments("lang=zh_CN.UTF-8");

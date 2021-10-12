@@ -25,7 +25,6 @@ public class SlideVerifyBlock {
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
-
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
 
@@ -74,8 +73,8 @@ public class SlideVerifyBlock {
             for (int a = 0; a < 170; a++) {
                 read.setRGB(sum, a, Color.GREEN.getRGB());
             }
+            ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
         }
-        ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
         actions.pause(100 + new Random().nextInt(100)).release(slider);
         actions.perform();
     }
