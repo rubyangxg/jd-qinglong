@@ -8,7 +8,6 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
     && echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/main" >> /etc/apk/repositories \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ >> /etc/timezone \
-    && apk upgrade -U -a \
     && apk add \
     libstdc++ \
     chromium \
