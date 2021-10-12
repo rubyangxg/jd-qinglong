@@ -45,8 +45,8 @@ services:
 #    networks:
 #      - selenoid
 
-  webapp:
-    container_name: webapp
+  webapp-selenoid:
+    container_name: webapp-selenoid
     image: rubyangxg/jd-qinglong:1.3
     privileged: true
     environment:
@@ -54,7 +54,7 @@ services:
       - "selenium.hub.url=http://selenoid:4444/wd/hub"
       - "selenium.hub.status.url=http://selenoid:4444/status"
     ports:
-      - "5701:8080"
+      - "5702:8080"
     volumes:
       - "$(pwd)"/env.properties:/env.properties
       - "$(pwd)"/go-cqhttp:/go-cqhttp
