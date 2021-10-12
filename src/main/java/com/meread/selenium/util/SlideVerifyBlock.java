@@ -50,7 +50,14 @@ public class SlideVerifyBlock {
             sum += intValue;
             res += (array[i] - intValue);
             actions.moveByOffset(intValue, (random.nextInt(MAX - MIN + 1) + MIN));
-            actions.perform();
+            try {
+                actions.perform();
+            } catch (Exception e) {
+                e.printStackTrace();
+                actions.pause(100 + new Random().nextInt(100)).release(slider);
+                actions.perform();
+                break;
+            }
 
             if (debug) {
                 try {
