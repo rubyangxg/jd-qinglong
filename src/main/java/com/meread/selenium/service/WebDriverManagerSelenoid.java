@@ -107,11 +107,6 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         chromeOptions.addArguments("--window-size=500,700");
     }
 
-    public MutableCapabilities getOptions() {
-        return chromeOptions;
-    }
-
-
     /**
      * 和grid同步chrome状态，清理失效的session，并移除本地缓存
      */
@@ -137,7 +132,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         int shouldCreate = CAPACITY - chromes.size();
         if (shouldCreate > 0) {
             try {
-                RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
                 webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                 MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                 //计算chrome实例的最大存活时间
@@ -154,7 +149,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
     public <T> T exec(WebDriverOpCallBack<T> executor) {
         RemoteWebDriver webDriver = null;
         try {
-            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
@@ -297,7 +292,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
                 try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
@@ -407,18 +402,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
     }
 
     @Override
-    public void onApplicationEvent(ContextClosedEvent event) {
-        ApplicationContext context = event.getApplicationContext();
-        WSManager wsManager = context.getBean(WSManager.class);
-        while (wsManager.runningSchedule) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("wait wsManager schedule destroy...");
-        }
-
+    public void close() {
         SelenoidStatus status = getGridStatus();
         Map<String, JSONObject> sessions = status.getSessions();
         if (sessions != null) {
@@ -431,4 +415,5 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         }
         cleanDockerContainer();
     }
+
 }

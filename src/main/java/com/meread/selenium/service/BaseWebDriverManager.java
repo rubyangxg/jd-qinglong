@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.OpenCVUtil;
+import com.meread.selenium.util.SpringUtils;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -19,6 +20,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.Resource;
@@ -363,5 +365,27 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
         return chromes;
     }
 
+    @Override
+    public void destroyAll() {
+        ApplicationContext context = SpringUtils.getApplicationContext();
+        WSManager wsManager = context.getBean(WSManager.class);
+        while (wsManager.runningSchedule) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            log.info("wait wsManager schedule destroy...");
+        }
+        close();
+    }
+
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        destroyAll();
+    }
+
     public abstract void heartbeat();
+
+    public abstract void close();
 }

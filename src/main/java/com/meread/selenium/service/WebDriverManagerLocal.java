@@ -322,18 +322,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     }
 
     @Override
-    public void onApplicationEvent(ContextClosedEvent event) {
-        ApplicationContext context = event.getApplicationContext();
-        WSManager wsManager = context.getBean(WSManager.class);
-        wsManager.stopSchedule = true;
-        while (wsManager.runningSchedule) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("wait wsManager schedule destroy...");
-        }
+    public void close() {
         for (MyChrome myChrome : chromes.values()) {
             myChrome.getWebDriver().quit();
         }

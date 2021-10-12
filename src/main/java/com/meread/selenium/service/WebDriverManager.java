@@ -22,4 +22,6 @@ public interface WebDriverManager {
     void createChromeOptions();
 
     <T> T exec(WebDriverOpCallBack<T> executor);
+
+    void destroyAll();
 }
