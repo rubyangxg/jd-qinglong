@@ -6,7 +6,6 @@ COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
-COPY MSYH.TTC /usr/share/fonts/
 RUN chmod 755 /opt/bin/start-webapp.sh && chmod 755 /opt/bin/start-go-cqhttp.sh && chmod 755 /opt/bin/notify
 VOLUME /tmp
 EXPOSE 8080
