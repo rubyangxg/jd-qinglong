@@ -500,6 +500,7 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
                 }
                 String qlUsername = qlConfig.getQlUsername();
                 String qlPassword = qlConfig.getQlPassword();
+                webDriver.get(qlUrl + "/login");
                 new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
                 webDriver.get(qlUrl + "/login");
                 WebElement firstResult = new WebDriverWait(webDriver, Duration.ofSeconds(10))
