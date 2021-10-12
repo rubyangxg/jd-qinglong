@@ -10,7 +10,6 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +20,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Controller
 @Slf4j
@@ -88,25 +85,14 @@ public class HelloController {
         if (myChromeClient == null) {
             return new JDOpResultBean(service.getScreen(myChromeClient), false);
         }
-
-        CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                service.crackCaptcha(myChromeClient);
-                JDScreenBean screen = service.getScreen(myChromeClient);
-                if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
-                    return true;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return false;
-        });
         try {
-            crackSuccess = future.get(10, TimeUnit.SECONDS);
-            if (!crackSuccess) {
+            service.crackCaptcha(myChromeClient);
+            JDScreenBean screen = service.getScreen(myChromeClient);
+            if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
                 crackSuccess = true;
             }
-        } catch (Exception ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return new JDOpResultBean(service.getScreen(myChromeClient), crackSuccess);
     }
