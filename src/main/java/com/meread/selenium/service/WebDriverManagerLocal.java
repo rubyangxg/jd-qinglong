@@ -4,10 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.WebDriverOpCallBack;
-import com.meread.selenium.util.WebDriverUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -15,6 +15,8 @@ import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -497,16 +500,18 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
                 }
                 String qlUsername = qlConfig.getQlUsername();
                 String qlPassword = qlConfig.getQlPassword();
+                new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
                 webDriver.get(qlUrl + "/login");
-                boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
-                Thread.sleep(2000);
-                if (b) {
+                WebElement firstResult = new WebDriverWait(webDriver, Duration.ofSeconds(10))
+                        .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@type='submit']")));
+                if (firstResult != null) {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                    b = WebDriverUtil.waitForJStoLoad(webDriver);
-                    Thread.sleep(2000);
-                    if (b) {
+                    Boolean until = new WebDriverWait(webDriver, Duration.ofSeconds(10)).until(
+                            driver -> driver.findElement(By.tagName("body")).getText().contains("定时任务")
+                    );
+                    if (until) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
                         RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
                         LocalStorage storage = webStorage.getLocalStorage();

@@ -8,16 +8,18 @@ import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.util.WebDriverOpCallBack;
-import com.meread.selenium.util.WebDriverUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.html5.LocalStorage;
 import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.html5.RemoteWebStorage;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -625,15 +628,18 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
                 String qlUsername = qlConfig.getQlUsername();
                 String qlPassword = qlConfig.getQlPassword();
                 webDriver.get(qlUrl + "/login");
-                boolean b = WebDriverUtil.waitForJStoLoad(webDriver);
-                Thread.sleep(2000);
-                if (b) {
+                new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
+                webDriver.get(qlUrl + "/login");
+                WebElement firstResult = new WebDriverWait(webDriver, Duration.ofSeconds(10))
+                        .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@type='submit']")));
+                if (firstResult != null) {
                     webDriver.findElement(By.id("username")).sendKeys(qlUsername);
                     webDriver.findElement(By.id("password")).sendKeys(qlPassword);
                     webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                    Thread.sleep(2000);
-                    b = WebDriverUtil.waitForJStoLoad(webDriver);
-                    if (b) {
+                    Boolean until = new WebDriverWait(webDriver, Duration.ofSeconds(10)).until(
+                            driver -> driver.findElement(By.tagName("body")).getText().contains("定时任务")
+                    );
+                    if (until) {
                         RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
                         RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
                         LocalStorage storage = webStorage.getLocalStorage();
@@ -644,6 +650,7 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             log.error(qlUrl + "测试登录失败，请检查配置");
         }
         return qlConfig.getQlToken() != null && qlConfig.getQlToken().getToken() != null;
