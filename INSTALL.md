@@ -11,7 +11,7 @@ wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/m
 ```
 wget -O env.properties https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
 ```
-3. 下载rubyangxg/jd-qinglong镜像
+3. 下载rubyangxg/jd-qinglong镜像，**_arm的请把1.3替换为arm_**
 ```
 sudo docker pull rubyangxg/jd-qinglong:1.3
 ```
