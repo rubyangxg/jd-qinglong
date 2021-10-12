@@ -27,7 +27,7 @@ public class OpenCVUtil {
             long tt2 = System.currentTimeMillis();
             Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
             Rect rect = getOffsetX(mat, matSmall, String.valueOf(a), false);
-            System.out.println("crackCaptcha calc gap " + rect.x() + " end...耗时：" + (tt2 - tt1));
+            System.out.println("init opencv calc " + a + " gap " + rect.x() + " end...耗时：" + (tt2 - tt1));
         }
     }
 
