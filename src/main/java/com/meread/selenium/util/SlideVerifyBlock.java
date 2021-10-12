@@ -151,7 +151,7 @@ public class SlideVerifyBlock {
             if (current < distance * 0.7) {
                 a = A_SPEED;
             } else {
-                a = -400;
+                a = -200;
             }
             double dis = 0.5 * a * Math.pow((cnt + 1) * (0.1), 2);
             list.add(Double.valueOf(df.format(dis - current)));
