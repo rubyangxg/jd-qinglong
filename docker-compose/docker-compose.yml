@@ -46,6 +46,7 @@ services:
 #      - selenoid
 
   webapp-selenoid:
+    network_mode: bridge
     container_name: webapp-selenoid
     image: rubyangxg/jd-qinglong:1.3
     privileged: true
@@ -57,7 +58,10 @@ services:
       - "5702:8080"
     volumes:
       - ./env.properties:/env.properties
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./go-cqhttp:/go-cqhttp
+    links:
+      - selenoid
     depends_on:
       - selenoid
 
