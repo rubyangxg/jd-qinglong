@@ -21,7 +21,7 @@ import java.util.Random;
 @Slf4j
 public class SlideVerifyBlock {
     //加速度
-    private static final int A_SPEED = 400;
+    private static final int A_SPEED = 500;
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
