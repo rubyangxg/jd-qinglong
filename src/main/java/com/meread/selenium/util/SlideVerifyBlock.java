@@ -43,7 +43,7 @@ public class SlideVerifyBlock {
 
         BufferedImage read = null;
         if (debug) {
-            read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+            read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + ".origin.marked.jpeg"));
         }
 
         int sum = 0;
