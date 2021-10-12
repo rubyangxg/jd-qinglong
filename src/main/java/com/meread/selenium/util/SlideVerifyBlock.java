@@ -21,7 +21,7 @@ import java.util.Random;
 @Slf4j
 public class SlideVerifyBlock {
     //加速度
-    private static final int A_SPEED = 450;
+    private static final int A_SPEED = 350;
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
@@ -142,7 +142,7 @@ public class SlideVerifyBlock {
         ArrayList<Double> list = new ArrayList<>();
         int a = 0, cnt = 0;
         while (current < distance) {
-            if (current < distance * 0.8) {
+            if (current < distance * 0.7) {
                 a = A_SPEED;
             } else {
                 a = -300;
@@ -150,7 +150,7 @@ public class SlideVerifyBlock {
             double dis = 0.5 * a * Math.pow((cnt + 1) * (0.1), 2);
             list.add(Double.valueOf(df.format(dis - current)));
             current = dis;
-            if (distance - current < A_SPEED * 0.2) {
+            if (distance - current < A_SPEED * 0.1) {
                 break;
             }
             cnt++;
