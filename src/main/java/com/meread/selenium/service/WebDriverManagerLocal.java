@@ -186,6 +186,7 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
+            //clean chromes
             Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
             while (iterator.hasNext()) {
                 MyChrome chrome = iterator.next().getValue();
@@ -206,6 +207,15 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
                 chromes.put(webDriver.getSessionId().toString(), myChrome);
                 log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
             }
+
+            //clean clients
+            Iterator<Map.Entry<String, MyChromeClient>> it = clients.entrySet().iterator();
+            while (it.hasNext()) {
+                MyChromeClient client = it.next().getValue();
+                if (client.isExpire()) {
+                    it.remove();
+                }
+            }
         }
         runningSchedule = false;
     }
@@ -220,6 +230,13 @@ public class WebDriverManagerLocal implements WebDriverManager, CommandLineRunne
             Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        if (chrome.getUserTrackId() != null) {
+            MyChromeClient myChromeClient = clients.get(chrome.getUserTrackId());
+            if (myChromeClient != null) {
+                clients.remove(chrome.getUserTrackId());
+            }
         }
     }
 
