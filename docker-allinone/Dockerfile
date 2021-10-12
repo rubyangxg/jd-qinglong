@@ -1,47 +1,13 @@
-FROM adoptopenjdk/openjdk11:alpine
-
-ENV TZ=Asia/Shanghai
-
+FROM rubyangxg/selenium-base
 COPY config-template.yml /
 ARG JAR_FILE
-COPY config-template.yml /
 COPY ${JAR_FILE} app.jar
 COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
-
-#RUN apk add --no-cache msttcorefonts-installer fontconfig
-#RUN update-ms-fonts
 COPY MSYH.TTC /usr/share/fonts/
-
-# Installs latest Chromium package.
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories \
-    && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
-    && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
-    && echo "http://dl-cdn.alpinelinux.org/alpine/v3.12/main" >> /etc/apk/repositories \
-    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
-    && echo $TZ >> /etc/timezone \
-    && apk upgrade -U -a \
-    && apk add \
-    libstdc++ \
-    chromium \
-    chromium-chromedriver \
-    harfbuzz \
-    supervisor \
-    net-tools \
-    lsof \
-#    nss \
-#    freetype \
-#    ttf-freefont \
-#    font-noto-emoji \
-#    wqy-zenhei \
-    && rm -rf /var/cache/* \
-    && mkdir /var/cache/apk \
-    && chmod 755 /opt/bin/start-webapp.sh \
-    && chmod 755 /opt/bin/start-go-cqhttp.sh \
-    && chmod 755 /opt/bin/notify
-
+RUN chmod 755 /opt/bin/start-webapp.sh && chmod 755 /opt/bin/start-go-cqhttp.sh && chmod 755 /opt/bin/notify
 VOLUME /tmp
 EXPOSE 8080
 COPY supervisord.conf /etc/supervisord.conf
