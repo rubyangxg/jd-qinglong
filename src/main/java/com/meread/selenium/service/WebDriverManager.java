@@ -1,9 +1,11 @@
 package com.meread.selenium.service;
 
 import com.meread.selenium.bean.*;
+import com.meread.selenium.util.WebDriverOpCallBack;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import java.util.*;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * @author yangxg
@@ -11,25 +13,13 @@ import java.util.*;
  */
 public interface WebDriverManager {
 
-    MyChromeClient getCacheMyChromeClient(String httpSessionId);
-
     MyChromeClient createNewMyChromeClient(String httpSessionId, LoginType loginType, JDLoginType jdLoginType);
 
     void releaseWebDriver(String chromeSessionId);
 
-    RemoteWebDriver getDriverBySessionId(String chromeSessionId);
+    void createChrome();
 
-    List<QLConfig> getQlConfigs();
+    void createChromeOptions();
 
-    StatClient getStatClient();
-
-    String getXddUrl();
-
-    String getXddToken();
-
-    Properties getProperties();
-
-    boolean getToken(QLConfig qlConfig);
-
-    boolean isInitSuccess();
+    <T> T exec(WebDriverOpCallBack<T> executor);
 }

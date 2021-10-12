@@ -28,7 +28,7 @@ public class WSManager implements DisposableBean {
     private JDService jdService;
 
     @Autowired
-    private WebDriverManager driverManager;
+    private BaseWebDriverManager driverManager;
 
     public volatile boolean runningSchedule = false;
     public volatile boolean stopSchedule = false;

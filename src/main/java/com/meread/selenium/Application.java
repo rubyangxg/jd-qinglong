@@ -25,12 +25,5 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-        //初始化调用opencv
-        try {
-            OpenCVUtil.test();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
     }
 }

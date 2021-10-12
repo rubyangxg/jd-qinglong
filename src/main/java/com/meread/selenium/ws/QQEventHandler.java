@@ -2,6 +2,7 @@ package com.meread.selenium.ws;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.BotService;
 import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.bean.qq.GroupMessage;
@@ -35,7 +36,7 @@ public class QQEventHandler extends TextWebSocketHandler {
     private BotService botService;
 
     @Autowired
-    private WebDriverManager driverManager;
+    private BaseWebDriverManager driverManager;
 
     @Value("${go-cqhttp.dir}")
     private String goCqHttpDir;

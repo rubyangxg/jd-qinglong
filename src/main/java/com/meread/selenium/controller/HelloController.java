@@ -2,6 +2,7 @@ package com.meread.selenium.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.JDService;
 import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.util.CommonAttributes;
@@ -29,7 +30,7 @@ public class HelloController {
     private JDService service;
 
     @Autowired
-    private WebDriverManager factory;
+    private BaseWebDriverManager factory;
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
@@ -106,7 +107,7 @@ public class HelloController {
         int qlUploadDirect = service.getQLUploadDirectConfig();
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
-        model.addAttribute("initSuccess", factory.isInitSuccess());
+        model.addAttribute("initSuccess", service.isInitSuccess());
         model.addAttribute("indexNotice", factory.getProperties().getProperty("INDEX.NOTICE"));
         model.addAttribute("indexTitle", factory.getProperties().getProperty("INDEX.TITLE"));
 
@@ -116,7 +117,7 @@ public class HelloController {
             jdLoginType = "phone";
         }
         model.addAttribute("jdLoginType", jdLoginType);
-        if (!factory.isInitSuccess()) {
+        if (!service.isInitSuccess()) {
             return "login";
         }
 

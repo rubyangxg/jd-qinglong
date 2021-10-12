@@ -21,6 +21,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,6 +37,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -49,16 +51,18 @@ import java.util.regex.Pattern;
  */
 @Service
 @Slf4j
-public class JDService {
+public class JDService implements CommandLineRunner {
 
     @Autowired
-    private WebDriverManager driverFactory;
+    private BaseWebDriverManager driverFactory;
 
     @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
     private HttpClientUtil httpClientUtil;
+
+    public boolean initSuccess;
 
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
 
@@ -913,7 +917,7 @@ public class JDService {
     }
 
     public void fetchNewOpenIdToken(QLConfig qlConfig) {
-        driverFactory.getToken(qlConfig);
+        getToken(qlConfig);
     }
 
     public static String strSpecialFilter(String str) {
@@ -922,5 +926,110 @@ public class JDService {
         Matcher m = p.matcher(str);
         //将所有的特殊字符替换为空字符串
         return m.replaceAll("").trim();
+    }
+
+    @Override
+    public void run(String... args) throws MalformedURLException {
+        initQLConfig();
+        List<QLConfig> qlConfigs = driverFactory.getQlConfigs();
+        if (qlConfigs.isEmpty()) {
+            log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
+        }
+        log.info("启动成功!");
+        initSuccess = true;
+    }
+
+    protected void initQLConfig() {
+        List<QLConfig> qlConfigs = driverFactory.getQlConfigs();
+        Map<String, MyChrome> chromes = driverFactory.getChromes();
+        Iterator<QLConfig> iterator = qlConfigs.iterator();
+        RemoteWebDriver driver = null;
+        try {
+            for (MyChrome chrome : chromes.values()) {
+                if (chrome.getUserTrackId() == null) {
+                    driver = chrome.getWebDriver();
+                    break;
+                }
+            }
+            while (iterator.hasNext()) {
+                QLConfig qlConfig = iterator.next();
+                if (StringUtils.isEmpty(qlConfig.getLabel())) {
+                    qlConfig.setLabel("请配置QL_LABEL_" + qlConfig.getId() + "");
+                }
+
+                boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
+                boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
+                boolean verify3 = verify1 && !StringUtils.isEmpty(qlConfig.getQlClientID()) && !StringUtils.isEmpty(qlConfig.getQlClientSecret());
+
+                boolean result_token = false;
+                boolean result_usernamepassword = false;
+                if (verify3) {
+                    boolean success = getToken(qlConfig);
+                    if (success) {
+                        result_token = true;
+                        qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
+                        fetchCurrentCKS_count(driver, qlConfig, "");
+                    } else {
+                        log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
+                    }
+                } else if (verify2) {
+                    boolean result = false;
+                    try {
+                        result = driverFactory.initInnerQingLong(driver, qlConfig);
+                        if (result) {
+                            qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
+                            fetchCurrentCKS_count(driver, qlConfig, "");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (result) {
+                        result_usernamepassword = true;
+                    } else {
+                        log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
+                    }
+                }
+
+                if (!result_token && !result_usernamepassword) {
+                    iterator.remove();
+                }
+            }
+        } finally {
+            if (driver != null && driver.getSessionId() != null) {
+                driverFactory.releaseWebDriver(driver.getSessionId().toString());
+            }
+        }
+
+        log.info("成功添加" + qlConfigs.size() + "套配置");
+    }
+
+    public boolean getToken(QLConfig qlConfig) {
+        String qlUrl = qlConfig.getQlUrl();
+        String qlClientID = qlConfig.getQlClientID();
+        String qlClientSecret = qlConfig.getQlClientSecret();
+        try {
+            ResponseEntity<String> entity = restTemplate.getForEntity(qlUrl + "/open/auth/token?client_id=" + qlClientID + "&client_secret=" + qlClientSecret, String.class);
+            if (entity.getStatusCodeValue() == 200) {
+                String body = entity.getBody();
+                log.info("获取token " + body);
+                JSONObject jsonObject = JSON.parseObject(body);
+                Integer code = jsonObject.getInteger("code");
+                if (code == 200) {
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    String token = data.getString("token");
+                    String tokenType = data.getString("token_type");
+                    long expiration = data.getLong("expiration");
+                    qlConfig.setQlToken(new QLToken(token, tokenType, expiration));
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.error(qlUrl + "获取token失败，请检查配置");
+        }
+        return false;
+    }
+
+    public boolean isInitSuccess() {
+        return initSuccess;
     }
 }

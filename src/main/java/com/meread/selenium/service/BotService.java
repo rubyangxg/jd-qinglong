@@ -29,7 +29,7 @@ import static com.meread.selenium.util.CommonAttributes.webSocketSession;
 public class BotService {
 
     @Autowired
-    private WebDriverManager driverFactory;
+    private BaseWebDriverManager driverFactory;
 
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;

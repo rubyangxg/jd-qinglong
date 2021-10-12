@@ -1,5 +1,6 @@
 package com.meread.selenium.config;
 
+import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.bean.MyChromeClient;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ public class ChromeSessionInterceptor implements HandlerInterceptor {
     Logger logger = LoggerFactory.getLogger(ChromeSessionInterceptor.class);
 
     @Autowired
-    private WebDriverManager driverFactory;
+    private BaseWebDriverManager driverFactory;
 
     /**
      * 在请求到达Controller控制器之前 通过拦截器执行一段代码

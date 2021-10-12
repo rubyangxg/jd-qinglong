@@ -6,44 +6,34 @@ import com.alibaba.fastjson.JSONPath;
 import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.UnixDocker;
-import com.meread.selenium.bean.*;
+import com.meread.selenium.bean.MyChrome;
+import com.meread.selenium.bean.MyChromeClient;
+import com.meread.selenium.bean.SelenoidStatus;
 import com.meread.selenium.util.CommonAttributes;
+import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.By;
 import org.openqa.selenium.MutableCapabilities;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.html5.LocalStorage;
-import org.openqa.selenium.remote.RemoteExecuteMethod;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.html5.RemoteWebStorage;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.Resource;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -55,64 +45,27 @@ import java.util.concurrent.*;
 @Component
 @Slf4j
 @Profile({"debuglocal", "debugremote"})
-public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRunner {
-
-    @Autowired
-    private ResourceLoader resourceLoader;
-
-    @Autowired
-    private JDService jdService;
+public class WebDriverManagerSelenoid extends BaseWebDriverManager {
 
     @Value("${selenium.hub.url}")
     private String seleniumHubUrl;
-
-    @Value("${env.path}")
-    private String envPath;
-
     @Value("${selenium.hub.status.url}")
     private String seleniumHubStatusUrl;
 
-    @Value("${op.timeout}")
-    private int opTimeout;
+    public WebDriverManagerSelenoid(@Value("${chrome.driver.path}") String chromeDriverPath,
+                                    @Autowired RestTemplate restTemplate,
+                                    @Autowired ThreadPoolTaskExecutor threadPoolTaskExecutor,
+                                    @Autowired ResourceLoader resourceLoader,
+                                    @Value("${chrome.headless}") boolean headless,
+                                    @Value("${env.path}") String envPath,
+                                    @Value("${op.timeout}") int opTimeout,
+                                    @Value("${chrome.timeout}") int chromeTimeout,
+                                    @Value("${SE_NODE_MAX_SESSIONS}") String maxSessionFromProps) {
+        super(chromeDriverPath, restTemplate, threadPoolTaskExecutor, resourceLoader, headless, envPath, opTimeout, chromeTimeout, maxSessionFromProps);
+    }
 
-    @Value("${chrome.timeout}")
-    private int chromeTimeout;
-
-    @Value("#{environment.SE_NODE_MAX_SESSIONS}")
-    private String maxSessionFromSystemEnv;
-
-    @Value("${SE_NODE_MAX_SESSIONS}")
-    private String maxSessionFromProps;
-
-    private String maxSessionFromEnvFile;
-
-    private List<QLConfig> qlConfigs;
-
-    public Properties properties = new Properties();
-
-    private String xddUrl;
-
-    private String xddToken;
-
-    private static int CAPACITY = 0;
-
-    public volatile boolean stopSchedule = false;
-    public volatile boolean initSuccess = false;
-    public volatile boolean runningSchedule = false;
-
-    /**
-     * chromeSessionId-->MyChrome
-     */
-    private static final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
-
-    /**
-     * userTrackId --> MyChromeClient
-     */
-    private static final Map<String, MyChromeClient> clients = Collections.synchronizedMap(new HashMap<>());
-
-    public ChromeOptions chromeOptions;
-
-    public void init() {
+    @Override
+    public void createChromeOptions() {
         chromeOptions = new ChromeOptions();
         chromeOptions.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
         chromeOptions.setExperimentalOption("useAutomationExtension", false);
@@ -158,79 +111,60 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
         return chromeOptions;
     }
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 30 * 60000)
-    public void syncCK_count() {
-        if (qlConfigs != null) {
-            for (QLConfig qlConfig : qlConfigs) {
-                int oldSize = qlConfig.getRemain();
-                Boolean exec = exec(webDriver -> {
-                    jdService.fetchCurrentCKS_count(webDriver, qlConfig, "");
-                    return true;
-                });
-                if (exec != null && exec) {
-                    int newSize = qlConfig.getRemain();
-                    log.info(qlConfig.getQlUrl() + " 容量从 " + oldSize + "变为" + newSize);
-                } else {
-                    log.error("syncCK_count 执行失败");
-                }
-            }
-        }
-    }
-
-    @Scheduled(cron = "0 0 0 * * ?")
-//    @Scheduled(initialDelay = 30000, fixedDelay = 30000)
-    public void refreshOpenIdToken() {
-        if (qlConfigs != null) {
-            for (QLConfig qlConfig : qlConfigs) {
-                if (qlConfig.getQlLoginType() == QLConfig.QLLoginType.TOKEN) {
-                    QLToken qlTokenOld = qlConfig.getQlToken();
-                    jdService.fetchNewOpenIdToken(qlConfig);
-                    log.info(qlConfig.getQlToken() + " token 从" + qlTokenOld + " 变为 " + qlConfig.getQlToken());
-                }
-            }
-        }
-    }
 
     /**
      * 和grid同步chrome状态，清理失效的session，并移除本地缓存
      */
-    @Scheduled(initialDelay = 10000, fixedDelay = 2000)
+    @Override
     public void heartbeat() {
-        runningSchedule = true;
-        if (!stopSchedule) {
-            SelenoidStatus nss = getGridStatus();
-            Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
-            Set<String> removedChromeSessionId = new HashSet<>();
-            while (iterator.hasNext()) {
-                String chromeSessionId = iterator.next().getKey();
-                Map<String, JSONObject> sessions = nss.getSessions();
-                JSONObject jsonObject = sessions.get(chromeSessionId);
-                if (jsonObject != null) {
-                    break;
-                } else {
-                    //如果session不存在，则remove
-                    iterator.remove();
-                    removedChromeSessionId.add(chromeSessionId);
-                    log.warn("quit a chrome");
-                }
-            }
-            cleanClients(removedChromeSessionId);
-            int shouldCreate = CAPACITY - chromes.size();
-            if (shouldCreate > 0) {
-                try {
-                    RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
-                    //计算chrome实例的最大存活时间
-                    chromes.put(webDriver.getSessionId().toString(), myChrome);
-                    log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                inflate(chromes, getGridStatus());
+        SelenoidStatus nss = getGridStatus();
+        Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
+        Set<String> removedChromeSessionId = new HashSet<>();
+        while (iterator.hasNext()) {
+            String chromeSessionId = iterator.next().getKey();
+            Map<String, JSONObject> sessions = nss.getSessions();
+            JSONObject jsonObject = sessions.get(chromeSessionId);
+            if (jsonObject != null) {
+                break;
+            } else {
+                //如果session不存在，则remove
+                iterator.remove();
+                removedChromeSessionId.add(chromeSessionId);
+                log.warn("quit a chrome");
             }
         }
-        runningSchedule = false;
+        cleanClients(removedChromeSessionId);
+        int shouldCreate = CAPACITY - chromes.size();
+        if (shouldCreate > 0) {
+            try {
+                RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+                webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+                MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                //计算chrome实例的最大存活时间
+                chromes.put(webDriver.getSessionId().toString(), myChrome);
+                log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            inflate(chromes, getGridStatus());
+        }
+    }
+
+    @Override
+    public <T> T exec(WebDriverOpCallBack<T> executor) {
+        RemoteWebDriver webDriver = null;
+        try {
+            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+            return executor.doBusiness(webDriver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (webDriver != null) {
+                webDriver.quit();
+            }
+        }
+        return null;
     }
 
     private void cleanClients(Set<String> removedChromeSessionId) {
@@ -243,9 +177,6 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
             }
         }
     }
-
-    @Autowired
-    private RestTemplate restTemplate;
 
     public SelenoidStatus getGridStatus() {
         SelenoidStatus status = new SelenoidStatus();
@@ -301,11 +232,17 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
     }
 
     @Override
-    public void run(String... args) throws MalformedURLException {
-        stopSchedule = true;
-        log.info("解析配置不初始化");
-        parseEnvConfig();
-        init();
+    public void afterPropertiesSet() {
+        CompletableFuture<Void> waitTask = CompletableFuture.runAsync(() -> {
+            try {
+                OpenCVUtil.test();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, threadPoolTaskExecutor);
+
+        parseConfig();
+        createChromeOptions();
         //获取hub-node状态
         SelenoidStatus status = getNodeStatuses();
         if (status == null) {
@@ -335,7 +272,6 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
         createChrome();
         inflate(chromes, getGridStatus());
         //借助这一半chrome实例，初始化配置
-        initQLConfig();
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
@@ -346,12 +282,15 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
             inflate(chromes, getGridStatus());
         }
 
-        log.info("启动成功!");
-        stopSchedule = false;
-        initSuccess = true;
+        try {
+            waitTask.get();
+        } catch (Exception e) {
+            System.exit(0);
+        }
     }
 
-    private void createChrome() {
+    @Override
+    public void createChrome() {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         int create = CAPACITY == 1 ? 1 : (CAPACITY - chromes.size()) / 2;
         CountDownLatch cdl = new CountDownLatch(create);
@@ -416,317 +355,6 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
         return status;
     }
 
-    private void parseEnvConfig() {
-        qlConfigs = new ArrayList<>();
-        if (envPath.startsWith("classpath")) {
-            Resource resource = resourceLoader.getResource(envPath);
-            try (InputStreamReader inputStreamReader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
-                properties.load(inputStreamReader);
-            } catch (IOException e) {
-                throw new RuntimeException("env.properties配置有误");
-            }
-        } else {
-            File envFile = new File(envPath);
-            if (!envFile.exists()) {
-                throw new RuntimeException("env.properties配置有误");
-            }
-            try (BufferedReader br = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
-                properties.load(br);
-            } catch (IOException e) {
-                throw new RuntimeException("env.properties配置有误");
-            }
-        }
-
-        maxSessionFromEnvFile = properties.getProperty("SE_NODE_MAX_SESSIONS");
-        CommonAttributes.debug = Boolean.parseBoolean(properties.getProperty("jd.debug", "false"));
-        String opTime = properties.getProperty("OP_TIME");
-        if (!StringUtils.isEmpty(opTime)) {
-            try {
-                int i = Integer.parseInt(opTime);
-                if (i > 0) {
-                    opTimeout = i;
-                }
-            } catch (NumberFormatException e) {
-            }
-        }
-
-        log.info("最大资源数配置: maxSessionFromEnvFile = " + maxSessionFromEnvFile + ", maxSessionFromSystemEnv = " + maxSessionFromSystemEnv + ", maxSessionFromProps = " + maxSessionFromProps);
-
-        CAPACITY = parseCapacity();
-        log.info("最大资源数配置: CAPACITY = " + CAPACITY);
-        if (CAPACITY <= 0) {
-            throw new RuntimeException("最大资源数配置有误");
-        }
-
-        xddUrl = properties.getProperty("XDD_URL");
-        xddToken = properties.getProperty("XDD_TOKEN");
-
-        for (int i = 1; i <= 5; i++) {
-            QLConfig config = new QLConfig();
-            config.setId(i);
-            for (String key : properties.stringPropertyNames()) {
-                String value = properties.getProperty(key);
-                if (key.equals("QL_USERNAME_" + i)) {
-                    config.setQlUsername(value);
-                } else if (key.equals("QL_URL_" + i)) {
-                    if (value.endsWith("/")) {
-                        value = value.substring(0, value.length() - 1);
-                    }
-                    config.setQlUrl(value);
-                } else if (key.equals("QL_PASSWORD_" + i)) {
-                    config.setQlPassword(value);
-                } else if (key.equals("QL_CLIENTID_" + i)) {
-                    config.setQlClientID(value);
-                } else if (key.equals("QL_SECRET_" + i)) {
-                    config.setQlClientSecret(value);
-                } else if (key.equals("QL_LABEL_" + i)) {
-                    config.setLabel(value);
-                } else if (key.equals("QL_CAPACITY_" + i)) {
-                    config.setCapacity(Integer.parseInt(value));
-                }
-            }
-            if (config.isValid()) {
-                qlConfigs.add(config);
-            }
-        }
-        log.info("解析" + qlConfigs.size() + "套配置");
-    }
-
-    private int parseCapacity() {
-        int res = 0;
-        if (!StringUtils.isEmpty(maxSessionFromSystemEnv)) {
-            try {
-                res = Integer.parseInt(maxSessionFromSystemEnv);
-            } catch (NumberFormatException e) {
-            }
-        }
-
-        if (res <= 0) {
-            if (!StringUtils.isEmpty(maxSessionFromEnvFile)) {
-                try {
-                    res = Integer.parseInt(maxSessionFromEnvFile);
-                } catch (NumberFormatException e) {
-                }
-            }
-        }
-
-        if (res <= 0) {
-            if (!StringUtils.isEmpty(maxSessionFromProps)) {
-                try {
-                    res = Integer.parseInt(maxSessionFromProps);
-                } catch (NumberFormatException e) {
-                }
-            }
-        }
-        return res;
-    }
-
-    private void initQLConfig() {
-        Iterator<QLConfig> iterator = qlConfigs.iterator();
-        RemoteWebDriver driver = null;
-        try {
-            for (MyChrome chrome : chromes.values()) {
-                if (chrome.getUserTrackId() == null) {
-                    driver = chrome.getWebDriver();
-                    break;
-                }
-            }
-            while (iterator.hasNext()) {
-                QLConfig qlConfig = iterator.next();
-                if (StringUtils.isEmpty(qlConfig.getLabel())) {
-                    qlConfig.setLabel("请配置QL_LABEL_" + qlConfig.getId() + "");
-                }
-
-                boolean verify1 = !StringUtils.isEmpty(qlConfig.getQlUrl());
-                boolean verify2 = verify1 && !StringUtils.isEmpty(qlConfig.getQlUsername()) && !StringUtils.isEmpty(qlConfig.getQlPassword());
-                boolean verify3 = verify1 && !StringUtils.isEmpty(qlConfig.getQlClientID()) && !StringUtils.isEmpty(qlConfig.getQlClientSecret());
-
-                boolean result_token = false;
-                boolean result_usernamepassword = false;
-                if (verify3) {
-                    boolean success = getToken(qlConfig);
-                    if (success) {
-                        result_token = true;
-                        qlConfig.setQlLoginType(QLConfig.QLLoginType.TOKEN);
-                        jdService.fetchCurrentCKS_count(driver, qlConfig, "");
-                    } else {
-                        log.warn(qlConfig.getQlUrl() + "获取token失败，获取到的ck无法上传，已忽略");
-                    }
-                } else if (verify2) {
-                    boolean result = false;
-                    try {
-                        result = initInnerQingLong(driver, qlConfig);
-                        if (result) {
-                            qlConfig.setQlLoginType(QLConfig.QLLoginType.USERNAME_PASSWORD);
-                            jdService.fetchCurrentCKS_count(driver, qlConfig, "");
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (result) {
-                        result_usernamepassword = true;
-                    } else {
-                        log.info("初始化青龙面板" + qlConfig.getQlUrl() + "登录失败, 获取到的ck无法上传，已忽略");
-                    }
-                }
-
-                if (!result_token && !result_usernamepassword) {
-                    iterator.remove();
-                }
-            }
-        } finally {
-            if (driver != null && driver.getSessionId() != null) {
-                releaseWebDriver(driver.getSessionId().toString());
-            }
-        }
-
-        log.info("成功添加" + qlConfigs.size() + "套配置");
-    }
-
-    @Override
-    public boolean getToken(QLConfig qlConfig) {
-        String qlUrl = qlConfig.getQlUrl();
-        String qlClientID = qlConfig.getQlClientID();
-        String qlClientSecret = qlConfig.getQlClientSecret();
-        try {
-            ResponseEntity<String> entity = restTemplate.getForEntity(qlUrl + "/open/auth/token?client_id=" + qlClientID + "&client_secret=" + qlClientSecret, String.class);
-            if (entity.getStatusCodeValue() == 200) {
-                String body = entity.getBody();
-                log.info("获取token " + body);
-                JSONObject jsonObject = JSON.parseObject(body);
-                Integer code = jsonObject.getInteger("code");
-                if (code == 200) {
-                    JSONObject data = jsonObject.getJSONObject("data");
-                    String token = data.getString("token");
-                    String tokenType = data.getString("token_type");
-                    long expiration = data.getLong("expiration");
-                    qlConfig.setQlToken(new QLToken(token, tokenType, expiration));
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            log.error(qlUrl + "获取token失败，请检查配置");
-        }
-        return false;
-    }
-
-    public boolean initInnerQingLong(RemoteWebDriver webDriver, QLConfig qlConfig) {
-        String qlUrl = qlConfig.getQlUrl();
-        webDriver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-        try {
-            String token = null;
-            int retry = 0;
-            while (StringUtils.isEmpty(token)) {
-                retry++;
-                log.info("initInnerQingLong-->" + qlConfig.getQlUrl() + "第" + retry + "次尝试");
-                if (retry > 2) {
-                    break;
-                }
-                String qlUsername = qlConfig.getQlUsername();
-                String qlPassword = qlConfig.getQlPassword();
-                webDriver.get(qlUrl + "/login");
-                new RemoteWebStorage(new RemoteExecuteMethod(webDriver)).getLocalStorage().clear();
-                webDriver.get(qlUrl + "/login");
-                WebElement firstResult = new WebDriverWait(webDriver, Duration.ofSeconds(10))
-                        .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@type='submit']")));
-                if (firstResult != null) {
-                    webDriver.findElement(By.id("username")).sendKeys(qlUsername);
-                    webDriver.findElement(By.id("password")).sendKeys(qlPassword);
-                    webDriver.findElement(By.xpath("//button[@type='submit']")).click();
-                    Boolean until = new WebDriverWait(webDriver, Duration.ofSeconds(10)).until(
-                            driver -> driver.findElement(By.tagName("body")).getText().contains("定时任务")
-                    );
-                    if (until) {
-                        RemoteExecuteMethod executeMethod = new RemoteExecuteMethod(webDriver);
-                        RemoteWebStorage webStorage = new RemoteWebStorage(executeMethod);
-                        LocalStorage storage = webStorage.getLocalStorage();
-                        token = storage.getItem("token");
-                        qlConfig.setQlToken(new QLToken(token));
-                        readPassword(qlConfig);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(qlUrl + "测试登录失败，请检查配置");
-        }
-        return qlConfig.getQlToken() != null && qlConfig.getQlToken().getToken() != null;
-    }
-
-    private boolean readPassword(QLConfig qlConfig) throws IOException {
-        File file = new File("/data/config/auth.json");
-        if (file.exists()) {
-            String s = FileUtils.readFileToString(file, "utf-8");
-            JSONObject jsonObject = JSON.parseObject(s);
-            String username = jsonObject.getString("username");
-            String password = jsonObject.getString("password");
-            if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password) && !"adminadmin".equals(password)) {
-                qlConfig.setQlUsername(username);
-                qlConfig.setQlPassword(password);
-                log.debug("username = " + username + ", password = " + password);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public RemoteWebDriver getDriverBySessionId(String chromeSessionId) {
-        MyChrome myChromeBySessionId = getMyChromeBySessionId(chromeSessionId);
-        if (myChromeBySessionId != null) {
-            return myChromeBySessionId.getWebDriver();
-        }
-        return null;
-    }
-
-    public MyChrome getMyChromeBySessionId(String chromeSessionId) {
-        if (chromes.size() > 0) {
-            return chromes.get(chromeSessionId);
-        }
-        return null;
-    }
-
-    @Override
-    public synchronized MyChromeClient createNewMyChromeClient(String userTrackId, LoginType loginType, JDLoginType jdLoginType) {
-        //客户端传过来的sessionid为空，可能是用户重新刷新了网页，或者新开了一个浏览器，那么就需要跟踪会话缓存来找到之前的ChromeSessionId
-        MyChromeClient myChromeClient = null;
-        myChromeClient = new MyChromeClient();
-        myChromeClient.setLoginType(loginType);
-        myChromeClient.setJdLoginType(jdLoginType);
-        myChromeClient.setUserTrackId(userTrackId);
-        boolean success = false;
-        if (chromes.size() < CAPACITY) {
-            createChrome();
-        }
-        for (MyChrome myChrome : chromes.values()) {
-            if (myChrome.getUserTrackId() == null) {
-                //双向绑定
-                myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
-                myChromeClient.setChromeSessionId(myChrome.getChromeSessionId());
-                myChrome.setUserTrackId(userTrackId);
-                success = true;
-                break;
-            }
-        }
-        if (success) {
-            clients.put(userTrackId, myChromeClient);
-            return myChromeClient;
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public MyChromeClient getCacheMyChromeClient(String userTrackId) {
-        if (userTrackId != null) {
-            return clients.get(userTrackId);
-        }
-        return null;
-    }
-
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
     @Override
     public void releaseWebDriver(String removeChromeSessionId) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
@@ -779,70 +407,28 @@ public class WebDriverManagerSelenoid implements WebDriverManager, CommandLineRu
     }
 
     @Override
-    public String getXddUrl() {
-        return xddUrl;
-    }
-
-    @Override
-    public String getXddToken() {
-        return xddToken;
-    }
-
-    @Override
-    public List<QLConfig> getQlConfigs() {
-        return qlConfigs;
-    }
-
-    @Override
-    public Properties getProperties() {
-        return properties;
-    }
-
-    @Override
-    public boolean isInitSuccess() {
-        return initSuccess;
-    }
-
-    public <T> T exec(WebDriverOpCallBack<T> executor) {
-        RemoteWebDriver webDriver = null;
-        try {
-            webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), getOptions());
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-            return executor.doBusiness(webDriver);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (webDriver != null) {
-                webDriver.quit();
+    public void onApplicationEvent(ContextClosedEvent event) {
+        ApplicationContext context = event.getApplicationContext();
+        WSManager wsManager = context.getBean(WSManager.class);
+        while (wsManager.runningSchedule) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+            log.info("wait wsManager schedule destroy...");
         }
-        return null;
-    }
 
-    @Override
-    public StatClient getStatClient() {
-        int availChromeCount = 0;
-        int webSessionCount = 0;
-        int qqSessionCount = 0;
-        int totalChromeCount = CAPACITY;
-        for (MyChrome chrome : chromes.values()) {
-            if (chrome.getUserTrackId() == null) {
-                availChromeCount++;
-            } else {
-                String userTrackId = chrome.getUserTrackId();
-                MyChromeClient client = clients.get(userTrackId);
-                if (client != null) {
-                    LoginType loginType = client.getLoginType();
-                    if (loginType == LoginType.WEB) {
-                        webSessionCount++;
-                    } else if (loginType == LoginType.QQBOT) {
-                        qqSessionCount++;
-                    }
+        SelenoidStatus status = getGridStatus();
+        Map<String, JSONObject> sessions = status.getSessions();
+        if (sessions != null) {
+            for (String sessionId : sessions.keySet()) {
+                if (sessionId != null) {
+                    log.info("destroy chrome " + sessionId);
+                    closeSession(sessionId);
                 }
             }
         }
-        return new StatClient(availChromeCount, webSessionCount, qqSessionCount, totalChromeCount);
+        cleanDockerContainer();
     }
-
-
 }
