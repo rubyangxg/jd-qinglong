@@ -232,7 +232,6 @@ public class SlideVerifyBlock {
     public static void manualWay(RemoteWebDriver webDriver, WebElement slider, List<Point> pointList) {
         Actions actions = new Actions(webDriver);
         actions.clickAndHold(slider);
-        actions.perform();
         try {
             Rectangle cpc_img = webDriver.findElement(By.id("cpc_img")).getRect();
             int width = cpc_img.getWidth();
@@ -240,12 +239,13 @@ public class SlideVerifyBlock {
             for (Point point : pointList) {
                 int x = Math.toIntExact(Math.round(width / 275.0 * point.getX()));
                 int y = Math.toIntExact(Math.round(height / 170.0 * point.getY()));
-                actions.moveByOffset(x, y).perform();
+                log.info(point.getX() + " to " + x + " , " + point.getY() + " to " + y);
+                actions.moveByOffset(x, y);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            actions.pause(100 + new Random().nextInt(100)).release(slider);
+            actions.pause(300 + new Random().nextInt(100)).release(slider);
             actions.perform();
         }
     }
