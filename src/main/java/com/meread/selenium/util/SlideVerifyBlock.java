@@ -208,9 +208,13 @@ public class SlideVerifyBlock {
             current += d;
             // 添加到轨迹列表
             tracks.add(d);
-            int i = random.nextInt(8);
-            tracks.add((double) (-i / 2));
-            tracks.add((double) (i / 2));
+            int i1 = random.nextInt(8);
+            if (i1 % 2 == 0) {
+                int i2 = random.nextInt(8);
+                tracks.add((double) (-i2 / 2));
+                tracks.add((double) (i2 / 2));
+            }
+
             // 速度已经达到v,该速度作为下次的初速度
             v = v0 + a * t;
         }
