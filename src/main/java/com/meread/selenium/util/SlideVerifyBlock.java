@@ -57,32 +57,32 @@ public class SlideVerifyBlock {
                 break;
             }
 
-            if (debug) {
-                try {
-                    for (int a = 0; a < 170; a++) {
-                        read.setRGB(sum, a, Color.GREEN.getRGB());
-                    }
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    ImageIO.write(read, "png", outputStream);
-                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
-                    ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+//            if (debug) {
+//                try {
+//                    for (int a = 0; a < 170; a++) {
+//                        read.setRGB(sum, a, Color.GREEN.getRGB());
+//                    }
+//                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//                    ImageIO.write(read, "png", outputStream);
+//                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
+//                    ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
         actions.moveByOffset(new Double(res).intValue(), 0);
-        if (debug) {
-            try {
-                sum += new Double(res).intValue();
-                for (int a = 0; a < 170; a++) {
-                    read.setRGB(sum, a, Color.GREEN.getRGB());
-                }
-                ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+//        if (debug) {
+//            try {
+//                sum += new Double(res).intValue();
+//                for (int a = 0; a < 170; a++) {
+//                    read.setRGB(sum, a, Color.GREEN.getRGB());
+//                }
+//                ImageIO.write(read, "jpg", new File(CommonAttributes.TMPDIR + "/" + uuid + "_captcha.origin.marked.jpeg"));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
         actions.pause(100 + new Random().nextInt(100)).release(slider);
         actions.perform();
     }
