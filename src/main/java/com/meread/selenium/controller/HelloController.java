@@ -6,9 +6,11 @@ import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.JDService;
 import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.FreemarkerUtils;
+import com.meread.selenium.util.OpenCVUtil;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -21,11 +23,23 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Controller
 @Slf4j
 public class HelloController {
+
+    static byte[] exampleBig = new byte[0];
+    static byte[] exampleSmall = new byte[0];
+    static {
+        try {
+            exampleBig = IOUtils.toByteArray(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/a.jpeg")));
+            exampleSmall = IOUtils.toByteArray(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/a_small.png")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Autowired
     private JDService service;
@@ -56,9 +70,24 @@ public class HelloController {
     public byte[] manualCrackBig(@PathVariable("type") String type, HttpSession session) {
         MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
         if (myChromeClient == null) {
+            if ("small".equals(type)) {
+                return exampleSmall;
+            } else if ("big".equals(type)) {
+                return exampleBig;
+            }
             return null;
         }
-        return service.getCaptchaImg(myChromeClient, type);
+        JDScreenBean screen = service.getScreen(myChromeClient);
+        if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
+            return service.getCaptchaImg(myChromeClient, type);
+        }
+        if ("small".equals(type)) {
+            return exampleSmall;
+        } else if ("big".equals(type)) {
+            return exampleBig;
+        } else {
+            return null;
+        }
     }
 
     @RequestMapping("/verifyCaptcha")
