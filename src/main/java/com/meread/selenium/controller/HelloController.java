@@ -4,13 +4,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.JDService;
-import com.meread.selenium.service.WebDriverManager;
 import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.FreemarkerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,7 +20,6 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,10 +51,26 @@ public class HelloController {
         return "mock2";
     }
 
+    @GetMapping(value = "/manualCrack/{type}", produces = MediaType.IMAGE_JPEG_VALUE)
+    @ResponseBody
+    public byte[] manualCrackBig(@PathVariable("type") String type, HttpSession session) {
+        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
+        if (myChromeClient == null) {
+            return null;
+        }
+        return service.getCaptchaImg(myChromeClient, type);
+    }
+
     @RequestMapping("/verifyCaptcha")
     @ResponseBody
     public boolean verifyCaptcha(@RequestParam String datas) {
-        System.out.println(datas);
+        if (!StringUtils.isEmpty(datas)) {
+            System.out.println(datas);
+            String[] split = datas.split("\\|");
+            String last = split[split.length - 1];
+            String substring = last.substring(1, last.length() - 1);
+            System.out.println(Integer.parseInt(substring.split(",")[0]));
+        }
         return true;
     }
 
@@ -167,7 +182,7 @@ public class HelloController {
 
         if ("1".equals(reset)) {
             String chromeSessionId = cacheMyChromeClient.getChromeSessionId();
-            factory.releaseWebDriver(chromeSessionId,true);
+            factory.releaseWebDriver(chromeSessionId, true);
             return "redirect:/";
         }
         JDCookie ck;
@@ -256,7 +271,7 @@ public class HelloController {
         if (myChromeClient == null) {
             return 1;
         }
-        factory.releaseWebDriver(myChromeClient.getChromeSessionId(),false);
+        factory.releaseWebDriver(myChromeClient.getChromeSessionId(), false);
         return 1;
     }
 

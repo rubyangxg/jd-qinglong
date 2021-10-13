@@ -98,7 +98,7 @@ public class JDService implements CommandLineRunner {
     //http://localhost:4444/status 获取hub的状态
     //http://localhost:4444/ui/index.html#/ 后台ui界面
 
-//    cURL --request DELETE 'http://172.18.0.8:5555/se/grid/node/session/a73dade333fd8b68224ca762f087d676' --header 'X-REGISTRATION-SECRET;'
+    //    cURL --request DELETE 'http://172.18.0.8:5555/se/grid/node/session/a73dade333fd8b68224ca762f087d676' --header 'X-REGISTRATION-SECRET;'
 //    cURL --request GET 'http://<node-URL>/se/grid/node/owner/<session-id>' --header 'X-REGISTRATION-SECRET;'
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
@@ -350,7 +350,6 @@ public class JDService implements CommandLineRunner {
                 log.info("crackCaptcha calc move end...耗时：" + (t5 - t4));
             }
         }
-        long t6 = System.currentTimeMillis();
     }
 
     public boolean toJDlogin(MyChromeClient myChromeClient) {
@@ -1003,5 +1002,37 @@ public class JDService implements CommandLineRunner {
 
     public boolean isInitSuccess() {
         return initSuccess;
+    }
+
+    public byte[] getCaptchaImg(MyChromeClient myChromeClient, String type) {
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
+        if (webDriver != null) {
+            WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
+            if (!img_tips_wraper.isDisplayed()) {
+                String cpc_img = webDriver.findElement(By.id("cpc_img")).getAttribute("src");
+                String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
+
+                Matcher matcher = pattern.matcher(cpc_img);
+                String bigImageBase64 = null;
+                String smallImageBase64 = null;
+                if (matcher.matches()) {
+                    bigImageBase64 = matcher.group(1);
+                }
+                matcher = pattern.matcher(small_img);
+                if (matcher.matches()) {
+                    smallImageBase64 = matcher.group(1);
+                }
+                if (bigImageBase64 != null && smallImageBase64 != null) {
+                    byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
+                    byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
+                    if ("small".equals(type)) {
+                        return bgSmallBytes;
+                    } else if ("big".equals(type)) {
+                        return bgBytes;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

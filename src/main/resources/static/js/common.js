@@ -22,6 +22,7 @@ var serverHost = window.location.host;
 var ws;
 var screenTimer;
 var timeoutTimer;
+var captchaComponent;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -57,26 +58,25 @@ var timeoutTimer;
 })();
 $(function () {
 
-    var captcha = sliderCaptcha({
+    captchaComponent = sliderCaptcha({
         id: 'captcha',
         width: 275,
         height: 170,
         sliderL: 51,
         barText: '向右滑动填充拼图',
         setSrc: function () {
-            return base + '/images/a.jpeg';
+            return base + '/manualCrack/big';
         },
         smallSrc: function () {
-            return base + '/images/a_small.png';
+            return base + '/manualCrack/small';
         },
         remoteUrl: base + "/verifyCaptcha",
         onSuccess: function () {  //成功事件
             var handler = setTimeout(function () {
                 window.clearTimeout(handler);
-                captcha.reset();
+                captchaComponent.reset();
             }, 500);
         }
-
     });
 
     if (error === 0) {
@@ -409,24 +409,26 @@ function getScreen(data) {
         layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
     }
     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
-        let loadIndex = '';
-        $.ajax({
-            url: "/crackCaptcha",
-            async: true,
-            loading: false,
-            beforeSend: function () {
-                cracking = true;
-                loadIndex = layer.msg('正在进行滑块验证', {
-                    icon: 16,
-                    time: false,
-                    shade: 0.4
-                });
-            },
-            complete: function () {
-                layer.close(loadIndex);
-                cracking = false;
-            }
-        });
+        $("#manualCrack").show();
+        captchaComponent.reset();
+        // let loadIndex = '';
+        // $.ajax({
+        //     url: "/crackCaptcha",
+        //     async: true,
+        //     loading: false,
+        //     beforeSend: function () {
+        //         cracking = true;
+        //         loadIndex = layer.msg('正在进行滑块验证', {
+        //             icon: 16,
+        //             time: false,
+        //             shade: 0.4
+        //         });
+        //     },
+        //     complete: function () {
+        //         layer.close(loadIndex);
+        //         cracking = false;
+        //     }
+        // });
     }
     if (!canSendAuth) {
         $("#send_sms_code").attr("disabled", true);

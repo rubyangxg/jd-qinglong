@@ -97,7 +97,7 @@
                     <img id="jd-screen" class="carousel-inner img-responsive img-rounded">
                 </div>
             </div>
-            <div class="row">
+            <div class="row" style="display: none" id="manualCrack">
                 <div class="container-fluid">
                     <div class="form-row">
                         <div class="col-12">
