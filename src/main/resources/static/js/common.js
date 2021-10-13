@@ -65,10 +65,10 @@ $(function () {
         sliderL: 51,
         barText: '向右滑动填充拼图',
         setSrc: function () {
-            return base + '/manualCrack/big';
+            return base + '/manualCrack/big?t=' + new Date().getTime();
         },
         smallSrc: function () {
-            return base + '/manualCrack/small';
+            return base + '/manualCrack/small?t=' + new Date().getTime();
         },
         remoteUrl: base + "/verifyCaptcha",
         onSuccess: function () {  //成功事件
@@ -409,6 +409,7 @@ function getScreen(data) {
         layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
     }
     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
+        console.log("需要滑块验证");
         $("#manualCrack").show();
         captchaComponent.reset();
         // let loadIndex = '';
