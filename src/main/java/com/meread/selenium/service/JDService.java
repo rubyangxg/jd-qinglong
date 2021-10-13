@@ -3,6 +3,7 @@ package com.meread.selenium.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.meread.selenium.bean.Point;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
 import com.meread.selenium.util.*;
@@ -1034,5 +1035,14 @@ public class JDService implements CommandLineRunner {
             }
         }
         return null;
+    }
+
+    public boolean manualCrackCaptcha(MyChromeClient myChromeClient, List<Point> pointList) {
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
+        if (webDriver != null) {
+            WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
+            SlideVerifyBlock.manualWay(webDriver, slider,pointList);
+        }
+        return false;
     }
 }

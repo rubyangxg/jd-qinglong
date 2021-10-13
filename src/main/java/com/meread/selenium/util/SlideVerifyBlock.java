@@ -1,10 +1,12 @@
 package com.meread.selenium.util;
 
+import com.meread.selenium.bean.Point;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.touch.TouchActions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.util.Base64Utils;
 
 import javax.imageio.ImageIO;
@@ -226,5 +228,16 @@ public class SlideVerifyBlock {
     public static void main(String[] args) {
         List<Double> dis1 = SlideVerifyBlock.moveManualiy2(100);
         System.out.println(dis1);
+    }
+
+    public static void manualWay(RemoteWebDriver webDriver, WebElement slider, List<Point> pointList) {
+        Actions actions = new Actions(webDriver);
+        actions.clickAndHold(slider);
+        actions.perform();
+        for (Point point : pointList) {
+            actions.moveByOffset(point.getX(), point.getY()).perform();
+        }
+        actions.pause(100 + new Random().nextInt(100)).release(slider);
+        actions.perform();
     }
 }

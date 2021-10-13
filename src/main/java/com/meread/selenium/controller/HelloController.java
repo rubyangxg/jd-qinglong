@@ -2,6 +2,7 @@ package com.meread.selenium.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
+import com.meread.selenium.bean.Point;
 import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.JDService;
 import com.meread.selenium.util.CommonAttributes;
@@ -21,10 +22,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Controller
 @Slf4j
@@ -92,13 +90,24 @@ public class HelloController {
 
     @RequestMapping("/verifyCaptcha")
     @ResponseBody
-    public boolean verifyCaptcha(@RequestParam String datas) {
+    public boolean verifyCaptcha(@RequestParam String datas,HttpSession session) {
+        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
+        if (myChromeClient == null) {
+            return false;
+        }
         if (!StringUtils.isEmpty(datas)) {
             System.out.println(datas);
             String[] split = datas.split("\\|");
-            String last = split[split.length - 1];
-            String substring = last.substring(1, last.length() - 1);
-            System.out.println(Integer.parseInt(substring.split(",")[0]));
+            List<Point> pointList = new ArrayList<>();
+            for (int i = 0; i < split.length; i++) {
+                String[] points = split[i].substring(1, split[i].length() - 1).split(",");
+                Point point = new Point(Integer.parseInt(points[0]), Integer.parseInt(points[1]));
+                pointList.add(point);
+                if (i == split.length - 1) {
+                    System.out.println(point.getX());
+                }
+            }
+            return service.manualCrackCaptcha(myChromeClient,pointList);
         }
         return true;
     }
