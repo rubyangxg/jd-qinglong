@@ -57,19 +57,19 @@ public class SlideVerifyBlock {
                 break;
             }
 
-//            if (debug) {
-//                try {
-//                    for (int a = 0; a < 170; a++) {
-//                        read.setRGB(sum, a, Color.GREEN.getRGB());
-//                    }
-//                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//                    ImageIO.write(read, "png", outputStream);
-//                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
-//                    ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
+            if (debug) {
+                try {
+                    for (int a = 0; a < 170; a++) {
+                        read.setRGB(sum, a, Color.GREEN.getRGB());
+                    }
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    ImageIO.write(read, "png", outputStream);
+                    String markedJpg = "data:image/jpg;base64," + Base64Utils.encodeToString(outputStream.toByteArray());
+                    ((JavascriptExecutor) driver).executeScript("document.getElementById('cpc_img').setAttribute('src','" + markedJpg + "')");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
         actions.moveByOffset(new Double(res).intValue(), 0);
 //        if (debug) {
@@ -199,9 +199,9 @@ public class SlideVerifyBlock {
         while (current < distance) {
             if (current < mid) {
                 // 加速度越小，单位时间的位移越小,模拟的轨迹就越多越详细
-                a = random.nextInt(3) + 1;
+                a = random.nextInt(9) + 1;
             } else {
-                a = -random.nextInt(3) + 2;
+                a = -random.nextInt(9) + 2;
             }
             // 初速度
             double v0 = v;
