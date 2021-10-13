@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.interactions.touch.TouchActions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.util.Base64Utils;
 
@@ -234,10 +233,20 @@ public class SlideVerifyBlock {
         Actions actions = new Actions(webDriver);
         actions.clickAndHold(slider);
         actions.perform();
-        for (Point point : pointList) {
-            actions.moveByOffset(point.getX(), point.getY()).perform();
+        try {
+            Rectangle cpc_img = webDriver.findElement(By.id("cpc_img")).getRect();
+            int width = cpc_img.getWidth();
+            int height = cpc_img.getHeight();
+            for (Point point : pointList) {
+                int x = Math.toIntExact(Math.round(width / 275.0 * point.getX()));
+                int y = Math.toIntExact(Math.round(height / 170.0 * point.getY()));
+                actions.moveByOffset(x, y).perform();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            actions.pause(100 + new Random().nextInt(100)).release(slider);
+            actions.perform();
         }
-        actions.pause(100 + new Random().nextInt(100)).release(slider);
-        actions.perform();
     }
 }
