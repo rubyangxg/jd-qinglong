@@ -71,6 +71,23 @@ $(function () {
             return base + '/manualCrack/small?t=' + new Date().getTime();
         },
         remoteUrl: base + "/verifyCaptcha",
+        verify: function (arr, url) {
+            var ret = false;
+            $.ajax({
+                url: url,
+                data: {
+                    "datas": arr.join('|'),
+                },
+                type: "post",
+                async: false,
+                success: function (result) {
+                    ret = JSON.stringify(result);
+                    console.log("返回结果：" + ret);
+                    cracking = false;
+                }
+            });
+            return ret;
+        },
         onSuccess: function () {  //成功事件
             var handler = setTimeout(function () {
                 window.clearTimeout(handler);
@@ -409,7 +426,7 @@ function getScreen(data) {
         layer.alert("对不起，短信验证码发送次数已达上限，请24小时后再试");
     }
     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
-        console.log("需要滑块验证");
+        cracking = true;
         $("#manualCrack").show();
         captchaComponent.reset();
         // let loadIndex = '';
