@@ -231,13 +231,16 @@ public class SlideVerifyBlock {
 
     public static void manualWay(RemoteWebDriver webDriver, WebElement slider, int gap, List<Point> pointList) {
         Actions actions = new Actions(webDriver);
-        actions.clickAndHold(slider).perform();
+        actions.clickAndHold(slider);
         try {
             int maxX = pointList.get(pointList.size() - 1).getX();
             float beishu = (float) gap / maxX;
             int prevX = 0;
             int prevY = 0;
             for (Point point : pointList) {
+                if (prevX == point.getX() && prevY == point.getY()) {
+                    continue;
+                }
 //                int x = Math.toIntExact(Math.round(beishu * point.getX()));
 //                int y = Math.toIntExact(Math.round(beishu * point.getY()));
                 int x = point.getX() - prevX;
@@ -246,6 +249,7 @@ public class SlideVerifyBlock {
                 prevX = point.getX();
                 prevY = point.getY();
             }
+            actions.build().perform();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
