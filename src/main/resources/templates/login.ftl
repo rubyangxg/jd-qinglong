@@ -8,6 +8,7 @@
     <title><#if indexTitle??>${indexTitle}<#else>阿东CK自助获取</#if></title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <link href="${base}/css/main.css" rel="stylesheet">
+    <link href="${base}/css/slidercaptcha.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
 </head>
 <body>
@@ -96,6 +97,22 @@
                     <img id="jd-screen" class="carousel-inner img-responsive img-rounded">
                 </div>
             </div>
+            <div class="row">
+                <div class="container-fluid">
+                    <div class="form-row">
+                        <div class="col-12">
+                            <div class="slidercaptcha card">
+                                <div class="card-header">
+                                    <span>请完成安全验证!</span>
+                                </div>
+                                <div class="card-body">
+                                    <div id="captcha"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <#else>
             <div class="row">
                 <div class="mx-auto text-center" style="color: red">
@@ -142,6 +159,7 @@
 <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 <script src="${base}/js/layer/layer.js"></script>
+<script src="${base}/js/longbow.slidercaptcha.min.js"></script>
 <script>
     let qlUploadDirect = ${qlUploadDirect};
     let error = ${error!"0"};

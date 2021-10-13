@@ -57,13 +57,34 @@ var timeoutTimer;
 })();
 $(function () {
 
-    console.log(error);
+    var captcha = sliderCaptcha({
+        id: 'captcha',
+        width: 275,
+        height: 170,
+        sliderL: 51,
+        barText: '向右滑动填充拼图',
+        setSrc: function () {
+            return base + '/images/a.jpeg';
+        },
+        smallSrc: function () {
+            return base + '/images/a_small.png';
+        },
+        remoteUrl: base + "/verifyCaptcha",
+        onSuccess: function () {  //成功事件
+            var handler = setTimeout(function () {
+                window.clearTimeout(handler);
+                captcha.reset();
+            }, 500);
+        }
+
+    });
+
     if (error === 0) {
-        let wsProtocolSuffix = location.protocol.match('^https')?"s":""
+        let wsProtocolSuffix = location.protocol.match('^https') ? "s" : ""
         if ('WebSocket' in window) {
-            ws = new WebSocket("ws"+wsProtocolSuffix+"://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
+            ws = new WebSocket("ws" + wsProtocolSuffix + "://" + serverHost + "/ws/page/" + jdLoginType);//建立连接
         } else {
-            ws = new SockJS("http"+wsProtocolSuffix+"://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
+            ws = new SockJS("http" + wsProtocolSuffix + "://" + serverHost + "/sockjs/ws/page" + jdLoginType);//建立连接
         }
 
         //建立连接处理

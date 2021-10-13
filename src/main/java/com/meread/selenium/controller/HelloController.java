@@ -20,6 +20,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,6 +45,18 @@ public class HelloController {
     @RequestMapping("/mock")
     public String mock() {
         return "mock";
+    }
+
+    @RequestMapping("/mock2")
+    public String mock2() {
+        return "mock2";
+    }
+
+    @RequestMapping("/verifyCaptcha")
+    @ResponseBody
+    public boolean verifyCaptcha(@RequestParam String datas) {
+        System.out.println(datas);
+        return true;
     }
 
     @RequestMapping("/recordMock")
