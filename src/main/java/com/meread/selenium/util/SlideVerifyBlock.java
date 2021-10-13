@@ -206,9 +206,7 @@ public class SlideVerifyBlock {
             // 速度已经达到v,该速度作为下次的初速度
             v = v0 + a * t;
         }
-        for (int i = 0; i < 3; i++) {
-            tracks.add((double) -(random.nextInt(3) + 1));
-        }
+        tracks.add(distance - current);
         return tracks;
     }
 
