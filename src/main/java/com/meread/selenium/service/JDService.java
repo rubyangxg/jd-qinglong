@@ -359,6 +359,8 @@ public class JDService implements CommandLineRunner {
                 log.info("crackCaptcha calc gap end...耗时：" + (t3 - t2));
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
                 long t4 = System.currentTimeMillis();
+                slider.click();
+                slider.click();
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), CommonAttributes.debug);
                 long t5 = System.currentTimeMillis();
                 log.info("crackCaptcha calc move end...耗时：" + (t5 - t4));

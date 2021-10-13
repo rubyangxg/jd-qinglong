@@ -28,8 +28,11 @@ public class SlideVerifyBlock {
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
 
-        long myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
+        long myRandomLong = (long) (Math.random() * 6);
+//        long myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
         gap += myRandomLong;
+
+        log.info("modify gap from " + gap + " to " + (gap - myRandomLong));
 
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
@@ -46,17 +49,15 @@ public class SlideVerifyBlock {
 
         int sum = 0;
         for (int i = 0; i < array.length; i++) {
-            actions.pause(40);
             int intValue = array[i].intValue();
             sum += intValue;
             res += (array[i] - intValue);
-            myRandomLong = (long) (Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1));
-            actions.moveByOffset(intValue, (int)myRandomLong);
+            actions.moveByOffset(intValue, 2);
             try {
                 actions.perform();
             } catch (Exception e) {
                 e.printStackTrace();
-                actions.pause(100 + new Random().nextInt(100)).release(slider);
+                actions.pause(300 + new Random().nextInt(300)).release(slider);
                 actions.perform();
                 break;
             }
@@ -87,7 +88,7 @@ public class SlideVerifyBlock {
                 e.printStackTrace();
             }
         }
-        actions.pause(100 + new Random().nextInt(100)).release(slider);
+        actions.pause(400 + new Random().nextInt(100)).release(slider);
         actions.perform();
     }
 
