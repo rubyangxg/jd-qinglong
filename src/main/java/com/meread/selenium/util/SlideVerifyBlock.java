@@ -28,7 +28,7 @@ public class SlideVerifyBlock {
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
 
-        long myRandomLong = (long) (Math.random() * 6);
+        long myRandomLong = (long) (Math.random() * 4);
 //        long myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
         gap += myRandomLong;
 
@@ -37,8 +37,10 @@ public class SlideVerifyBlock {
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.perform();
+        actions.moveByOffset(10, 0);
+        actions.perform();
 
-        List<Double> doubles = moveManualiy(gap);
+        List<Double> doubles = moveManualiy(gap - 10);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
 

@@ -6,7 +6,7 @@ HOME=$(
   pwd
 )
 file=$HOME/jd-qinglong
-if [ ! -f "$file" ]; then
+if [ ! -d "$file" ]; then
   git clone https://ghproxy.com/https://github.com/rubyangxg/jd-qinglong.git
   cd jd-qinglong
 else
