@@ -242,7 +242,7 @@ public class SlideVerifyBlock {
 //                int y = Math.toIntExact(Math.round(beishu * point.getY()));
                 int x = point.getX() - prevX;
                 int y = point.getY() - prevY;
-                actions.moveByOffset(x, y);
+                actions.moveByOffset(x, y).perform();
                 prevX = x;
                 prevY = y;
             }
