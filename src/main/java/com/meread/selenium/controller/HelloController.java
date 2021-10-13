@@ -101,7 +101,7 @@ public class HelloController {
             List<Point> pointList = new ArrayList<>();
             for (int i = 0; i < split.length; i++) {
                 String[] points = split[i].substring(1, split[i].length() - 1).split(",");
-                Point point = new Point(Integer.parseInt(points[0]), Integer.parseInt(points[1]));
+                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()));
                 pointList.add(point);
                 if (i == split.length - 1) {
                     System.out.println(point.getX());
