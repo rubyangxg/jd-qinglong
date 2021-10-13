@@ -49,7 +49,7 @@ public class SlideVerifyBlock {
             res += (array[i] - intValue);
             long myRandomLong = (long) (Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1));
             log.info("random y " + myRandomLong);
-            actions.moveByOffset(intValue, (int)myRandomLong).perform();
+            actions.moveByOffset(intValue, i % 2).perform();
             actions = new Actions(driver);
             if (debug) {
                 try {
