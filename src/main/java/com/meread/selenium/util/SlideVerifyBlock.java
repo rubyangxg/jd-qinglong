@@ -243,8 +243,8 @@ public class SlideVerifyBlock {
                 int x = point.getX() - prevX;
                 int y = point.getY() - prevY;
                 actions.moveByOffset(x, y).perform();
-                prevX = x;
-                prevY = y;
+                prevX = point.getX();
+                prevY = point.getY();
             }
         } catch (Exception e) {
             e.printStackTrace();
