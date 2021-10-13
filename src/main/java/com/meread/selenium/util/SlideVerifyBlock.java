@@ -199,9 +199,9 @@ public class SlideVerifyBlock {
         while (current < distance) {
             if (current < mid) {
                 // 加速度越小，单位时间的位移越小,模拟的轨迹就越多越详细
-                a = random.nextInt(9) + 1;
+                a = random.nextInt(100) + 1;
             } else {
-                a = -random.nextInt(9) + 2;
+                a = -random.nextInt(100) + 2;
             }
             // 初速度
             double v0 = v;
@@ -215,14 +215,14 @@ public class SlideVerifyBlock {
             // 速度已经达到v,该速度作为下次的初速度
             v = v0 + a * t;
         }
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             tracks.add((double) -(random.nextInt(3) + 1));
         }
         return tracks;
     }
 
     public static void main(String[] args) {
-        List<Double> dis1 = SlideVerifyBlock.moveManualiy(100);
+        List<Double> dis1 = SlideVerifyBlock.moveManualiy2(100);
         System.out.println(dis1);
     }
 }
