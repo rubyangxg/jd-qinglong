@@ -47,7 +47,8 @@ public class SlideVerifyBlock {
             int intValue = array[i].intValue();
             sum += intValue;
             res += (array[i] - intValue);
-            actions.moveByOffset(intValue, 2).perform();
+            long myRandomLong = (long) (Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1));
+            actions.moveByOffset(intValue, (int)myRandomLong).perform();
             if (debug) {
                 try {
                     for (int a = 0; a < 170; a++) {
