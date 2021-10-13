@@ -209,7 +209,7 @@ public class SlideVerifyBlock {
             // 添加到轨迹列表
             tracks.add(d);
             int i1 = random.nextInt(8);
-            if (i1 % 2 == 0) {
+            if (i1 % 3 == 1) {
                 int i2 = random.nextInt(8);
                 tracks.add((double) (-i2 / 2));
                 tracks.add((double) (i2 / 2));
