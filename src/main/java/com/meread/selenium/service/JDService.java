@@ -1040,8 +1040,42 @@ public class JDService implements CommandLineRunner {
     public boolean manualCrackCaptcha(MyChromeClient myChromeClient, List<Point> pointList) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         if (webDriver != null) {
-            WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
-            SlideVerifyBlock.manualWay(webDriver, slider,pointList);
+            WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
+            if (!img_tips_wraper.isDisplayed()) {
+                String cpc_img = webDriver.findElement(By.id("cpc_img")).getAttribute("src");
+                String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
+
+                Matcher matcher = pattern.matcher(cpc_img);
+                String bigImageBase64 = null;
+                String smallImageBase64 = null;
+                if (matcher.matches()) {
+                    bigImageBase64 = matcher.group(1);
+                }
+                matcher = pattern.matcher(small_img);
+                if (matcher.matches()) {
+                    smallImageBase64 = matcher.group(1);
+                }
+                if (bigImageBase64 != null && smallImageBase64 != null) {
+                    byte[] bgBytes = Base64Utils.decodeFromString(bigImageBase64);
+                    byte[] bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
+                    UUID uuid = UUID.randomUUID();
+                    ByteArrayInputStream in = new ByteArrayInputStream(bgBytes);
+                    ByteArrayInputStream inSmall = new ByteArrayInputStream(bgSmallBytes);
+                    Rect rect = null;
+                    WebElement slider = null;
+                    try {
+                        BufferedImage image = ImageIO.read(in);
+                        BufferedImage imageSmall = ImageIO.read(inSmall);
+                        Mat mat = Java2DFrameUtils.toMat(image);
+                        Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
+                        rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
+                        slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
+                        SlideVerifyBlock.manualWay(webDriver, slider, rect.x(), pointList);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
         return false;
     }

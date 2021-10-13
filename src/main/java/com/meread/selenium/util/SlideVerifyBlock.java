@@ -229,16 +229,15 @@ public class SlideVerifyBlock {
         System.out.println(dis1);
     }
 
-    public static void manualWay(RemoteWebDriver webDriver, WebElement slider, List<Point> pointList) {
+    public static void manualWay(RemoteWebDriver webDriver, WebElement slider, int gap, List<Point> pointList) {
         Actions actions = new Actions(webDriver);
         actions.clickAndHold(slider);
         try {
-            Rectangle cpc_img = webDriver.findElement(By.id("cpc_img")).getRect();
-            int width = cpc_img.getWidth();
-            int height = cpc_img.getHeight();
+            int maxX = pointList.get(pointList.size() - 1).getX();
+            float beishu = (float) gap / maxX;
             for (Point point : pointList) {
-                int x = Math.toIntExact(Math.round(width / 275.0 * point.getX()));
-                int y = Math.toIntExact(Math.round(height / 170.0 * point.getY()));
+                int x = Math.toIntExact(Math.round(beishu * point.getX()));
+                int y = Math.toIntExact(Math.round(beishu * point.getY()));
                 log.info(point.getX() + " to " + x + " , " + point.getY() + " to " + y);
                 actions.moveByOffset(x, y);
             }
