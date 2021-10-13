@@ -236,10 +236,12 @@ public class SlideVerifyBlock {
             int maxX = pointList.get(pointList.size() - 1).getX();
             float beishu = (float) gap / maxX;
             for (Point point : pointList) {
-                int x = Math.toIntExact(Math.round(beishu * point.getX()));
-                int y = Math.toIntExact(Math.round(beishu * point.getY()));
-                log.info(point.getX() + " to " + x + " , " + point.getY() + " to " + y);
+//                int x = Math.toIntExact(Math.round(beishu * point.getX()));
+//                int y = Math.toIntExact(Math.round(beishu * point.getY()));
+                int x = point.getX();
+                int y = point.getY();
                 actions.moveByOffset(x, y);
+                actions = new Actions(webDriver);
             }
         } catch (Exception e) {
             e.printStackTrace();
