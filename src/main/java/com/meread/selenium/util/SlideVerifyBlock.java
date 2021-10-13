@@ -182,6 +182,8 @@ public class SlideVerifyBlock {
         double t = 0.2;
         // 位移/轨迹列表，列表内的一个元素代表0.2s的位移
         ArrayList<Double> tracks = new ArrayList<>();
+        tracks.add(distance * 0.5);
+        distance = distance * 0.5;
         // 当前的位移
         int current = 0;
         // 到达mid值开始减速
