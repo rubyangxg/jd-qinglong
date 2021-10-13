@@ -21,7 +21,7 @@ import java.util.Random;
 @Slf4j
 public class SlideVerifyBlock {
     //加速度
-    private static final int A_SPEED = 500;
+    private static final int A_SPEED = 300;
 
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
@@ -31,7 +31,7 @@ public class SlideVerifyBlock {
         long myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
         gap += myRandomLong;
 
-        TouchActions actions = new TouchActions(driver);
+        Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.perform();
 
@@ -46,10 +46,11 @@ public class SlideVerifyBlock {
 
         int sum = 0;
         for (int i = 0; i < array.length; i++) {
+            actions.pause(40);
             int intValue = array[i].intValue();
             sum += intValue;
             res += (array[i] - intValue);
-            myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
+            myRandomLong = (long) (Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1));
             actions.moveByOffset(intValue, (int)myRandomLong);
             try {
                 actions.perform();
@@ -149,7 +150,7 @@ public class SlideVerifyBlock {
         ArrayList<Double> list = new ArrayList<>();
         int a = 0, cnt = 0;
         while (current < distance) {
-            if (cnt < 10) {
+            if (cnt < 6) {
                 a = A_SPEED;
             } else {
                 a = 0;
@@ -222,8 +223,5 @@ public class SlideVerifyBlock {
     public static void main(String[] args) {
         List<Double> dis1 = SlideVerifyBlock.moveManualiy(100);
         System.out.println(dis1);
-        System.out.println("~~~~~~~~");
-        List<Double> dis2 = SlideVerifyBlock.moveManualiy2(100);
-        System.out.println(dis2);
     }
 }
