@@ -28,10 +28,6 @@ public class SlideVerifyBlock {
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
 
-        Actions actions = new Actions(driver);
-        actions.clickAndHold(slider);
-        actions.perform();
-
         List<Double> doubles = moveManualiy2(gap);
         log.info("track is " + doubles);
         Double[] array = doubles.toArray(new Double[0]);
@@ -42,21 +38,16 @@ public class SlideVerifyBlock {
             read = ImageIO.read(new File(CommonAttributes.TMPDIR + "/" + uuid + ".origin.marked.jpeg"));
         }
 
+        Actions actions = new Actions(driver);
+        actions.clickAndHold(slider);
+        actions.perform();
+
         int sum = 0;
         for (int i = 0; i < array.length; i++) {
             int intValue = array[i].intValue();
             sum += intValue;
             res += (array[i] - intValue);
-            actions.moveByOffset(intValue, 2);
-            try {
-                actions.perform();
-            } catch (Exception e) {
-                e.printStackTrace();
-                actions.pause(100 + new Random().nextInt(300)).release(slider);
-                actions.perform();
-                break;
-            }
-
+            actions.moveByOffset(intValue, 2).perform();
             if (debug) {
                 try {
                     for (int a = 0; a < 170; a++) {
