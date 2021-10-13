@@ -77,7 +77,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.setCapability("browserName", "chrome");
         chromeOptions.setCapability("browserVersion", "89.0");
-        chromeOptions.setCapability("screenResolution", "1280x1024x24");
+        chromeOptions.setCapability("screenResolution", "510x710x24");
         chromeOptions.setCapability("enableVideo", false);
         if (chromeTimeout < 60) {
             chromeTimeout = 60;
@@ -85,7 +85,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         chromeOptions.setCapability("selenoid:options", Map.<String, Object>of(
                 "enableVNC", CommonAttributes.debug,
                 "enableVideo", false,
-                "enableLog", CommonAttributes.debug,
+                "enableLog", false,
                 "env", new String[]{"LANG=zh_CN.UTF-8", "LANGUAGE=zh:cn", "LC_ALL=zh_CN.UTF-8"},
                 "timeZone", "Asia/Shanghai",
                 "sessionTimeout", chromeTimeout + "s"

@@ -2,7 +2,6 @@ package com.meread.selenium.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.*;
-import com.meread.selenium.bean.Point;
 import com.meread.selenium.service.BaseWebDriverManager;
 import com.meread.selenium.service.JDService;
 import com.meread.selenium.util.CommonAttributes;
@@ -30,6 +29,7 @@ public class HelloController {
 
     static byte[] exampleBig = new byte[0];
     static byte[] exampleSmall = new byte[0];
+
     static {
         try {
             exampleBig = IOUtils.toByteArray(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/a.jpeg")));
@@ -90,24 +90,29 @@ public class HelloController {
 
     @RequestMapping("/verifyCaptcha")
     @ResponseBody
-    public boolean verifyCaptcha(@RequestParam String datas,HttpSession session) {
+    public boolean verifyCaptcha(@RequestParam String datas, HttpSession session) {
         MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
         if (myChromeClient == null) {
             return false;
         }
         if (!StringUtils.isEmpty(datas)) {
-            System.out.println(datas);
             String[] split = datas.split("\\|");
             List<Point> pointList = new ArrayList<>();
+            System.out.println(split.length);
+            long currTime = 0;
             for (int i = 0; i < split.length; i++) {
                 String[] points = split[i].substring(1, split[i].length() - 1).split(",");
-                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()));
-                pointList.add(point);
+                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()), Long.parseLong(points[1].trim()));
+                if (currTime == 0 || (point.getTime() - currTime > 100)) {
+                    pointList.add(point);
+                    currTime = point.getTime();
+                }
                 if (i == split.length - 1) {
                     System.out.println(point.getX());
                 }
             }
-            return service.manualCrackCaptcha(myChromeClient,pointList);
+            System.out.println("filter size = "+pointList.size());
+            return service.manualCrackCaptcha(myChromeClient, pointList);
         }
         return true;
     }

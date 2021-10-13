@@ -15,6 +15,7 @@ import java.util.Objects;
 public class Point {
     private int x;
     private int y;
+    private long time;
 
     @Override
     public boolean equals(Object o) {

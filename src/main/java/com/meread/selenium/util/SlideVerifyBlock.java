@@ -234,7 +234,8 @@ public class SlideVerifyBlock {
         actions.clickAndHold(slider);
         try {
             int maxX = pointList.get(pointList.size() - 1).getX();
-            float beishu = (float) gap / maxX;
+            System.out.println("gap = " + gap);
+            System.out.println("maxX = " + maxX);
             int prevX = 0;
             int prevY = 0;
             for (Point point : pointList) {
