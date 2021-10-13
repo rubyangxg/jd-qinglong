@@ -325,7 +325,6 @@ public class JDService implements CommandLineRunner {
     }
 
     public void crackCaptcha(MyChromeClient myChromeClient) throws IOException {
-        log.info("crackCaptcha start...");
         long t1 = System.currentTimeMillis();
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
@@ -356,7 +355,6 @@ public class JDService implements CommandLineRunner {
                 long t2 = System.currentTimeMillis();
                 Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
                 long t3 = System.currentTimeMillis();
-                log.info("crackCaptcha calc gap end...耗时：" + (t3 - t2));
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
                 long t4 = System.currentTimeMillis();
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), CommonAttributes.debug);
@@ -365,7 +363,6 @@ public class JDService implements CommandLineRunner {
             }
         }
         long t6 = System.currentTimeMillis();
-        log.info("crackCaptcha end...耗时：" + (t6 - t1));
     }
 
     public boolean toJDlogin(MyChromeClient myChromeClient) {

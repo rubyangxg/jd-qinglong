@@ -28,19 +28,12 @@ public class SlideVerifyBlock {
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
 
-        long myRandomLong = (long) (Math.random() * 4);
-//        long myRandomLong = (long) (Math.random() * 4 * (Math.random() > 0.5 ? 1 : -1));
-        gap += myRandomLong;
-
-        log.info("modify gap from " + gap + " to " + (gap - myRandomLong));
-
         Actions actions = new Actions(driver);
         actions.clickAndHold(slider);
         actions.perform();
-        actions.moveByOffset(10, 0);
-        actions.perform();
 
-        List<Double> doubles = moveManualiy(gap - 10);
+        List<Double> doubles = moveManualiy2(gap);
+        log.info("track is " + doubles);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
 
@@ -59,7 +52,7 @@ public class SlideVerifyBlock {
                 actions.perform();
             } catch (Exception e) {
                 e.printStackTrace();
-                actions.pause(300 + new Random().nextInt(300)).release(slider);
+                actions.pause(100 + new Random().nextInt(300)).release(slider);
                 actions.perform();
                 break;
             }
@@ -90,7 +83,7 @@ public class SlideVerifyBlock {
                 e.printStackTrace();
             }
         }
-        actions.pause(400 + new Random().nextInt(100)).release(slider);
+        actions.pause(100 + new Random().nextInt(100)).release(slider);
         actions.perform();
     }
 
@@ -199,26 +192,31 @@ public class SlideVerifyBlock {
         // 当前的位移
         int current = 0;
         // 到达mid值开始减速
-        double mid = distance * 4 / 5;
+        double mid = distance * 5 / 8;
         //加速度
         int a = 0;
+        Random random = new Random();
         while (current < distance) {
             if (current < mid) {
                 // 加速度越小，单位时间的位移越小,模拟的轨迹就越多越详细
-                a = 40;
+                a = random.nextInt(3) + 1;
             } else {
-                a = -50;
+                a = -random.nextInt(3) + 2;
             }
             // 初速度
             double v0 = v;
             // 0.2秒时间内的位移
             double s = v0 * t + 0.5 * a * Math.pow(t, 2);
+            double d = Double.parseDouble(df.format(s));
             // 当前的位置
-            current += s;
+            current += d;
             // 添加到轨迹列表
-            tracks.add(Double.valueOf(df.format(s)));
+            tracks.add(d);
             // 速度已经达到v,该速度作为下次的初速度
             v = v0 + a * t;
+        }
+        for (int i = 0; i < 5; i++) {
+            tracks.add((double) -(random.nextInt(3) + 1));
         }
         return tracks;
     }
