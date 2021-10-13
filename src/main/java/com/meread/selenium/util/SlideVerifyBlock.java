@@ -26,10 +26,11 @@ public class SlideVerifyBlock {
     //模拟手动的过程
     public static void moveWay1(WebDriver driver, WebElement slider, int gap, String uuid, boolean debug) throws IOException {
         Rectangle cpc_img = driver.findElement(By.id("cpc_img")).getRect();
+        log.info("gap old is " + gap);
         gap = Math.toIntExact(Math.round(cpc_img.width / 275.0 * gap));
+        log.info("gap new is " + gap + " cpc_img.width  = " + cpc_img.width);
 
         List<Double> doubles = moveManualiy2(gap);
-        log.info("track is " + doubles);
         Double[] array = doubles.toArray(new Double[0]);
         double res = 0;
 
