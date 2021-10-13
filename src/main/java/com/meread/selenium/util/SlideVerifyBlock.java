@@ -208,7 +208,7 @@ public class SlideVerifyBlock {
             v = v0 + a * t;
         }
         tracks.add(distance - current);
-        tracks.add(8D);
+        tracks.add(-8D);
         return tracks;
     }
 
