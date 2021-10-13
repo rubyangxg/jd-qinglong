@@ -192,9 +192,9 @@ public class SlideVerifyBlock {
         while (current < distance) {
             if (current < mid) {
                 // 加速度越小，单位时间的位移越小,模拟的轨迹就越多越详细
-                a = random.nextInt(100) + 1;
+                a = random.nextInt(200) + 1;
             } else {
-                a = -random.nextInt(100) + 2;
+                a = -random.nextInt(200) + 2;
             }
             // 初速度
             double v0 = v;
