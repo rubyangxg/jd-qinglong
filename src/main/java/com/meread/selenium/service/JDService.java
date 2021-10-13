@@ -9,6 +9,7 @@ import com.meread.selenium.util.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -20,7 +21,6 @@ import org.openqa.selenium.remote.html5.RemoteWebStorage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -53,18 +53,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class JDService implements CommandLineRunner {
 
-    @Autowired
-    private BaseWebDriverManager driverFactory;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private HttpClientUtil httpClientUtil;
-
-    public boolean initSuccess;
-
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
+    static Pattern pattern = Pattern.compile("data:image.*base64,(.*)");
 
     static {
         NODEJS_PUSH_KEYS.add("PUSH_KEY");
@@ -89,8 +79,13 @@ public class JDService implements CommandLineRunner {
         NODEJS_PUSH_KEYS.add("GOBOT_QQ");
     }
 
+    public boolean initSuccess;
     @Autowired
-    private FreeMarkerConfigurer freeMarkerConfigurer;
+    private BaseWebDriverManager driverFactory;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private HttpClientUtil httpClientUtil;
 
     //关闭hub：http://{hubhost}:{hubport}/lifecycle-manager/LifecycleServlet?action=shutdown
     //关闭node：http://localhost:5557/extra/LifecycleServlet?action=shutdown
@@ -105,6 +100,16 @@ public class JDService implements CommandLineRunner {
 
 //    cURL --request DELETE 'http://172.18.0.8:5555/se/grid/node/session/a73dade333fd8b68224ca762f087d676' --header 'X-REGISTRATION-SECRET;'
 //    cURL --request GET 'http://<node-URL>/se/grid/node/owner/<session-id>' --header 'X-REGISTRATION-SECRET;'
+    @Autowired
+    private FreeMarkerConfigurer freeMarkerConfigurer;
+
+    public static String strSpecialFilter(String str) {
+        String regEx = "[\\u00A0\\s\"`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        //将所有的特殊字符替换为空字符串
+        return m.replaceAll("").trim();
+    }
 
     public JDCookie getJDCookies(MyChromeClient myChromeClient) {
         JDCookie ck = new JDCookie();
@@ -136,8 +141,6 @@ public class JDService implements CommandLineRunner {
         }
         return ck;
     }
-
-    static Pattern pattern = Pattern.compile("data:image.*base64,(.*)");
 
     private JDScreenBean getScreenInner(MyChromeClient myChromeClient) throws IOException, InterruptedException {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
@@ -283,25 +286,13 @@ public class JDService implements CommandLineRunner {
         //需要输入验证码
         if (pageText.contains("安全验证") && !pageText.contains("验证成功")) {
             //创建全屏截图
-            screen = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
-            screenBase64 = Base64Utils.encodeToString(screen);
             chapter_element = webDriver.findElement(By.id("captcha_modal"));
-            if (chapter_element != null) {
-                element = chapter_element;
-                //截取某个元素的图，此处为了方便调试和验证，所以如果出现验证码 就只获取验证码的截图
-                BufferedImage subImg = null;
-                Rectangle rect = element.getRect();
-                int x = rect.x;
-                int y = rect.y;
-                int w = rect.width;
-                int h = rect.height;
-                subImg = ImageIO.read(new ByteArrayInputStream(screen)).getSubimage(x, y, w, h);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ImageIO.write(subImg, "png", outputStream);
-                screen = outputStream.toByteArray();
-                screenBase64 = Base64Utils.encodeToString(screen);
-                return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
+            screenBase64 = chapter_element.getScreenshotAs(OutputType.BASE64);
+            if (CommonAttributes.debug) {
+                File screenshotAs = chapter_element.getScreenshotAs(OutputType.FILE);
+                FileUtils.copyFile(screenshotAs, new File("/tmp/" + UUID.randomUUID() + ".png"));
             }
+            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
         }
 
         if (pageText.contains("验证码错误多次")) {
@@ -325,7 +316,6 @@ public class JDService implements CommandLineRunner {
     }
 
     public void crackCaptcha(MyChromeClient myChromeClient) throws IOException {
-        long t1 = System.currentTimeMillis();
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
         if (!img_tips_wraper.isDisplayed()) {
@@ -352,9 +342,7 @@ public class JDService implements CommandLineRunner {
                 BufferedImage imageSmall = ImageIO.read(inSmall);
                 Mat mat = Java2DFrameUtils.toMat(image);
                 Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
-                long t2 = System.currentTimeMillis();
                 Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
-                long t3 = System.currentTimeMillis();
                 WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
                 long t4 = System.currentTimeMillis();
                 SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), CommonAttributes.debug);
@@ -524,7 +512,7 @@ public class JDService implements CommandLineRunner {
                 }
             }
 
-            driverFactory.releaseWebDriver(chromeSessionId,false);
+            driverFactory.releaseWebDriver(chromeSessionId, false);
 
             if (qlUploadDirect != 1) {
                 Map<String, Object> map = new HashMap<>();
@@ -912,14 +900,6 @@ public class JDService implements CommandLineRunner {
         getToken(qlConfig);
     }
 
-    public static String strSpecialFilter(String str) {
-        String regEx = "[\\u00A0\\s\"`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(str);
-        //将所有的特殊字符替换为空字符串
-        return m.replaceAll("").trim();
-    }
-
     @Override
     public void run(String... args) throws MalformedURLException {
         initQLConfig();
@@ -988,7 +968,7 @@ public class JDService implements CommandLineRunner {
             }
         } finally {
             if (driver != null && driver.getSessionId() != null) {
-                driverFactory.releaseWebDriver(driver.getSessionId().toString(),false);
+                driverFactory.releaseWebDriver(driver.getSessionId().toString(), false);
             }
         }
 

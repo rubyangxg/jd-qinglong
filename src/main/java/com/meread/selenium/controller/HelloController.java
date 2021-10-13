@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -38,6 +39,23 @@ public class HelloController {
     @RequestMapping("/websocket")
     public String getWebSocket() {
         return "ws";
+    }
+
+    @RequestMapping("/mock")
+    public String mock() {
+        return "mock";
+    }
+
+    @RequestMapping("/recordMock")
+    @PostMapping
+    public String recordMock(@RequestParam String tracks) {
+        if (!StringUtils.isEmpty(tracks)) {
+            String[] split = tracks.split("\\|");
+            String last = split[split.length - 1];
+            String substring = last.substring(1, last.length() - 1);
+            System.out.println(Integer.parseInt(substring.split(",")[0]));
+        }
+        return "mock";
     }
 
 //    @GetMapping(value = "/getScreen")
