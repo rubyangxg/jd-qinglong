@@ -74,7 +74,6 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
 //        chromeOptions.addArguments("user-agent=UCWEB/2.0 (MIDP-2.0; U; Adr 9.0.0) UCBrowser U2/1.0.0 Gecko/63.0 Firefox/63.0 iPhone/7.1 SearchCraft/2.8.2 baiduboxapp/3.2.5.10 BingWeb/9.1 ALiSearchApp/2.4");
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
-        chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.setCapability("browserName", "chrome");
         chromeOptions.setCapability("browserVersion", "89.0");
