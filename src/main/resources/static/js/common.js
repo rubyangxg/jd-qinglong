@@ -84,6 +84,9 @@ $(function () {
                     ret = JSON.stringify(result);
                     console.log("返回结果：" + ret);
                     cracking = false;
+                    if (ret) {
+                        $("#manualCrack").hide();
+                    }
                 }
             });
             return ret;

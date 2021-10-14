@@ -1076,6 +1076,6 @@ public class JDService implements CommandLineRunner {
                 }
             }
         }
-        return false;
+        return true;
     }
 }
