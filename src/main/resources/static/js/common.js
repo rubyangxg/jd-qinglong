@@ -79,14 +79,11 @@ $(function () {
                     "datas": arr.join('|'),
                 },
                 type: "post",
-                async: false,
                 success: function (result) {
                     ret = JSON.stringify(result);
                     console.log("返回结果：" + ret);
                     cracking = false;
-                    if (ret) {
-                        $("#manualCrack").hide();
-                    }
+                    $("#manualCrack").hide();
                 }
             });
             return ret;

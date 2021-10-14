@@ -91,12 +91,6 @@
                     <button type="button" class="btn btn-danger btn-block" id="reset">重置</button>
                 </div>
             </form>
-
-            <div class="row">
-                <div class="col-sm-10 col-md-4 col-lg-4 col-xl-4 mx-auto text-center">
-                    <img id="jd-screen" class="carousel-inner img-responsive img-rounded">
-                </div>
-            </div>
             <div class="row" style="display: none" id="manualCrack">
                 <div class="container-fluid">
                     <div class="form-row">
@@ -111,6 +105,11 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-10 col-md-4 col-lg-4 col-xl-4 mx-auto text-center">
+                    <img id="jd-screen" class="carousel-inner img-responsive img-rounded">
                 </div>
             </div>
         <#else>
