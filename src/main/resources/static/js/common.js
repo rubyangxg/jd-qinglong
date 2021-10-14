@@ -448,6 +448,7 @@ function getScreen(data) {
         //     }
         // });
     } else if (!pageStatus !== 'REQUIRE_VERIFY') {
+        cracking = false;
         $("#manualCrack").hide();
     }
     if (!canSendAuth) {
