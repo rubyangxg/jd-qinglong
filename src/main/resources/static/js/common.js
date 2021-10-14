@@ -447,6 +447,9 @@ function getScreen(data) {
         //         cracking = false;
         //     }
         // });
+    } else {
+        cracking = false;
+        $("#manualCrack").hide();
     }
     if (!canSendAuth) {
         $("#send_sms_code").attr("disabled", true);
