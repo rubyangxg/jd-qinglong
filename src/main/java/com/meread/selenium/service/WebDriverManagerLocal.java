@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.html5.LocalStorage;
+import org.openqa.selenium.html5.SessionStorage;
+import org.openqa.selenium.html5.WebStorage;
+import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -187,6 +191,17 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
+                        WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
+                        if (webStorage != null) {
+                            LocalStorage localStorage = webStorage.getLocalStorage();
+                            if (localStorage != null) {
+                                localStorage.clear();
+                            }
+                            SessionStorage sessionStorage = webStorage.getSessionStorage();
+                            if (sessionStorage != null) {
+                                sessionStorage.clear();
+                            }
+                        }
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {

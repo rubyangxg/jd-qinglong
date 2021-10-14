@@ -13,14 +13,15 @@ import com.meread.selenium.util.CommonAttributes;
 import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.html5.LocalStorage;
+import org.openqa.selenium.html5.SessionStorage;
+import org.openqa.selenium.html5.WebStorage;
+import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -350,7 +351,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
     }
 
     @Override
-    public void releaseWebDriver(String removeChromeSessionId,boolean quit) {
+    public void releaseWebDriver(String removeChromeSessionId, boolean quit) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next().getValue();
@@ -370,6 +371,17 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
+                        WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
+                        if (webStorage != null) {
+                            LocalStorage localStorage = webStorage.getLocalStorage();
+                            if (localStorage != null) {
+                                localStorage.clear();
+                            }
+                            SessionStorage sessionStorage = webStorage.getSessionStorage();
+                            if (sessionStorage != null) {
+                                sessionStorage.clear();
+                            }
+                        }
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
