@@ -24,6 +24,7 @@ var screenTimer;
 var timeoutTimer;
 var captchaComponent;
 var mockCaptcha_ing;
+var crackCaptchaErrorCount;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -84,9 +85,9 @@ $(function () {
                 type: "post",
                 success: function (result) {
                     ret = JSON.stringify(result);
-                    console.log("返回结果：" + ret);
                     cracking = false;
                     $("#manualCrack").hide();
+                    captchaComponent.reset();
                 }
             });
             return ret;
@@ -488,6 +489,10 @@ function getScreen(data) {
         $("#manualCrack").show();
         captchaComponent.reset();
         // let loadIndex = '';
+        crackCaptchaErrorCount++;
+        if (crackCaptchaErrorCount < 5) {
+
+        }
         // $.ajax({
         //     url: "/crackCaptcha",
         //     async: true,
@@ -500,9 +505,12 @@ function getScreen(data) {
         //             shade: 0.4
         //         });
         //     },
-        //     complete: function () {
+        //     success: function (result) {
         //         layer.close(loadIndex);
+        //         ret = JSON.stringify(result);
+        //         console.log("返回结果：" + ret);
         //         cracking = false;
+        //         $("#manualCrack").hide();
         //     }
         // });
     } else if (pageStatus !== 'REQUIRE_VERIFY') {

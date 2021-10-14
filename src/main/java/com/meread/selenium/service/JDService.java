@@ -11,6 +11,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -40,6 +41,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -318,6 +320,17 @@ public class JDService implements CommandLineRunner {
     }
 
     public void crackCaptcha(MyChromeClient myChromeClient) throws IOException {
+        String gaps = getGap(myChromeClient);
+        if (gaps != null) {
+            String uuid = gaps.split(",")[0];
+            int gap = Integer.parseInt(gaps.split(",")[1]);
+            RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
+            WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
+            SlideVerifyBlock.moveWay1(webDriver, slider, gap, uuid, CommonAttributes.debug);
+        }
+    }
+
+    public String getGap(MyChromeClient myChromeClient) throws IOException {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
         if (!img_tips_wraper.isDisplayed()) {
@@ -345,13 +358,10 @@ public class JDService implements CommandLineRunner {
                 Mat mat = Java2DFrameUtils.toMat(image);
                 Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
                 Rect rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
-                WebElement slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
-                long t4 = System.currentTimeMillis();
-                SlideVerifyBlock.moveWay1(webDriver, slider, rect.x(), uuid.toString(), CommonAttributes.debug);
-                long t5 = System.currentTimeMillis();
-                log.info("crackCaptcha calc move end...耗时：" + (t5 - t4));
+                return uuid + "," + rect.x();
             }
         }
+        return null;
     }
 
     public boolean toJDlogin(MyChromeClient myChromeClient) {
@@ -912,6 +922,39 @@ public class JDService implements CommandLineRunner {
         }
         log.info("启动成功!");
         initSuccess = true;
+        try {
+            String s = IOUtils.toString(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("mock_captcha_points.txt")), StandardCharsets.UTF_8);
+            String[] split = s.split("\n");
+            Map<Integer, List<List<Point>>> mockMap = new HashMap<>();
+            for (String line : split) {
+                String[] s1 = line.split(" ");
+                if (s1.length == 2) {
+                    int gap = Integer.parseInt(s1[0]);
+                    String[] points = s1[1].split("\\|");
+                    List<Point> pointList = new ArrayList<>();
+                    System.out.println(points.length);
+                    for (String point : points) {
+                        String[] split1 = point.split(",");
+                        if (split1.length == 3) {
+                            long time = Long.parseLong(split1[0]);
+                            int x = Integer.parseInt(split1[1]);
+                            int y = Integer.parseInt(split1[2]);
+                            pointList.add(new Point(x, y, time));
+                        }
+                    }
+                    List<List<Point>> old = mockMap.get(gap);
+                    if (old == null) {
+                        old = new ArrayList<>();
+                    }
+                    old.add(pointList);
+                    mockMap.put(gap, old);
+                }
+
+            }
+            System.out.println(mockMap.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     protected void initQLConfig() {
@@ -1087,13 +1130,28 @@ public class JDService implements CommandLineRunner {
     public void manualCrackCaptchaMock(MyChromeClient myChromeClient, List<Point> pointList) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         if (webDriver != null) {
-            Point point = pointList.get(pointList.size() - 1);
-            int mockGap = point.getX();
+//            Point point = pointList.get(pointList.size() - 1);
+//            int mockGap = point.getX();
             try {
-                FileUtils.writeStringToFile(new File("mock_captcha_points.txt"), mockGap + " " + JSON.toJSONString(pointList) + "\n", "utf-8", true);
+                String gaps = getGap(myChromeClient);
+                int mockGap = Integer.parseInt(gaps.split(",")[1]);
+                File file = new File("mock_captcha_points.txt");
+                if (file.exists()) {
+                    List<String> strings = FileUtils.readLines(file, "utf-8");
+                    Set<Integer> ranges = new HashSet<>();
+                    for (String s : strings) {
+                        String s1 = s.split(" ")[0];
+                        ranges.add(Integer.parseInt(s1));
+                    }
+                    System.out.println(ranges.size());
+                }
+                FileUtils.writeStringToFile(file, mockGap + " " + JSON.toJSONString(pointList) + "\n", "utf-8", true);
+                WebElement element = webDriver.findElement(By.xpath("//img[@class='jcap_refresh']"));
+                element.click();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
     }
 }

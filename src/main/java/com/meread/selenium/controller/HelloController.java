@@ -100,7 +100,7 @@ public class HelloController {
                     currTime = point.getTime();
                 }
             }
-            log.debug("filter size = "+pointList.size());
+            log.info("filter size = "+pointList.size());
             if ("1".equals(System.getenv("mockCaptcha"))) {
                 service.manualCrackCaptchaMock(myChromeClient,pointList);
                 return true;
@@ -109,34 +109,6 @@ public class HelloController {
         }
         return true;
     }
-
-    @RequestMapping("/recordMock")
-    @PostMapping
-    public String recordMock(@RequestParam String tracks) {
-        if (!StringUtils.isEmpty(tracks)) {
-            String[] split = tracks.split("\\|");
-            String last = split[split.length - 1];
-            String substring = last.substring(1, last.length() - 1);
-            System.out.println(Integer.parseInt(substring.split(",")[0]));
-        }
-        return "mock";
-    }
-
-//    @GetMapping(value = "/getScreen")
-//    @ResponseBody
-//    public JDScreenBean getScreen(HttpSession session) {
-//        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
-//        if (myChromeClient == null) {
-//            return new JDScreenBean("", "", JDScreenBean.PageStatus.SESSION_EXPIRED);
-//        }
-//        JDScreenBean screen = service.getScreen(myChromeClient);
-//        if (screen.getPageStatus().equals(JDScreenBean.PageStatus.SUCCESS_CK)) {
-//            log.info("已经获取到ck了 " + myChromeClient + ", ck = " + screen.getCk());
-//            String xddRes = service.doXDDNotify(screen.getCk().toString());
-//            log.info("doXDDNotify res = " + xddRes);
-//        }
-//        return screen;
-//    }
 
     @GetMapping(value = "/sendAuthCode")
     @ResponseBody
@@ -168,14 +140,10 @@ public class HelloController {
         if (myChromeClient == null) {
             return new JDOpResultBean(service.getScreen(myChromeClient), false);
         }
-        try {
-            service.crackCaptcha(myChromeClient);
-            JDScreenBean screen = service.getScreen(myChromeClient);
-            if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
-                crackSuccess = true;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        service.manualCrackCaptcha(myChromeClient,null);
+        JDScreenBean screen = service.getScreen(myChromeClient);
+        if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
+            crackSuccess = true;
         }
         return new JDOpResultBean(service.getScreen(myChromeClient), crackSuccess);
     }
