@@ -133,7 +133,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         if (shouldCreate > 0) {
             try {
                 RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
-                webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+                webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
                 MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                 //计算chrome实例的最大存活时间
                 chromes.put(webDriver.getSessionId().toString(), myChrome);
@@ -150,7 +150,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         RemoteWebDriver webDriver = null;
         try {
             webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
             e.printStackTrace();
@@ -293,7 +293,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
             executorService.execute(() -> {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
