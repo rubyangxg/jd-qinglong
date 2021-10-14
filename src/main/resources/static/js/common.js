@@ -511,6 +511,5 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-    console.log("onMessage");
     getScreen(JSON.parse(event.data));
 }

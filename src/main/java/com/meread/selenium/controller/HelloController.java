@@ -27,8 +27,8 @@ import java.util.*;
 @Slf4j
 public class HelloController {
 
-    static byte[] exampleBig = new byte[0];
-    static byte[] exampleSmall = new byte[0];
+    public static byte[] exampleBig = new byte[0];
+    public static byte[] exampleSmall = new byte[0];
 
     static {
         try {
