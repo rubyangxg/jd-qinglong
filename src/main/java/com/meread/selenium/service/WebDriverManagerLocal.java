@@ -241,6 +241,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
 //        chromeOptions.addArguments("user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
+        chromeOptions.addArguments("--disable-gpu");
         chromeOptions.setCapability("enableVideo", false);
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.addArguments("lang=zh_CN.UTF-8");

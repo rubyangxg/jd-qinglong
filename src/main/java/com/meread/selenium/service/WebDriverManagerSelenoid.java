@@ -76,6 +76,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         chromeOptions.addArguments("--disable-blink-features");
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--lang=zh-cn");
+        chromeOptions.addArguments("--disable-gpu");
         chromeOptions.setCapability("browserName", "chrome");
         chromeOptions.setCapability("browserVersion", "89.0");
         chromeOptions.setCapability("screenResolution", "510x710x24");
@@ -228,14 +229,6 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
 
     @Override
     public void afterPropertiesSet() {
-        CompletableFuture<Void> waitTask = CompletableFuture.runAsync(() -> {
-            try {
-                OpenCVUtil.test();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, threadPoolTaskExecutor);
-
         parseConfig();
         createChromeOptions();
         //获取hub-node状态
@@ -275,12 +268,6 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
             //防止配置资源数过少时(比如1)，因为初始化青龙后，导致无chrome实例,来不及等定时任务创建
             createChrome();
             inflate(chromes, getGridStatus());
-        }
-
-        try {
-            waitTask.get();
-        } catch (Exception e) {
-            System.exit(0);
         }
     }
 
