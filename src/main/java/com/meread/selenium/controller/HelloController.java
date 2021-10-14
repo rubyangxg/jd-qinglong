@@ -48,20 +48,20 @@ public class HelloController {
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
 
-    @RequestMapping("/websocket")
-    public String getWebSocket() {
-        return "ws";
-    }
-
-    @RequestMapping("/mock")
-    public String mock() {
-        return "mock";
-    }
-
-    @RequestMapping("/mock2")
-    public String mock2() {
-        return "mock2";
-    }
+//    @RequestMapping("/websocket")
+//    public String getWebSocket() {
+//        return "ws";
+//    }
+//
+//    @RequestMapping("/mock")
+//    public String mock() {
+//        return "mock";
+//    }
+//
+//    @RequestMapping("/mock2")
+//    public String mock2() {
+//        return "mock2";
+//    }
 
     @GetMapping(value = "/manualCrack/{type}", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
@@ -98,20 +98,19 @@ public class HelloController {
         if (!StringUtils.isEmpty(datas)) {
             String[] split = datas.split("\\|");
             List<Point> pointList = new ArrayList<>();
-            System.out.println(split.length);
             long currTime = 0;
             for (int i = 0; i < split.length; i++) {
                 String[] points = split[i].substring(1, split[i].length() - 1).split(",");
-                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()), Long.parseLong(points[1].trim()));
-                if (currTime == 0 || (point.getTime() - currTime > 100)) {
+                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()), Long.parseLong(points[2].trim()));
+                if (currTime == 0 || (point.getTime() - currTime > 50) || i == split.length - 1) {
                     pointList.add(point);
                     currTime = point.getTime();
-                }
-                if (i == split.length - 1) {
-                    System.out.println(point.getX());
+                    if (i == split.length - 1) {
+                        System.out.println(point.getX());
+                    }
                 }
             }
-            System.out.println("filter size = "+pointList.size());
+            log.debug("filter size = "+pointList.size());
             return service.manualCrackCaptcha(myChromeClient, pointList);
         }
         return true;

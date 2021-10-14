@@ -1044,7 +1044,6 @@ public class JDService implements CommandLineRunner {
             if (!img_tips_wraper.isDisplayed()) {
                 String cpc_img = webDriver.findElement(By.id("cpc_img")).getAttribute("src");
                 String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
-
                 Matcher matcher = pattern.matcher(cpc_img);
                 String bigImageBase64 = null;
                 String smallImageBase64 = null;
