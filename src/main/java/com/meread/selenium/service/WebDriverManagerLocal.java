@@ -89,7 +89,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     private void quit(MyChrome chrome) {
         ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
         int port = chromeDriverService.getUrl().getPort();
-        log.info("kill port = " + port);
+        log.info("kill -9 $(lsof -n -i :" + port + " | awk '/LISTEN/{print $2}')");
         String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + port + " | awk '/LISTEN/{print $2}')"};
         try {
             chrome.getWebDriver().quit();
