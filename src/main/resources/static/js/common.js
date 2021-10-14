@@ -447,8 +447,7 @@ function getScreen(data) {
         //         cracking = false;
         //     }
         // });
-    } else {
-        cracking = false;
+    } else if (!pageStatus !== 'REQUIRE_VERIFY') {
         $("#manualCrack").hide();
     }
     if (!canSendAuth) {
