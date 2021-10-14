@@ -242,6 +242,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
+        chromeOptions.setCapability("screenResolution", "510x710x24");
         chromeOptions.setCapability("enableVideo", false);
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.addArguments("lang=zh_CN.UTF-8");
