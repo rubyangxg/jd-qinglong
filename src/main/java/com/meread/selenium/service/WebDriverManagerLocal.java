@@ -205,6 +205,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
+                        clients.remove(userTrackId);
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);

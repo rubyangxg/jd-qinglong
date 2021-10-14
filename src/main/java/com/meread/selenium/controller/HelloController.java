@@ -224,7 +224,7 @@ public class HelloController {
 
         if ("1".equals(reset)) {
             String chromeSessionId = cacheMyChromeClient.getChromeSessionId();
-            factory.releaseWebDriver(chromeSessionId, false);
+            factory.releaseWebDriver(chromeSessionId, true);
             return "redirect:/";
         }
         JDCookie ck;
