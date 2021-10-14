@@ -13,11 +13,8 @@ import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -35,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
-@Profile("default")
+@Profile({"default", "local"})
 public class WebDriverManagerLocal extends BaseWebDriverManager {
     public WebDriverManagerLocal(@Value("${chrome.driver.path}") String chromeDriverPath,
                                  @Autowired RestTemplate restTemplate,
@@ -171,7 +168,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     }
 
     @Override
-    public void releaseWebDriver(String removeChromeSessionId,boolean quit) {
+    public void releaseWebDriver(String removeChromeSessionId, boolean quit) {
         Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
         while (iterator.hasNext()) {
             MyChrome myChrome = iterator.next().getValue();

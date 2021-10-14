@@ -11,6 +11,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Rect;
@@ -394,11 +395,13 @@ public class JDService implements CommandLineRunner {
             element = webDriver.findElement(By.xpath("//input[@class='acc-input msgCode']"));
         }
         if (element != null) {
-            element.sendKeys(Keys.CONTROL + "a");
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            boolean isOsMac = SystemUtils.IS_OS_MAC;
+            if (isOsMac) {
+                for (int i = 0; i < 20; i++) {
+                    element.sendKeys(Keys.BACK_SPACE);
+                }
+            } else {
+                element.sendKeys(Keys.CONTROL + "a");
             }
             element.sendKeys(currValue);
         }
