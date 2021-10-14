@@ -73,19 +73,12 @@ public class HelloController {
             } else if ("big".equals(type)) {
                 return exampleBig;
             }
-            return null;
         }
         JDScreenBean screen = service.getScreen(myChromeClient);
         if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
             return service.getCaptchaImg(myChromeClient, type);
         }
-        if ("small".equals(type)) {
-            return exampleSmall;
-        } else if ("big".equals(type)) {
-            return exampleBig;
-        } else {
-            return null;
-        }
+        return null;
     }
 
     @RequestMapping("/verifyCaptcha")
@@ -105,12 +98,13 @@ public class HelloController {
                 if (currTime == 0 || (point.getTime() - currTime > 50) || i == split.length - 1) {
                     pointList.add(point);
                     currTime = point.getTime();
-                    if (i == split.length - 1) {
-                        System.out.println(point.getX());
-                    }
                 }
             }
             log.debug("filter size = "+pointList.size());
+            if ("1".equals(System.getenv("mockCaptcha"))) {
+                service.manualCrackCaptchaMock(myChromeClient,pointList);
+                return true;
+            }
             return service.manualCrackCaptcha(myChromeClient, pointList);
         }
         return true;
@@ -196,6 +190,7 @@ public class HelloController {
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", service.isInitSuccess());
+        model.addAttribute("mockCaptcha", "1".equals(System.getenv("mockCaptcha")));
         model.addAttribute("indexNotice", factory.getProperties().getProperty("INDEX.NOTICE"));
         model.addAttribute("indexTitle", factory.getProperties().getProperty("INDEX.TITLE"));
 

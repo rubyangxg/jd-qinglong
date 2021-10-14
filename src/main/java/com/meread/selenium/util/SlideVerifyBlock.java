@@ -234,13 +234,14 @@ public class SlideVerifyBlock {
         actions.clickAndHold(slider);
         try {
             int maxX = pointList.get(pointList.size() - 1).getX();
-            log.debug("gap = " + gap);
-            log.debug("maxX = " + maxX);
+            log.info("gap = " + gap);
+            log.info("maxX = " + maxX);
             Rectangle cpc_img = webDriver.findElement(By.id("cpc_img")).getRect();
             float gapNew = Math.round(cpc_img.width / 275.0 * gap);
-            log.debug("gap new = " + gap);
+            log.info("gap cpc_img.width / 275.0 = " + cpc_img.width / 275.0);
+            log.info("gap new = " + gap);
             float beishu = gapNew / gap;
-            log.debug("beishu = " + beishu);
+            log.info("beishu = " + beishu);
             for (Point point : pointList) {
                 point.setX((int) (point.getX() * beishu));
                 point.setY((int) (point.getY() * beishu));

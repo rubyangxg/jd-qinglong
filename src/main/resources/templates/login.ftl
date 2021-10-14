@@ -165,6 +165,7 @@
     let base = "${base}";
     let debug = "${debug?c}";
     let jdLoginType = "${jdLoginType}";
+    let mockCaptcha = "${mockCaptcha?c}";
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="${base}/js/common.js"></script>

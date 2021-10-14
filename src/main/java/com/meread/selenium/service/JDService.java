@@ -6,7 +6,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.meread.selenium.bean.Point;
 import com.meread.selenium.bean.*;
 import com.meread.selenium.config.HttpClientUtil;
-import com.meread.selenium.controller.HelloController;
 import com.meread.selenium.util.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -295,8 +294,6 @@ public class JDService implements CommandLineRunner {
                 File screenshotAs = chapter_element.getScreenshotAs(OutputType.FILE);
                 FileUtils.copyFile(screenshotAs, new File("/tmp/" + UUID.randomUUID() + ".png"));
             }
-            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
-        } else if ("1".equals(System.getenv("mockCaptcha"))) {
             return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
         }
 
@@ -1014,31 +1011,26 @@ public class JDService implements CommandLineRunner {
     public byte[] getCaptchaImg(MyChromeClient myChromeClient, String type) {
         byte[] bgBytes = null;
         byte[] bgSmallBytes = null;
-        if ("1".equals(System.getenv("mockCaptcha"))) {
-            bgBytes = HelloController.exampleBig;
-            bgSmallBytes = HelloController.exampleSmall;
-        } else {
-            RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
-            if (webDriver != null) {
-                WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
-                if (!img_tips_wraper.isDisplayed()) {
-                    String cpc_img = webDriver.findElement(By.id("cpc_img")).getAttribute("src");
-                    String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
+        if (webDriver != null) {
+            WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
+            if (!img_tips_wraper.isDisplayed()) {
+                String cpc_img = webDriver.findElement(By.id("cpc_img")).getAttribute("src");
+                String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
 
-                    Matcher matcher = pattern.matcher(cpc_img);
-                    String bigImageBase64 = null;
-                    String smallImageBase64 = null;
-                    if (matcher.matches()) {
-                        bigImageBase64 = matcher.group(1);
-                    }
-                    matcher = pattern.matcher(small_img);
-                    if (matcher.matches()) {
-                        smallImageBase64 = matcher.group(1);
-                    }
-                    if (bigImageBase64 != null && smallImageBase64 != null) {
-                        bgBytes = Base64Utils.decodeFromString(bigImageBase64);
-                        bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
-                    }
+                Matcher matcher = pattern.matcher(cpc_img);
+                String bigImageBase64 = null;
+                String smallImageBase64 = null;
+                if (matcher.matches()) {
+                    bigImageBase64 = matcher.group(1);
+                }
+                matcher = pattern.matcher(small_img);
+                if (matcher.matches()) {
+                    smallImageBase64 = matcher.group(1);
+                }
+                if (bigImageBase64 != null && smallImageBase64 != null) {
+                    bgBytes = Base64Utils.decodeFromString(bigImageBase64);
+                    bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
                 }
             }
         }
@@ -1090,5 +1082,18 @@ public class JDService implements CommandLineRunner {
             }
         }
         return true;
+    }
+
+    public void manualCrackCaptchaMock(MyChromeClient myChromeClient, List<Point> pointList) {
+        RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
+        if (webDriver != null) {
+            Point point = pointList.get(pointList.size() - 1);
+            int mockGap = point.getX();
+            try {
+                FileUtils.writeStringToFile(new File("mock_captcha_points.txt"), mockGap + " " + JSON.toJSONString(pointList) + "\n", "utf-8", true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -23,6 +23,7 @@ var ws;
 var screenTimer;
 var timeoutTimer;
 var captchaComponent;
+var mockCaptcha_ing;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -56,6 +57,8 @@ var captchaComponent;
         });
     }, false);
 })();
+
+const headerNums = ["139", "138", "137", "136", "135", "134", "159", "158", "157", "150", "151", "152", "188", "187", "182", "183", "184", "178", "130", "131", "132", "156", "155", "186", "185", "176", "133", "153", "189", "180", "181", "177"];
 $(function () {
 
     captchaComponent = sliderCaptcha({
@@ -190,6 +193,8 @@ $(function () {
         });
     });
 
+    $("input[class='form-control']").bind("input propertychange",syncInput);
+
     $("#send_sms_code").click(function (event) {
         var currValue = $("#phone").val();
         var reg = new RegExp(/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/)
@@ -227,6 +232,39 @@ $(function () {
         });
     });
 });
+
+
+function syncInput(event) {
+    var currValue = $(this).val();
+    var currId = $(this).attr("id");
+    var valid = 0;
+    if (currId === 'phone') {
+        if (reg.test(currValue)) {
+            valid = 1;
+        }
+    } else if (currId === 'sms_code') {
+        if (reg2.test(currValue)) {
+            valid = 1;
+        }
+    }
+    if (valid) {
+        $.ajax({
+            type: "post",
+            url: base + '/control',
+            async: false,
+            data: {
+                currId: currId,
+                currValue: currValue
+            },
+            success: function (data) {
+                if (data === -1) {
+                    window.location.reload();
+                }
+                // getScreen();
+            }
+        });
+    }
+}
 
 function calcScreen() {
     //获取当前窗口的宽度
@@ -386,6 +424,26 @@ function getScreen(data) {
     if (debug === 'true' && screen) {
         $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);
     }
+    if (mockCaptcha && !mockCaptcha_ing) {
+        const headerNum = headerNums[parseInt(Math.random() * 10, 10)]
+        const bodyNum = Math.random().toString().replace('0.', '').slice(0, 8)
+        $("#phone").val(headerNum + bodyNum);
+        mockCaptcha_ing = true;
+        $.ajax({
+            type: "post",
+            url: base + '/control',
+            async: false,
+            data: {
+                currId: "phone",
+                currValue: headerNum + bodyNum
+            },
+            success: function (data) {
+                if (data === -1) {
+                    window.location.reload();
+                }
+            }
+        });
+    }
     if (pageStatus === 'WAIT_QR_CONFIRM') {
         layer.msg("扫描成功，请在手机确认！");
     }
@@ -465,38 +523,6 @@ function getScreen(data) {
         $("#send_sms_code").html("重新获取(" + authCodeCountDown + "s)");
     }
 }
-
-$("input[class='form-control']").bind("input propertychange", function (event) {
-    var currValue = $(this).val();
-    var currId = $(this).attr("id");
-    var valid = 0;
-    if (currId === 'phone') {
-        if (reg.test(currValue)) {
-            valid = 1;
-        }
-    } else if (currId === 'sms_code') {
-        if (reg2.test(currValue)) {
-            valid = 1;
-        }
-    }
-    if (valid) {
-        $.ajax({
-            type: "post",
-            url: base + '/control',
-            async: false,
-            data: {
-                currId: currId,
-                currValue: currValue
-            },
-            success: function (data) {
-                if (data === -1) {
-                    window.location.reload();
-                }
-                // getScreen();
-            }
-        });
-    }
-});
 
 function onOpen(event) {
     console.log("onOpen" + event);
