@@ -59,4 +59,4 @@
 ## 支持
 如果觉得我的项目对你小有帮助
 那么下面的微信赞赏码可以扫一扫啦：
-![微信赞赏码](donate/Wechat.png)
+<img src="https://github.com/rubyangxg/jd-qinglong/raw/master/donate/Wechat.png" width="400" height="400" alt="微信小程序"/><br/>
