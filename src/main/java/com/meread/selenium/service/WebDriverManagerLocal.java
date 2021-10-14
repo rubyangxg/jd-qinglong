@@ -69,7 +69,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         if (shouldCreate > 0) {
             ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
             ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
             //计算chrome实例的最大存活时间
             chromes.put(webDriver.getSessionId().toString(), myChrome);
@@ -119,7 +119,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                 try {
                     ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
                     ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
+                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
                     MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } finally {
@@ -299,7 +299,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         RemoteWebDriver webDriver = null;
         try {
             webDriver = new ChromeDriver(chromeOptions);
-            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(10, TimeUnit.SECONDS).setScriptTimeout(10, TimeUnit.SECONDS);
+            webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             return executor.doBusiness(webDriver);
         } catch (Exception e) {
             e.printStackTrace();
