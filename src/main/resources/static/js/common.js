@@ -22,6 +22,7 @@ var serverHost = window.location.host;
 var ws;
 var screenTimer;
 var timeoutTimer;
+var wsTimer;
 var captchaComponent;
 var mockCaptcha_ing;
 var crackCaptchaErrorCount = 0;
@@ -177,6 +178,10 @@ $(function () {
                 clearInterval(timeoutTimer);
             }
         }
+    }, 1000);
+
+    wsTimer = setInterval(function () {
+        ws.send('{"ping": ' + new Date().getTime() + '}');
     }, 1000);
 
     $("#reset").bind("click", function (event) {

@@ -81,6 +81,9 @@ public class WSManager implements DisposableBean {
             doPushScreen();
         }
         runningSchedule = false;
+        log.info("chrome size = " + driverManager.getChromes().size());
+        log.info("client size = " + driverManager.getClients().size());
+        log.info("ws size = " + socketSessionPool.size());
     }
 
     private void doPushScreen() {

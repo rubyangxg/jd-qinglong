@@ -63,7 +63,7 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
     /**
      * chromeSessionId-->MyChrome
      */
-    public final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
+    protected final Map<String, MyChrome> chromes = Collections.synchronizedMap(new HashMap<>());
     /**
      * userTrackId --> MyChromeClient
      */
@@ -354,6 +354,10 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
 
     public Map<String, MyChrome> getChromes() {
         return chromes;
+    }
+
+    public Map<String, MyChromeClient> getClients() {
+        return clients;
     }
 
     @Override

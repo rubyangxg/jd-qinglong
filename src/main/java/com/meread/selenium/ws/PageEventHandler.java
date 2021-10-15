@@ -41,14 +41,15 @@ public class PageEventHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message)
             throws IOException {
-        String id = session.getId();
+        String webSocketSessionId = session.getId();
         String payload = message.getPayload();
         JSONObject jsonObject = JSON.parseObject(payload);
         Boolean push = jsonObject.getBoolean("push");
-        if (!push) {
+        if (push != null && !push) {
             session.getAttributes().put("push", push);
         }
-        session.sendMessage(new TextMessage("Hi " + id + " how may we help you?"));
+        session.sendMessage(new TextMessage("Hi " + webSocketSessionId + " how may we help you?"));
+        Long pingTime = jsonObject.getLong("ping");
     }
 
     // 错误处理（客户端突然关闭等接收到的错误）
