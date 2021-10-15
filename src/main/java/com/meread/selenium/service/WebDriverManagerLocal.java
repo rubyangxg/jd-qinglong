@@ -191,7 +191,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
-                        wsManager.getLastPageStatus().remove(userTrackId);
+                        if (wsManager.getLastPageStatus().size() > 0) {
+                            wsManager.getLastPageStatus().remove(userTrackId);
+                        }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
                             LocalStorage localStorage = webStorage.getLocalStorage();
@@ -207,7 +209,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         log.info("clean chrome binding: " + sessionId);
                     } else {
                         clients.remove(userTrackId);
-                        wsManager.getLastPageStatus().remove(userTrackId);
+                        if (wsManager.getLastPageStatus().size() > 0) {
+                            wsManager.getLastPageStatus().remove(userTrackId);
+                        }
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);
