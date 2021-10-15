@@ -24,7 +24,9 @@ var screenTimer;
 var timeoutTimer;
 var captchaComponent;
 var mockCaptcha_ing;
-var crackCaptchaErrorCount;
+var crackCaptchaErrorCount = 0;
+var captchaImgBig;
+var captchaImgSmall;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
 (function () {
     'use strict';
@@ -87,7 +89,7 @@ $(function () {
                     ret = JSON.stringify(result);
                     cracking = false;
                     $("#manualCrack").hide();
-                    captchaComponent.reset();
+                    captchaComponent.reset(captchaImgBig, captchaImgSmall);
                 }
             });
             return ret;
@@ -95,7 +97,7 @@ $(function () {
         onSuccess: function () {  //成功事件
             var handler = setTimeout(function () {
                 window.clearTimeout(handler);
-                captchaComponent.reset();
+                captchaComponent.reset(captchaImgBig, captchaImgSmall);
             }, 500);
         }
     });
@@ -194,7 +196,7 @@ $(function () {
         });
     });
 
-    $("input[class='form-control']").bind("input propertychange",syncInput);
+    $("input[class='form-control']").bind("input propertychange", syncInput);
 
     $("#send_sms_code").click(function (event) {
         var currValue = $("#phone").val();
@@ -402,6 +404,10 @@ function getScreen(data) {
     canClickLogin = data.canClickLogin;
     canSendAuth = data.canSendAuth;
     sessionTimeOut = data.sessionTimeOut;
+    if (data.captchaImg) {
+        captchaImgBig = data.captchaImg.big;
+        captchaImgSmall = data.captchaImg.small;
+    }
     if (data.statClient) {
         totalChromeCount = data.statClient.totalChromeCount;
         availChromeCount = data.statClient.availChromeCount;
@@ -476,7 +482,6 @@ function getScreen(data) {
                     if (data === -1) {
                         window.location.reload();
                     }
-                    // getScreen();
                 }
             });
         });
@@ -487,32 +492,32 @@ function getScreen(data) {
     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
         cracking = true;
         $("#manualCrack").show();
-        captchaComponent.reset();
+        captchaComponent.reset(captchaImgBig, captchaImgSmall);
         // let loadIndex = '';
         crackCaptchaErrorCount++;
         if (crackCaptchaErrorCount < 5) {
-
+            $.ajax({
+                url: "/crackCaptcha",
+                async: true,
+                loading: false,
+                beforeSend: function () {
+                    cracking = true;
+                    loadIndex = layer.msg('正在进行滑块验证', {
+                        icon: 16,
+                        time: false,
+                        shade: 0.4
+                    });
+                },
+                complete: function (result) {
+                    layer.close(loadIndex);
+                    cracking = false;
+                    if (result && result.crackSuccess) {
+                        $("#manualCrack").hide();
+                        crackCaptchaErrorCount = 0;
+                    }
+                }
+            });
         }
-        // $.ajax({
-        //     url: "/crackCaptcha",
-        //     async: true,
-        //     loading: false,
-        //     beforeSend: function () {
-        //         cracking = true;
-        //         loadIndex = layer.msg('正在进行滑块验证', {
-        //             icon: 16,
-        //             time: false,
-        //             shade: 0.4
-        //         });
-        //     },
-        //     success: function (result) {
-        //         layer.close(loadIndex);
-        //         ret = JSON.stringify(result);
-        //         console.log("返回结果：" + ret);
-        //         cracking = false;
-        //         $("#manualCrack").hide();
-        //     }
-        // });
     } else if (pageStatus !== 'REQUIRE_VERIFY') {
         cracking = false;
         $("#manualCrack").hide();

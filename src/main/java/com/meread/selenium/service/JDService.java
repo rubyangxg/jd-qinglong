@@ -31,6 +31,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -58,6 +59,7 @@ import java.util.regex.Pattern;
 public class JDService implements CommandLineRunner {
 
     public static final Set<String> NODEJS_PUSH_KEYS = new HashSet<>();
+    public static Map<Integer, List<List<Point>>> MOCK_CAPTCHA_POINTS_MAP = new HashMap<>();
     static Pattern pattern = Pattern.compile("data:image.*base64,(.*)");
 
     static {
@@ -296,7 +298,10 @@ public class JDService implements CommandLineRunner {
                 File screenshotAs = chapter_element.getScreenshotAs(OutputType.FILE);
                 FileUtils.copyFile(screenshotAs, new File("/tmp/" + UUID.randomUUID() + ".png"));
             }
-            return new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
+            CaptchaImg captchaImg = getCaptchaImg(myChromeClient);
+            JDScreenBean jdScreenBean = new JDScreenBean(screenBase64, "", JDScreenBean.PageStatus.REQUIRE_VERIFY);
+            jdScreenBean.setCaptchaImg(captchaImg);
+            return jdScreenBean;
         }
 
         if (pageText.contains("验证码错误多次")) {
@@ -311,7 +316,7 @@ public class JDService implements CommandLineRunner {
         if (canSendAuth) {
             status = JDScreenBean.PageStatus.SHOULD_SEND_AUTH;
         }
-        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, status, authCodeCountDown, canClickLogin, canSendAuth, expire, null, System.currentTimeMillis(), "");
+        JDScreenBean bean = new JDScreenBean(screenBase64, "", jdCookies, status, authCodeCountDown, canClickLogin, canSendAuth, expire, null, System.currentTimeMillis(), "", null);
         if (!jdCookies.isEmpty()) {
             bean.setPageStatus(JDScreenBean.PageStatus.SUCCESS_CK);
         }
@@ -925,14 +930,12 @@ public class JDService implements CommandLineRunner {
         try {
             String s = IOUtils.toString(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("mock_captcha_points.txt")), StandardCharsets.UTF_8);
             String[] split = s.split("\n");
-            Map<Integer, List<List<Point>>> mockMap = new HashMap<>();
             for (String line : split) {
                 String[] s1 = line.split(" ");
                 if (s1.length == 2) {
                     int gap = Integer.parseInt(s1[0]);
                     String[] points = s1[1].split("\\|");
                     List<Point> pointList = new ArrayList<>();
-                    System.out.println(points.length);
                     for (String point : points) {
                         String[] split1 = point.split(",");
                         if (split1.length == 3) {
@@ -942,16 +945,15 @@ public class JDService implements CommandLineRunner {
                             pointList.add(new Point(x, y, time));
                         }
                     }
-                    List<List<Point>> old = mockMap.get(gap);
+                    List<List<Point>> old = MOCK_CAPTCHA_POINTS_MAP.get(gap);
                     if (old == null) {
                         old = new ArrayList<>();
                     }
                     old.add(pointList);
-                    mockMap.put(gap, old);
+                    MOCK_CAPTCHA_POINTS_MAP.put(gap, old);
                 }
 
             }
-            System.out.println(mockMap.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -1051,9 +1053,9 @@ public class JDService implements CommandLineRunner {
         return initSuccess;
     }
 
-    public byte[] getCaptchaImg(MyChromeClient myChromeClient, String type) {
-        byte[] bgBytes = null;
-        byte[] bgSmallBytes = null;
+    public CaptchaImg getCaptchaImg(MyChromeClient myChromeClient) {
+        String bigImageBase64 = null;
+        String smallImageBase64 = null;
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
         if (webDriver != null) {
             WebElement img_tips_wraper = webDriver.findElement(By.xpath("//div[@class='img_tips_wraper']"));
@@ -1062,8 +1064,6 @@ public class JDService implements CommandLineRunner {
                 String small_img = webDriver.findElement(By.id("small_img")).getAttribute("src");
 
                 Matcher matcher = pattern.matcher(cpc_img);
-                String bigImageBase64 = null;
-                String smallImageBase64 = null;
                 if (matcher.matches()) {
                     bigImageBase64 = matcher.group(1);
                 }
@@ -1071,18 +1071,9 @@ public class JDService implements CommandLineRunner {
                 if (matcher.matches()) {
                     smallImageBase64 = matcher.group(1);
                 }
-                if (bigImageBase64 != null && smallImageBase64 != null) {
-                    bgBytes = Base64Utils.decodeFromString(bigImageBase64);
-                    bgSmallBytes = Base64Utils.decodeFromString(smallImageBase64);
-                }
             }
         }
-        if ("small".equals(type)) {
-            return bgSmallBytes;
-        } else if ("big".equals(type)) {
-            return bgBytes;
-        }
-        return null;
+        return new CaptchaImg(bigImageBase64, smallImageBase64);
     }
 
     public boolean manualCrackCaptcha(MyChromeClient myChromeClient, List<Point> pointList) {
@@ -1117,6 +1108,14 @@ public class JDService implements CommandLineRunner {
                         Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
                         rect = OpenCVUtil.getOffsetX(mat, matSmall, uuid.toString(), CommonAttributes.debug);
                         slider = webDriver.findElement(By.xpath("//div[@class='sp_msg']/img"));
+                        if (pointList == null || pointList.size() == 0) {
+                            List<List<Point>> mockList = MOCK_CAPTCHA_POINTS_MAP.get(rect.x());
+                            if (CollectionUtils.isEmpty(mockList)) {
+                                return false;
+                            }
+                            int n = new Random().nextInt(mockList.size());
+                            pointList = mockList.get(n);
+                        }
                         SlideVerifyBlock.manualWay(webDriver, slider, rect.x(), pointList);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -1148,7 +1147,17 @@ public class JDService implements CommandLineRunner {
                 FileUtils.writeStringToFile(file, mockGap + " " + JSON.toJSONString(pointList) + "\n", "utf-8", true);
                 WebElement element = webDriver.findElement(By.xpath("//img[@class='jcap_refresh']"));
                 element.click();
-            } catch (IOException e) {
+                boolean displayed = webDriver.findElement(By.xpath("//div[@class='img_loading_refreshTips']")).isDisplayed();
+                int max = 5;
+                while (displayed) {
+                    Thread.sleep(100);
+                    displayed = webDriver.findElement(By.xpath("//div[@class='img_loading_refreshTips']")).isDisplayed();
+                    max--;
+                    if (max <= 0) {
+                        break;
+                    }
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

@@ -59,6 +59,8 @@ public class JDScreenBean {
     private long snapshotTime;
     //需要让前端提示的消息
     private String msg;
+    //验证码
+    private CaptchaImg captchaImg;
 
     public JDScreenBean(String screen,String qr, PageStatus pageStatus) {
         this.screen = screen;

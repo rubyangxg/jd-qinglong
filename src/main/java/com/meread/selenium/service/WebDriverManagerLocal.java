@@ -46,6 +46,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         super(chromeDriverPath, restTemplate, threadPoolTaskExecutor, resourceLoader, headless, envPath, opTimeout, chromeTimeout, maxSessionFromProps);
     }
 
+    @Autowired
+    private WSManager wsManager;
+
     /**
      * 和grid同步chrome状态，清理失效的session，并移除本地缓存
      */
@@ -188,6 +191,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
                         clients.remove(userTrackId);
+                        wsManager.getLastPageStatus().remove(userTrackId);
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
                             LocalStorage localStorage = webStorage.getLocalStorage();
@@ -203,6 +207,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         log.info("clean chrome binding: " + sessionId);
                     } else {
                         clients.remove(userTrackId);
+                        wsManager.getLastPageStatus().remove(userTrackId);
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);
@@ -242,7 +247,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("disable-blink-features=AutomationControlled");
         chromeOptions.addArguments("--disable-gpu");
-        chromeOptions.setCapability("screenResolution", "510x710x24");
+        chromeOptions.setCapability("screenResolution", "1024x768x24");
         chromeOptions.setCapability("enableVideo", false);
         chromeOptions.addArguments("--lang=zh-cn");
         chromeOptions.addArguments("lang=zh_CN.UTF-8");

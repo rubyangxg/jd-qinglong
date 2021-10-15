@@ -10,7 +10,6 @@ import com.meread.selenium.bean.MyChrome;
 import com.meread.selenium.bean.MyChromeClient;
 import com.meread.selenium.bean.SelenoidStatus;
 import com.meread.selenium.util.CommonAttributes;
-import com.meread.selenium.util.OpenCVUtil;
 import com.meread.selenium.util.WebDriverOpCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -65,6 +64,9 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         super(chromeDriverPath, restTemplate, threadPoolTaskExecutor, resourceLoader, headless, envPath, opTimeout, chromeTimeout, maxSessionFromProps);
     }
 
+    @Autowired
+    private WSManager wsManager;
+
     @Override
     public void createChromeOptions() {
         chromeOptions = new ChromeOptions();
@@ -79,7 +81,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.setCapability("browserName", "chrome");
         chromeOptions.setCapability("browserVersion", "89.0");
-        chromeOptions.setCapability("screenResolution", "510x710x24");
+        chromeOptions.setCapability("screenResolution", "1024x768x24");
         chromeOptions.setCapability("enableVideo", false);
         if (chromeTimeout < 60) {
             chromeTimeout = 60;

@@ -36,7 +36,7 @@ public class WSManager implements DisposableBean {
     public final Map<String, Map<String, WebSocketSession>>
             socketSessionPool = new ConcurrentHashMap<>();
 
-    public final Map<String, JDScreenBean> lastPageStatus = new ConcurrentHashMap<>();
+    public Map<String, JDScreenBean> lastPageStatus = new ConcurrentHashMap<>();
 
     public synchronized void addNew(WebSocketSession session) {
         String webSocketSessionId = session.getId();
@@ -119,7 +119,11 @@ public class WSManager implements DisposableBean {
                 if (oldScreen != null) {
                     diff = System.currentTimeMillis() - oldScreen.getSnapshotTime();
                 }
-                if (oldScreen == null || oldScreen.getPageStatus() == null || oldScreen.getPageStatus() != screen.getPageStatus() || diff > 2000) {
+                int threshold = 2000;
+                if (CommonAttributes.debug) {
+                    threshold = 0;
+                }
+                if (oldScreen == null || oldScreen.getPageStatus() == null || oldScreen.getPageStatus() != screen.getPageStatus() || screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY || diff > threshold) {
                     lastPageStatus.put(httpSessionId, screen);
                     for (WebSocketSession socketSession : socketSessionMap.values()) {
                         Object obj = socketSession.getAttributes().get("push");
@@ -147,4 +151,7 @@ public class WSManager implements DisposableBean {
         }
     }
 
+    public Map<String, JDScreenBean> getLastPageStatus() {
+        return lastPageStatus;
+    }
 }

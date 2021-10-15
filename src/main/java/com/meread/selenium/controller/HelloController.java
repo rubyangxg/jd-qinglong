@@ -63,23 +63,27 @@ public class HelloController {
 //        return "mock2";
 //    }
 
-    @GetMapping(value = "/manualCrack/{type}", produces = MediaType.IMAGE_JPEG_VALUE)
-    @ResponseBody
-    public byte[] manualCrackBig(@PathVariable("type") String type, HttpSession session) {
-        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
-        if (myChromeClient == null) {
-            if ("small".equals(type)) {
-                return exampleSmall;
-            } else if ("big".equals(type)) {
-                return exampleBig;
-            }
-        }
-        JDScreenBean screen = service.getScreen(myChromeClient);
-        if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
-            return service.getCaptchaImg(myChromeClient, type);
-        }
-        return null;
-    }
+//    @GetMapping(value = "/manualCrack/{type}", produces = MediaType.IMAGE_JPEG_VALUE)
+//    @ResponseBody
+//    public byte[] manualCrackBig(@PathVariable("type") String type, HttpSession session) {
+//        MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
+//        if (myChromeClient == null) {
+//            if ("small".equals(type)) {
+//                return exampleSmall;
+//            } else if ("big".equals(type)) {
+//                return exampleBig;
+//            }
+//        }
+//        JDScreenBean screen = service.getScreen(myChromeClient);
+//        if (screen.getPageStatus() == JDScreenBean.PageStatus.REQUIRE_VERIFY) {
+//            if ("small".equals(type)) {
+//                return screen.getCaptchaImg().getSmall();
+//            } else if ("big".equals(type)) {
+//                return screen.getCaptchaImg().getBig();
+//            }
+//        }
+//        return null;
+//    }
 
     @RequestMapping("/verifyCaptcha")
     @ResponseBody
