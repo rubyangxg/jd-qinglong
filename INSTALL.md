@@ -45,8 +45,8 @@ services:
             - ./go-cqhttp:/go-cqhttp
         image: rubyangxg/jd-qinglong:1.3
 ```
+然后在docker-compose.yml目录下执行命令
 ```
-执行命令
 docker-compose up -d
 ```
 5. 若要配置qq交互，往下看。
