@@ -60,7 +60,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             MyChrome chrome = iterator.next().getValue();
             if (chrome.getUserTrackId() == null) {
                 if (chrome.isExpire()) {
-                    quit(chrome);
+                    releaseWebDriver(chrome.getChromeSessionId(),true);
                     iterator.remove();
                 }
             }
@@ -75,7 +75,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                 it.remove();
             }
         }
-
 
         int shouldCreate = CAPACITY - chromes.size();
         if (shouldCreate > 0) {
