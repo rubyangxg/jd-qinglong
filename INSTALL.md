@@ -35,7 +35,7 @@ version: '3.3'
 services:
     jd-qinglong:
         ports:
-            - 5772:8080
+            - 5701:8080
         container_name: jd-login
         privileged: true
         environment:
