@@ -190,6 +190,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         if (wsManager.getLastPageStatus().size() > 0) {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }
+                        if (wsManager.socketSessionPool.size() > 0) {
+                            wsManager.socketSessionPool.remove(userTrackId);
+                        }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
                             LocalStorage localStorage = webStorage.getLocalStorage();
@@ -209,6 +212,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }
                         iterator.remove();
+                        if (wsManager.socketSessionPool.size() > 0) {
+                            wsManager.socketSessionPool.remove(userTrackId);
+                        }
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);
                     }
