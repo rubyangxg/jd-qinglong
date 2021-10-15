@@ -39,7 +39,7 @@ public class OpenCVUtil {
         }
     }
 
-    public static void main(String[] args) {
+    public static void test2() {
         for (char a = 'a'; a <= 'i'; a++) {
             String bigF = OpenCVUtil.class.getClassLoader().getResource("static/img/" + a + ".jpeg").getFile();
             String smallF = OpenCVUtil.class.getClassLoader().getResource("static/img/" + a + "_small.png").getFile();
