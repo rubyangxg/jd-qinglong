@@ -435,9 +435,11 @@ function getScreen(data) {
         $("#jd-screen").attr('src', 'data:image/png;base64,' + screen);
     }
     if (mockCaptcha && !mockCaptcha_ing) {
-        const headerNum = headerNums[parseInt(Math.random() * 10, 10)]
-        const bodyNum = Math.random().toString().replace('0.', '').slice(0, 8)
-        $("#phone").val(headerNum + bodyNum);
+        if (debug) {
+            const headerNum = headerNums[parseInt(Math.random() * 10, 10)];
+            const bodyNum = Math.random().toString().replace('0.', '').slice(0, 8)
+            $("#phone").val(headerNum + bodyNum);
+        }
         mockCaptcha_ing = true;
         $.ajax({
             type: "post",
