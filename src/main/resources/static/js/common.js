@@ -66,36 +66,38 @@ var captchaImgSmall;
 const headerNums = ["139", "138", "137", "136", "135", "134", "159", "158", "157", "150", "151", "152", "188", "187", "182", "183", "184", "178", "130", "131", "132", "156", "155", "186", "185", "176", "133", "153", "189", "180", "181", "177"];
 $(function () {
 
-    captchaComponent = sliderCaptcha({
-        id: 'captcha',
-        width: 275,
-        height: 170,
-        sliderL: 51,
-        barText: '向右滑动填充拼图',
-        remoteUrl: base + "/verifyCaptcha",
-        verify: function (arr, url) {
-            var ret = false;
-            $.ajax({
-                url: url,
-                data: {
-                    "datas": arr.join('|'),
-                },
-                type: "post",
-                success: function (result) {
-                    ret = JSON.stringify(result);
-                    cracking = false;
-                    $("#manualCrack").hide();
-                }
-            });
-            return ret;
-        },
-        onSuccess: function () {  //成功事件
-            var handler = setTimeout(function () {
-                window.clearTimeout(handler);
-                captchaComponent.reset(captchaImgBig, captchaImgSmall);
-            }, 500);
-        }
-    });
+    if (jdLoginType === 'phone') {
+        captchaComponent = sliderCaptcha({
+            id: 'captcha',
+            width: 275,
+            height: 170,
+            sliderL: 51,
+            barText: '向右滑动填充拼图',
+            remoteUrl: base + "/verifyCaptcha",
+            verify: function (arr, url) {
+                var ret = false;
+                $.ajax({
+                    url: url,
+                    data: {
+                        "datas": arr.join('|'),
+                    },
+                    type: "post",
+                    success: function (result) {
+                        ret = JSON.stringify(result);
+                        cracking = false;
+                        $("#manualCrack").hide();
+                    }
+                });
+                return ret;
+            },
+            onSuccess: function () {  //成功事件
+                var handler = setTimeout(function () {
+                    window.clearTimeout(handler);
+                    captchaComponent.reset(captchaImgBig, captchaImgSmall);
+                }, 500);
+            }
+        });
+    }
 
     if (error === 0) {
         let wsProtocolSuffix = location.protocol.match('^https') ? "s" : ""
@@ -408,7 +410,9 @@ function getScreen(data) {
         var captchaImgSmallNew = data.captchaImg.small;
         //验证码更新了
         if (captchaImgBigNew !== captchaImgBig && captchaImgSmallNew !== captchaImgSmall) {
-            captchaComponent.reset(captchaImgBigNew, captchaImgSmallNew);
+            if (captchaComponent) {
+                captchaComponent.reset(captchaImgBigNew, captchaImgSmallNew);
+            }
         }
         captchaImgBig = captchaImgBigNew;
         captchaImgSmall = captchaImgSmallNew;
@@ -501,7 +505,9 @@ function getScreen(data) {
         cracking = true;
         if (captchaImgBig && captchaImgSmall) {
             $("#manualCrack").show();
-            captchaComponent.reset(captchaImgBig, captchaImgSmall);
+            if (captchaComponent) {
+                captchaComponent.reset(captchaImgBigNew, captchaImgSmallNew);
+            }
         }
         if (crackCaptchaErrorCount < maxCrackCount) {
             crackCaptchaErrorCount++;

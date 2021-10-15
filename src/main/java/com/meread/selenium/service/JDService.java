@@ -927,7 +927,7 @@ public class JDService implements CommandLineRunner {
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
-        log.info("启动成功! " + mockCaptcha);
+        log.info("启动成功! ");
         initSuccess = true;
         try {
             String s = IOUtils.toString(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("mock_captcha_points.txt")), StandardCharsets.UTF_8);
