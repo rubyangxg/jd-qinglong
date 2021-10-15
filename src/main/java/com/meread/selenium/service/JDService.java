@@ -49,6 +49,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.meread.selenium.util.CommonAttributes.mockCaptcha;
+
 /**
  * Created by yangxg on 2021/9/1
  *
@@ -925,7 +927,7 @@ public class JDService implements CommandLineRunner {
         if (qlConfigs.isEmpty()) {
             log.warn("请配置至少一个青龙面板地址! 否则获取到的ck无法上传");
         }
-        log.info("启动成功!");
+        log.info("启动成功! " + mockCaptcha);
         initSuccess = true;
         try {
             String s = IOUtils.toString(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("mock_captcha_points.txt")), StandardCharsets.UTF_8);
