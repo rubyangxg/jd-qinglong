@@ -403,11 +403,13 @@ function getScreen(data) {
         var captchaImgSmallNew = data.captchaImg.small;
         //验证码更新了
         if (captchaImgBigNew !== captchaImgBig && captchaImgSmallNew !== captchaImgSmall) {
-            console.log("验证码更新了");
-            captchaComponent.reset(captchaImgBigNew,captchaImgSmallNew);
+            captchaComponent.reset(captchaImgBigNew, captchaImgSmallNew);
         }
         captchaImgBig = captchaImgBigNew;
         captchaImgSmall = captchaImgSmallNew;
+    } else {
+        captchaImgBig = null;
+        captchaImgSmall = null;
     }
     if (data.statClient) {
         totalChromeCount = data.statClient.totalChromeCount;
@@ -492,8 +494,10 @@ function getScreen(data) {
     }
     if (pageStatus === 'REQUIRE_VERIFY' && !sendingAuthCode && !cracking) {
         cracking = true;
-        $("#manualCrack").show();
-        captchaComponent.reset(captchaImgBig, captchaImgSmall);
+        if (captchaImgBig && captchaImgSmall) {
+            $("#manualCrack").show();
+            captchaComponent.reset(captchaImgBig, captchaImgSmall);
+        }
         if (crackCaptchaErrorCount < maxCrackCount) {
             crackCaptchaErrorCount++;
             $.ajax({
