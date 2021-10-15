@@ -97,7 +97,9 @@ public class HelloController {
             long currTime = 0;
             for (int i = 0; i < split.length; i++) {
                 String[] points = split[i].substring(1, split[i].length() - 1).split(",");
-                Point point = new Point(Integer.parseInt(points[0].trim()), Integer.parseInt(points[1].trim()), Long.parseLong(points[2].trim()));
+                int x = (int)Float.parseFloat(points[0].trim());
+                int y = (int) Float.parseFloat(points[1].trim());
+                Point point = new Point(x, y, Long.parseLong(points[2].trim()));
                 if (currTime == 0 || (point.getTime() - currTime > 50) || i == split.length - 1) {
                     pointList.add(point);
                     currTime = point.getTime();
