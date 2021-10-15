@@ -204,6 +204,17 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
             }
         }
 
+        String chromeTime = properties.getProperty("CHROME_TIME");
+        if (!StringUtils.isEmpty(chromeTime)) {
+            try {
+                int i = Integer.parseInt(chromeTime);
+                if (i > 0) {
+                    chromeTimeout = i;
+                }
+            } catch (NumberFormatException e) {
+            }
+        }
+
         log.info("最大资源数配置: maxSessionFromEnvFile = " + maxSessionFromEnvFile + " maxSessionFromProps = " + maxSessionFromProps);
 
         CAPACITY = parseCapacity();
