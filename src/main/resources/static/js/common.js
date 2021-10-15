@@ -493,9 +493,8 @@ function getScreen(data) {
         cracking = true;
         $("#manualCrack").show();
         captchaComponent.reset(captchaImgBig, captchaImgSmall);
-        // let loadIndex = '';
-        crackCaptchaErrorCount++;
         if (crackCaptchaErrorCount < 5) {
+            crackCaptchaErrorCount++;
             $.ajax({
                 url: "/crackCaptcha",
                 async: true,
@@ -517,6 +516,8 @@ function getScreen(data) {
                     }
                 }
             });
+        }else {
+            layer.msg("请手动完成滑块验证");
         }
     } else if (pageStatus !== 'REQUIRE_VERIFY') {
         cracking = false;

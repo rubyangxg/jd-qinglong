@@ -12,7 +12,6 @@ import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -104,9 +103,9 @@ public class HelloController {
                     currTime = point.getTime();
                 }
             }
-            log.info("filter size = "+pointList.size());
-            if ("1".equals(System.getenv("mockCaptcha"))) {
-                service.manualCrackCaptchaMock(myChromeClient,pointList);
+            log.info("filter size = " + pointList.size());
+            if (CommonAttributes.mockCaptcha) {
+                service.manualCrackCaptchaMock(myChromeClient, pointList);
                 return true;
             }
             return service.manualCrackCaptcha(myChromeClient, pointList);
@@ -139,15 +138,16 @@ public class HelloController {
     @ResponseBody
     public JDOpResultBean crackCaptcha(HttpSession session) {
         boolean crackSuccess = false;
-        //请求一个sessionId
         MyChromeClient myChromeClient = factory.getCacheMyChromeClient(session.getId());
         if (myChromeClient == null) {
-            return new JDOpResultBean(service.getScreen(myChromeClient), false);
+            return new JDOpResultBean(null, false);
         }
-        service.manualCrackCaptcha(myChromeClient,null);
-        JDScreenBean screen = service.getScreen(myChromeClient);
-        if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
-            crackSuccess = true;
+        if (!CommonAttributes.mockCaptcha) {
+            service.manualCrackCaptcha(myChromeClient, null);
+            JDScreenBean screen = service.getScreen(myChromeClient);
+            if (screen.getPageStatus() != JDScreenBean.PageStatus.REQUIRE_VERIFY) {
+                crackSuccess = true;
+            }
         }
         return new JDOpResultBean(service.getScreen(myChromeClient), crackSuccess);
     }
@@ -162,7 +162,7 @@ public class HelloController {
         model.addAttribute("qlUploadDirect", qlUploadDirect);
         model.addAttribute("qlConfigs", factory.getQlConfigs());
         model.addAttribute("initSuccess", service.isInitSuccess());
-        model.addAttribute("mockCaptcha", "1".equals(System.getenv("mockCaptcha")));
+        model.addAttribute("mockCaptcha", CommonAttributes.mockCaptcha);
         model.addAttribute("indexNotice", factory.getProperties().getProperty("INDEX.NOTICE"));
         model.addAttribute("indexTitle", factory.getProperties().getProperty("INDEX.TITLE"));
 
