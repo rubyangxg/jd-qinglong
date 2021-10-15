@@ -1,10 +1,7 @@
 package com.meread.selenium.service;
 
 import com.alibaba.fastjson.JSON;
-import com.meread.selenium.bean.JDLoginType;
-import com.meread.selenium.bean.JDScreenBean;
-import com.meread.selenium.bean.LoginType;
-import com.meread.selenium.bean.MyChromeClient;
+import com.meread.selenium.bean.*;
 import com.meread.selenium.util.CommonAttributes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -15,9 +12,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -81,9 +76,17 @@ public class WSManager implements DisposableBean {
             doPushScreen();
         }
         runningSchedule = false;
-        log.info("chrome size = " + driverManager.getChromes().size());
-        log.info("client size = " + driverManager.getClients().size());
-        log.info("ws size = " + socketSessionPool.size());
+        Set<String> onlineUserTrackIds = socketSessionPool.keySet();
+        for (MyChrome chrome : driverManager.getChromes().values()) {
+            if (!onlineUserTrackIds.contains(chrome.getUserTrackId())) {
+                driverManager.releaseWebDriver(chrome.getChromeSessionId(),false);
+            }
+        }
+        for (MyChromeClient client : driverManager.getClients().values()) {
+            if (!onlineUserTrackIds.contains(client.getUserTrackId())) {
+                driverManager.releaseWebDriver(client.getChromeSessionId(),false);
+            }
+        }
     }
 
     private void doPushScreen() {
