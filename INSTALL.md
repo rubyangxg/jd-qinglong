@@ -44,7 +44,7 @@ services:
             - ./env.properties:/env.properties:ro
             - ./go-cqhttp:/go-cqhttp
         image: rubyangxg/jd-qinglong:1.3
-``
+```
 ```
 执行命令
 docker-compose up -d
