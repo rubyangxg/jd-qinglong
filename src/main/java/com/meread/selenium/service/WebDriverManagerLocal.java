@@ -181,7 +181,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     String userTrackId = myChrome.getUserTrackId();
                     if (userTrackId != null) {
                         MyChromeClient client = clients.get(userTrackId);
-                        clientExpireTime = client.getExpireTime();
+                        if (client != null) {
+                            clientExpireTime = client.getExpireTime();
+                        }
                     }
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
