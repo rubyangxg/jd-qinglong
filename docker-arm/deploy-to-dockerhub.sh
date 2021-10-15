@@ -12,6 +12,8 @@ HOME=$(
   pwd
 )
 
+git pull
+
 op=$1
 if [[ $op == 'push' ]]; then
   echo "构建并推送镜像"
