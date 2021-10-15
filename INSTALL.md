@@ -29,6 +29,26 @@ sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -v "$(pwd)"/go-cqhttp:/go-cqhttp \
 rubyangxg/jd-qinglong:1.3
 ``` 
+或者编写docker-compose.yml
+```
+version: '3.3'
+services:
+    jd-qinglong:
+        ports:
+            - 5772:8080
+        container_name: jd-login
+        privileged: true
+        environment:
+            - SE_NODE_MAX_SESSIONS=8
+        volumes:
+            - ./env.properties:/env.properties:ro
+            - ./go-cqhttp:/go-cqhttp
+        image: rubyangxg/jd-qinglong:1.3
+``
+```
+执行命令
+docker-compose up -d
+```
 5. 若要配置qq交互，往下看。
 6. 启动后正常查看文件夹，应该是有一个名字叫go-cqhttp的目录。
 ```
