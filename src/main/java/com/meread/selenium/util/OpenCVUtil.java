@@ -1,6 +1,7 @@
 package com.meread.selenium.util;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.opencv_core.*;
@@ -19,24 +20,19 @@ import static org.bytedeco.opencv.global.opencv_imgproc.*;
 public class OpenCVUtil {
 
     public static void test() throws IOException {
+        String property = System.getProperty("os.arch");
+        System.out.println("初始化opencv start..." + property);
         for (char a = 'a'; a <= 'i'; a++) {
-            System.out.println("初始化opencv start...");
             long tt1 = System.currentTimeMillis();
-            System.out.println("0...");
             BufferedImage image = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + ".jpeg")));
-            System.out.println("1...");
             BufferedImage imageSmall = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + "_small.png")));
-            System.out.println("2...");
             Mat mat = Java2DFrameUtils.toMat(image);
-            System.out.println("3...");
             long tt2 = System.currentTimeMillis();
-            System.out.println("4...");
             Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
-            System.out.println("5...");
             Rect rect = getOffsetX(mat, matSmall, String.valueOf(a), false);
             System.out.println("init opencv calc " + a + " gap " + rect.x() + " end...耗时：" + (tt2 - tt1));
-            System.out.println("初始化opencv end...");
         }
+        System.out.println("初始化opencv end...");
     }
 
     public static void test2() {

@@ -12,11 +12,13 @@ COPY notify /opt/bin/notify
 #COPY jd_bean_change /opt/bin/jd_bean_change
 COPY start-webapp.sh /opt/bin/start-webapp.sh
 COPY start-go-cqhttp.sh /opt/bin/start-go-cqhttp.sh
+COPY gatgap.py /opt/bin/gatgap.py
 
 RUN apt-get update && apt-get install -y lsof libopencv-dev python3-opencv tzdata ca-certificates tzdata mailcap supervisor curl chromium chromium-driver && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     chmod 755 /opt/bin/start-webapp.sh ; \
     chmod 755 /opt/bin/start-go-cqhttp.sh ; \
-    chmod 755 /opt/bin/notify
+    chmod 755 /opt/bin/notify ; \
+    chmod 755 /opt/bin/gatgap.py
 
 EXPOSE 8080
 COPY supervisord.conf /etc/supervisord.conf
