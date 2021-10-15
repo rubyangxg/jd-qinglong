@@ -65,6 +65,18 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                 }
             }
         }
+
+        //clean clients
+        Iterator<Map.Entry<String, MyChromeClient>> it = clients.entrySet().iterator();
+        while (it.hasNext()) {
+            MyChromeClient client = it.next().getValue();
+            if (client.isExpire()) {
+                wsManager.socketSessionPool.remove(client.getUserTrackId());
+                it.remove();
+            }
+        }
+
+
         int shouldCreate = CAPACITY - chromes.size();
         if (shouldCreate > 0) {
             ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
@@ -76,14 +88,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
         }
 
-        //clean clients
-        Iterator<Map.Entry<String, MyChromeClient>> it = clients.entrySet().iterator();
-        while (it.hasNext()) {
-            MyChromeClient client = it.next().getValue();
-            if (client.isExpire()) {
-                it.remove();
-            }
-        }
+
     }
 
     private void quit(MyChrome chrome) {
