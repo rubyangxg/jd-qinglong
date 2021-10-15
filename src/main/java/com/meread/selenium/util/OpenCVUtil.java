@@ -20,6 +20,7 @@ public class OpenCVUtil {
 
     public static void test() throws IOException {
         for (char a = 'a'; a <= 'i'; a++) {
+            System.out.println("初始化opencv start...");
             long tt1 = System.currentTimeMillis();
             BufferedImage image = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + ".jpeg")));
             BufferedImage imageSmall = ImageIO.read(Objects.requireNonNull(OpenCVUtil.class.getClassLoader().getResourceAsStream("static/img/" + a + "_small.png")));
@@ -28,6 +29,7 @@ public class OpenCVUtil {
             Mat matSmall = Java2DFrameUtils.toMat(imageSmall);
             Rect rect = getOffsetX(mat, matSmall, String.valueOf(a), false);
             System.out.println("init opencv calc " + a + " gap " + rect.x() + " end...耗时：" + (tt2 - tt1));
+            System.out.println("初始化opencv end...");
         }
     }
 
