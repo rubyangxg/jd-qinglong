@@ -48,7 +48,7 @@ public class PageEventHandler extends TextWebSocketHandler {
         if (push != null && !push) {
             session.getAttributes().put("push", push);
         }
-        session.sendMessage(new TextMessage("Hi " + webSocketSessionId + " how may we help you?"));
+//        session.sendMessage(new TextMessage("Hi " + webSocketSessionId + " how may we help you?"));
         Long pingTime = jsonObject.getLong("ping");
     }
 
