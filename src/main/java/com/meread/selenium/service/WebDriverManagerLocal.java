@@ -54,16 +54,14 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
      */
     @Override
     public void heartbeat() {
-        //clean chromes
-        Iterator<Map.Entry<String, MyChrome>> iterator = chromes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            MyChrome chrome = iterator.next().getValue();
-            if (chrome.getUserTrackId() == null) {
-                if (chrome.isExpire()) {
-                    releaseWebDriver(chrome.getChromeSessionId(),true);
-                    iterator.remove();
-                }
+        List<String> removeChromeSessionIds = new ArrayList<>();
+        for (MyChrome myChrome : chromes.values()) {
+            if (myChrome.isExpire()) {
+                removeChromeSessionIds.add(myChrome.getChromeSessionId());
             }
+        }
+        for (String s : removeChromeSessionIds) {
+            releaseWebDriver(s, true);
         }
 
         //clean clients
