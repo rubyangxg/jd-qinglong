@@ -60,8 +60,8 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             MyChrome chrome = iterator.next().getValue();
             if (chrome.getUserTrackId() == null) {
                 if (chrome.isExpire()) {
-                    iterator.remove();
                     quit(chrome);
+                    iterator.remove();
                 }
             }
         }
@@ -97,13 +97,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        if (chrome.getUserTrackId() != null) {
-            MyChromeClient myChromeClient = clients.get(chrome.getUserTrackId());
-            if (myChromeClient != null) {
-                clients.remove(chrome.getUserTrackId());
-            }
-        }
+        clients.remove(chrome.getUserTrackId());
     }
 
     @Override
