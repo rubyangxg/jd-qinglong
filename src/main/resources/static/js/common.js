@@ -25,6 +25,7 @@ var timeoutTimer;
 var captchaComponent;
 var mockCaptcha_ing;
 var crackCaptchaErrorCount = 0;
+const maxCrackCount = 5;
 var captchaImgBig;
 var captchaImgSmall;
 // Example starter JavaScript for disabling form submissions if there are invalid fields
@@ -70,12 +71,6 @@ $(function () {
         height: 170,
         sliderL: 51,
         barText: '向右滑动填充拼图',
-        setSrc: function () {
-            return base + '/manualCrack/big?t=' + new Date().getTime();
-        },
-        smallSrc: function () {
-            return base + '/manualCrack/small?t=' + new Date().getTime();
-        },
         remoteUrl: base + "/verifyCaptcha",
         verify: function (arr, url) {
             var ret = false;
@@ -89,7 +84,6 @@ $(function () {
                     ret = JSON.stringify(result);
                     cracking = false;
                     $("#manualCrack").hide();
-                    captchaComponent.reset(captchaImgBig, captchaImgSmall);
                 }
             });
             return ret;
@@ -405,8 +399,15 @@ function getScreen(data) {
     canSendAuth = data.canSendAuth;
     sessionTimeOut = data.sessionTimeOut;
     if (data.captchaImg) {
-        captchaImgBig = data.captchaImg.big;
-        captchaImgSmall = data.captchaImg.small;
+        var captchaImgBigNew = data.captchaImg.big;
+        var captchaImgSmallNew = data.captchaImg.small;
+        //验证码更新了
+        if (captchaImgBigNew !== captchaImgBig && captchaImgSmallNew !== captchaImgSmall) {
+            console.log("验证码更新了");
+            captchaComponent.reset(captchaImgBigNew,captchaImgSmallNew);
+        }
+        captchaImgBig = captchaImgBigNew;
+        captchaImgSmall = captchaImgSmallNew;
     }
     if (data.statClient) {
         totalChromeCount = data.statClient.totalChromeCount;
@@ -493,7 +494,7 @@ function getScreen(data) {
         cracking = true;
         $("#manualCrack").show();
         captchaComponent.reset(captchaImgBig, captchaImgSmall);
-        if (crackCaptchaErrorCount < 5) {
+        if (crackCaptchaErrorCount < maxCrackCount) {
             crackCaptchaErrorCount++;
             $.ajax({
                 url: "/crackCaptcha",
@@ -501,7 +502,7 @@ function getScreen(data) {
                 loading: false,
                 beforeSend: function () {
                     cracking = true;
-                    loadIndex = layer.msg('正在进行滑块验证', {
+                    loadIndex = layer.msg('正在进行第' + crackCaptchaErrorCount + '次滑块验证(共' + maxCrackCount + '次)', {
                         icon: 16,
                         time: false,
                         shade: 0.4
@@ -516,7 +517,7 @@ function getScreen(data) {
                     }
                 }
             });
-        }else {
+        } else {
             layer.msg("请手动完成滑块验证");
         }
     } else if (pageStatus !== 'REQUIRE_VERIFY') {

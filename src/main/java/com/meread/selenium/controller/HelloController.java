@@ -106,10 +106,10 @@ public class HelloController {
                 }
             }
             log.info("filter size = " + pointList.size());
-            if (CommonAttributes.mockCaptcha) {
-                service.manualCrackCaptchaMock(myChromeClient, pointList);
-                return true;
-            }
+//            if (CommonAttributes.mockCaptcha) {
+//                service.manualCrackCaptchaMock(myChromeClient, pointList);
+//                return true;
+//            }
             return service.manualCrackCaptcha(myChromeClient, pointList);
         }
         return true;
