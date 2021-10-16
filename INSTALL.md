@@ -38,8 +38,8 @@ services:
             - 5701:8080
         container_name: jd-login
         privileged: true
-        environment:
-            - SE_NODE_MAX_SESSIONS=8
+        #environment: (失效，请在env.properties中配置资源数)
+        #    - SE_NODE_MAX_SESSIONS=8
         volumes:
             - ./env.properties:/env.properties:ro
             - ./go-cqhttp:/go-cqhttp
