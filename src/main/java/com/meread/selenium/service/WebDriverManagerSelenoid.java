@@ -359,7 +359,16 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
-                        clients.remove(userTrackId);
+                        if (userTrackId != null) {
+                            clients.remove(userTrackId);
+                            if (wsManager.getLastPageStatus().size() > 0) {
+                                wsManager.getLastPageStatus().remove(userTrackId);
+                            }
+                            iterator.remove();
+                            if (wsManager.socketSessionPool.size() > 0) {
+                                wsManager.socketSessionPool.remove(userTrackId);
+                            }
+                        }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
                             LocalStorage localStorage = webStorage.getLocalStorage();

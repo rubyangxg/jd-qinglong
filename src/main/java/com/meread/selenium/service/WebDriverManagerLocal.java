@@ -187,13 +187,16 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     }
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
+                        iterator.remove();
                         myChrome.setUserTrackId(null);
-                        clients.remove(userTrackId);
-                        if (wsManager.getLastPageStatus().size() > 0) {
-                            wsManager.getLastPageStatus().remove(userTrackId);
-                        }
-                        if (wsManager.socketSessionPool.size() > 0) {
-                            wsManager.socketSessionPool.remove(userTrackId);
+                        if (userTrackId != null) {
+                            clients.remove(userTrackId);
+                            if (wsManager.getLastPageStatus().size() > 0) {
+                                wsManager.getLastPageStatus().remove(userTrackId);
+                            }
+                            if (wsManager.socketSessionPool.size() > 0) {
+                                wsManager.socketSessionPool.remove(userTrackId);
+                            }
                         }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
@@ -209,14 +212,16 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
-                        clients.remove(userTrackId);
-                        if (wsManager.getLastPageStatus().size() > 0) {
-                            wsManager.getLastPageStatus().remove(userTrackId);
+                        if (userTrackId != null) {
+                            clients.remove(userTrackId);
+                            if (wsManager.getLastPageStatus().size() > 0) {
+                                wsManager.getLastPageStatus().remove(userTrackId);
+                            }
+                            if (wsManager.socketSessionPool.size() > 0) {
+                                wsManager.socketSessionPool.remove(userTrackId);
+                            }
                         }
                         iterator.remove();
-                        if (wsManager.socketSessionPool.size() > 0) {
-                            wsManager.socketSessionPool.remove(userTrackId);
-                        }
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));
                         log.info("destroy chrome : " + sessionId);
                     }
