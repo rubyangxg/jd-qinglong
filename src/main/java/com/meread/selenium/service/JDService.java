@@ -448,8 +448,10 @@ public class JDService implements CommandLineRunner {
 
     public void click(MyChromeClient myChromeClient, By xpath) {
         RemoteWebDriver webDriver = driverFactory.getDriverBySessionId(myChromeClient.getChromeSessionId());
-        WebElement sureButton = webDriver.findElement(xpath);
-        sureButton.click();
+        if (webDriver != null) {
+            WebElement sureButton = webDriver.findElement(xpath);
+            sureButton.click();
+        }
     }
 
     public boolean sendAuthCode(MyChromeClient myChromeClient) throws IOException, InterruptedException {
