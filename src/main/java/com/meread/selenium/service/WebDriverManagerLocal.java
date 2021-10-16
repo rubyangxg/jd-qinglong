@@ -69,7 +69,10 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         while (it.hasNext()) {
             MyChromeClient client = it.next().getValue();
             if (client.isExpire()) {
-                wsManager.socketSessionPool.remove(client.getUserTrackId());
+                if (client.getUserTrackId() != null) {
+                    wsManager.socketSessionPool.remove(client.getUserTrackId());
+                    wsManager.lastPageStatus.remove(client.getUserTrackId());
+                }
                 it.remove();
             }
         }

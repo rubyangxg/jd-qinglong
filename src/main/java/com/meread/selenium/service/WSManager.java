@@ -57,6 +57,7 @@ public class WSManager implements DisposableBean {
             WebSocketSession remove = socketSessionMap.remove(webSocketSessionId);
             if (remove != null && socketSessionMap.isEmpty()) {
                 socketSessionPool.remove(httpSessionId);
+                lastPageStatus.remove(httpSessionId);
                 MyChromeClient cacheMyChromeClient = driverManager.getCacheMyChromeClient(httpSessionId);
                 if (cacheMyChromeClient != null) {
                     driverManager.releaseWebDriver(cacheMyChromeClient.getChromeSessionId(),false);
