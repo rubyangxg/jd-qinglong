@@ -75,6 +75,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         }
 
         Set<Integer> systemChromes = getSystemChromes();
+        log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
         systemChromes.removeAll(servicePorts);
         for (Integer lajiPort : systemChromes) {
             log.info("kill " + lajiPort);
@@ -131,7 +132,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
 
     private Set<Integer> getSystemChromes() {
         Set<Integer> servicePorts = new HashSet<>();
-        log.info("ps -ef | grep chromedriver");
         String[] cmd = new String[]{"sh", "-c", "ps -ef | grep chromedriver"};
         try {
             Process process = Runtime.getRuntime().exec(cmd);
