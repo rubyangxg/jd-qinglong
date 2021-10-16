@@ -76,14 +76,17 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
 
         Set<Integer> systemChromes = getSystemChromes();
         log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
-        systemChromes.removeAll(servicePorts);
-        for (Integer lajiPort : systemChromes) {
-            log.info("kill " + lajiPort);
-            String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
-            try {
-                Runtime.getRuntime().exec(cmd);
-            } catch (IOException e) {
-                e.printStackTrace();
+
+        if (systemChromes.size() > servicePorts.size()) {
+            systemChromes.removeAll(servicePorts);
+            for (Integer lajiPort : systemChromes) {
+                log.info("kill " + lajiPort);
+                String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
+                try {
+                    Runtime.getRuntime().exec(cmd);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -110,12 +113,9 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             chromes.put(webDriver.getSessionId().toString(), myChrome);
             log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
         }
-
-
     }
 
     private void quit(MyChrome chrome) {
-        ChromeDriverService chromeDriverService = chrome.getChromeDriverService();
         chrome.getWebDriver().quit();
         clients.remove(chrome.getUserTrackId());
     }
