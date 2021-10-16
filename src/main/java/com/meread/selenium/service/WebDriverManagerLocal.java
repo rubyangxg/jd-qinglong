@@ -19,12 +19,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yangxg
@@ -55,6 +59,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     @Override
     public void heartbeat() {
         List<String> removeChromeSessionIds = new ArrayList<>();
+        Set<Integer> servicePorts = new HashSet<>();
         for (MyChrome myChrome : chromes.values()) {
             if (myChrome.isExpire()) {
                 removeChromeSessionIds.add(myChrome.getChromeSessionId());
@@ -62,6 +67,23 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         }
         for (String s : removeChromeSessionIds) {
             releaseWebDriver(s, true);
+        }
+
+        for (MyChrome myChrome : chromes.values()) {
+            int port = myChrome.getChromeDriverService().getUrl().getPort();
+            servicePorts.add(port);
+        }
+
+        Set<Integer> systemChromes = getSystemChromes();
+        systemChromes.removeAll(servicePorts);
+        for (Integer lajiPort : systemChromes) {
+            log.info("kill " + lajiPort);
+            String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
+            try {
+                Runtime.getRuntime().exec(cmd);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         //clean clients
@@ -103,6 +125,37 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             e.printStackTrace();
         }
         clients.remove(chrome.getUserTrackId());
+    }
+
+    public static final Pattern PATTERN = Pattern.compile("--port=(\\d+)");
+
+    private Set<Integer> getSystemChromes() {
+        Set<Integer> servicePorts = new HashSet<>();
+        log.info("ps -ef | grep chromedriver");
+        String[] cmd = new String[]{"sh", "-c", "ps -ef | grep chromedriver"};
+        try {
+            Process process = Runtime.getRuntime().exec(cmd);
+            List<String> output = new ArrayList<>();
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.add(line);
+            }
+            int exitVal = process.waitFor();
+            if (exitVal == 0) {
+                for (String s : output) {
+                    Matcher matcher = PATTERN.matcher(s);
+                    if (matcher.find()) {
+                        int port = Integer.parseInt(matcher.group(1));
+                        servicePorts.add(port);
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return servicePorts;
     }
 
     @Override
