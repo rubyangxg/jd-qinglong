@@ -22,6 +22,8 @@ import org.springframework.web.client.RestTemplate;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -77,18 +79,23 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         Set<Integer> systemChromes = getSystemChromes();
         log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
 
-        if (systemChromes.size() > servicePorts.size()) {
-            systemChromes.removeAll(servicePorts);
-            for (Integer lajiPort : systemChromes) {
-                log.info("kill " + lajiPort);
-                String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
-                try {
-                    Runtime.getRuntime().exec(cmd);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+//        if (systemChromes.size() > servicePorts.size()) {
+//            systemChromes.removeAll(servicePorts);
+//            for (Integer lajiPort : systemChromes) {
+//                log.info("kill " + lajiPort);
+//                try {
+//                    new RemoteWebDriver(new URL("http://localhost:" + lajiPort), chromeOptions).quit();
+//                } catch (MalformedURLException e) {
+//                    e.printStackTrace();
+//                }
+////                String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
+////                try {
+////                    Runtime.getRuntime().exec(cmd);
+////                } catch (IOException e) {
+////                    e.printStackTrace();
+////                }
+//            }
+//        }
 
         //clean clients
         Iterator<Map.Entry<String, MyChromeClient>> it = clients.entrySet().iterator();
@@ -105,18 +112,36 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
 
         int shouldCreate = CAPACITY - chromes.size();
         if (shouldCreate > 0) {
-            ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
-            ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
+            createOneChrome();
+        }
+    }
+
+    private void createOneChrome() {
+        ChromeDriverService chromeDriverService = new ChromeDriverService.Builder().usingAnyFreePort().build();
+        try {
+            chromeDriverService.start();
+            RemoteWebDriver webDriver = new RemoteWebDriver(chromeDriverService.getUrl(), chromeOptions);
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
             MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
             //计算chrome实例的最大存活时间
             chromes.put(webDriver.getSessionId().toString(), myChrome);
             log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     private void quit(MyChrome chrome) {
-        chrome.getWebDriver().quit();
+        try {
+            chrome.getWebDriver().quit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            chrome.getChromeDriverService().stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         clients.remove(chrome.getUserTrackId());
     }
 
@@ -161,11 +186,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         for (int i = 0; i < create; i++) {
             executorService.execute(() -> {
                 try {
-                    ChromeDriverService chromeDriverService = ChromeDriverService.createDefaultService();
-                    ChromeDriver webDriver = new ChromeDriver(chromeDriverService, chromeOptions);
-                    webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
-                    chromes.put(webDriver.getSessionId().toString(), myChrome);
+                    createOneChrome();
                 } finally {
                     cdl.countDown();
                 }
@@ -181,36 +202,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
 
         if (chromes.isEmpty()) {
             throw new RuntimeException("无法创建浏览器实例");
-        }
-    }
-
-    @Override
-    public synchronized MyChromeClient createNewMyChromeClient(String userTrackId, LoginType loginType, JDLoginType jdLoginType) {
-        //客户端传过来的sessionid为空，可能是用户重新刷新了网页，或者新开了一个浏览器，那么就需要跟踪会话缓存来找到之前的ChromeSessionId
-        MyChromeClient myChromeClient = null;
-        myChromeClient = new MyChromeClient();
-        myChromeClient.setLoginType(loginType);
-        myChromeClient.setJdLoginType(jdLoginType);
-        myChromeClient.setUserTrackId(userTrackId);
-        boolean success = false;
-        if (chromes.size() < CAPACITY) {
-            createChrome();
-        }
-        for (MyChrome myChrome : chromes.values()) {
-            if (myChrome.getUserTrackId() == null) {
-                //双向绑定
-                myChromeClient.setExpireTime(System.currentTimeMillis() + opTimeout * 1000L);
-                myChromeClient.setChromeSessionId(myChrome.getChromeSessionId());
-                myChrome.setUserTrackId(userTrackId);
-                success = true;
-                break;
-            }
-        }
-        if (success) {
-            clients.put(userTrackId, myChromeClient);
-            return myChromeClient;
-        } else {
-            return null;
         }
     }
 
@@ -233,18 +224,20 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                             clientExpireTime = client.getExpireTime();
                         }
                     }
+                    if (clientExpireTime <= 0) {
+                        continue;
+                    }
+                    long chromeRemain = (chromeExpireTime - clientExpireTime) / 1000;
+                    log.info("chrome剩余时间" + chromeRemain + " 配置的操作时限" + opTimeout);
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
-                    if ((chromeExpireTime - clientExpireTime) / 1000 > opTimeout && !quit) {
-                        iterator.remove();
+                    if (chromeRemain > opTimeout && !quit) {
                         myChrome.setUserTrackId(null);
-                        if (userTrackId != null) {
-                            clients.remove(userTrackId);
-                            if (wsManager.getLastPageStatus().size() > 0) {
-                                wsManager.getLastPageStatus().remove(userTrackId);
-                            }
-                            if (wsManager.socketSessionPool.size() > 0) {
-                                wsManager.socketSessionPool.remove(userTrackId);
-                            }
+                        clients.remove(userTrackId);
+                        if (wsManager.getLastPageStatus().size() > 0) {
+                            wsManager.getLastPageStatus().remove(userTrackId);
+                        }
+                        if (wsManager.socketSessionPool.size() > 0) {
+                            wsManager.socketSessionPool.remove(userTrackId);
                         }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
                         if (webStorage != null) {
@@ -260,14 +253,12 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
-                        if (userTrackId != null) {
-                            clients.remove(userTrackId);
-                            if (wsManager.getLastPageStatus().size() > 0) {
-                                wsManager.getLastPageStatus().remove(userTrackId);
-                            }
-                            if (wsManager.socketSessionPool.size() > 0) {
-                                wsManager.socketSessionPool.remove(userTrackId);
-                            }
+                        clients.remove(userTrackId);
+                        if (wsManager.getLastPageStatus().size() > 0) {
+                            wsManager.getLastPageStatus().remove(userTrackId);
+                        }
+                        if (wsManager.socketSessionPool.size() > 0) {
+                            wsManager.socketSessionPool.remove(userTrackId);
                         }
                         iterator.remove();
                         threadPoolTaskExecutor.execute(() -> quit(myChrome));

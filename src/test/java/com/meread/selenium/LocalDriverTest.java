@@ -2,6 +2,7 @@ package com.meread.selenium;
 
 import com.meread.selenium.util.OpenCVUtil;
 import org.junit.Test;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.io.IOException;
 
@@ -19,4 +20,5 @@ public class LocalDriverTest {
     public void test2() throws IOException {
         OpenCVUtil.test2();
     }
+
 }

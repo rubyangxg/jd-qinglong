@@ -94,9 +94,6 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
         myChromeClient.setJdLoginType(jdLoginType);
         myChromeClient.setUserTrackId(userTrackId);
         boolean success = false;
-        if (chromes.size() < CAPACITY) {
-            createChrome();
-        }
         for (MyChrome myChrome : chromes.values()) {
             if (myChrome.getUserTrackId() == null) {
                 //双向绑定
@@ -187,10 +184,10 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
         }
 
         maxSessionFromEnvFile = properties.getProperty("SE_NODE_MAX_SESSIONS");
-        int customChromeTimeout = Integer.parseInt(properties.getProperty("chrome.timeout", "0"));
-        if (customChromeTimeout > 0) {
-            chromeTimeout = customChromeTimeout;
-        }
+//        int customChromeTimeout = Integer.parseInt(properties.getProperty("chrome.timeout", "0"));
+//        if (customChromeTimeout > 0) {
+//            chromeTimeout = customChromeTimeout;
+//        }
         CommonAttributes.debug = Boolean.parseBoolean(properties.getProperty("jd.debug", "false"));
 
         String opTime = properties.getProperty("OP_TIME");
