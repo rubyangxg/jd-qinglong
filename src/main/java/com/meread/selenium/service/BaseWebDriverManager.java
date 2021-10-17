@@ -364,10 +364,6 @@ public abstract class BaseWebDriverManager implements WebDriverManager, Initiali
         return chromes;
     }
 
-    public Map<String, MyChromeClient> getClients() {
-        return clients;
-    }
-
     @Override
     public void destroyAll() {
         ApplicationContext context = SpringUtils.getApplicationContext();

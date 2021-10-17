@@ -82,7 +82,7 @@ public class WSManager implements DisposableBean {
                     removeChromeSessionIds.add(chrome.getChromeSessionId());
                 }
             }
-            for (MyChromeClient client : driverManager.getClients().values()) {
+            for (MyChromeClient client : driverManager.clients.values()) {
                 if (client.getUserTrackId() != null && !onlineUserTrackIds.contains(client.getUserTrackId())) {
                     removeChromeSessionIds.add(client.getChromeSessionId());
                 }

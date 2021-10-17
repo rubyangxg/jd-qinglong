@@ -101,6 +101,10 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     wsManager.lastPageStatus.remove(client.getUserTrackId());
                 }
                 it.remove();
+                MyChrome myChrome = chromes.get(client.getChromeSessionId());
+                if (myChrome != null) {
+                    myChrome.setUserTrackId(null);
+                }
             }
         }
 
@@ -116,7 +120,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             chromeDriverService.start();
             RemoteWebDriver webDriver = new RemoteWebDriver(chromeDriverService.getUrl(), chromeOptions);
             webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-            MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+            MyChrome myChrome = new MyChrome(webDriver, chromeDriverService, System.currentTimeMillis() + chromeTimeout * 1000L);
             //计算chrome实例的最大存活时间
             chromes.put(webDriver.getSessionId().toString(), myChrome);
             log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
@@ -136,7 +140,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        clients.remove(chrome.getUserTrackId());
     }
 
     public static final Pattern PATTERN = Pattern.compile("--port=(\\d+)");
@@ -206,6 +209,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
             MyChrome myChrome = iterator.next().getValue();
             String sessionId = myChrome.getWebDriver().getSessionId().toString();
             if (sessionId.equals(removeChromeSessionId)) {
+                myChrome.setUserTrackId(null);
                 try {
                     //获取chrome的失效时间
                     long chromeExpireTime = myChrome.getExpireTime();
@@ -213,6 +217,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     //获取客户端的失效时间
                     String userTrackId = myChrome.getUserTrackId();
                     if (userTrackId != null) {
+                        clients.remove(userTrackId);
                         MyChromeClient client = clients.get(userTrackId);
                         if (client != null) {
                             clientExpireTime = client.getExpireTime();
@@ -225,8 +230,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     log.info("chrome剩余时间" + chromeRemain + " 配置的操作时限" + opTimeout);
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if (chromeRemain > opTimeout && !quit) {
-                        myChrome.setUserTrackId(null);
-                        clients.remove(userTrackId);
                         if (wsManager.getLastPageStatus().size() > 0) {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }
@@ -247,7 +250,6 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
-                        clients.remove(userTrackId);
                         if (wsManager.getLastPageStatus().size() > 0) {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }

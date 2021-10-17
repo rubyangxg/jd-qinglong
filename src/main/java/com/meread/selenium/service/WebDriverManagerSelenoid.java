@@ -137,7 +137,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
             try {
                 RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
                 webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + chromeTimeout * 1000L);
                 //计算chrome实例的最大存活时间
                 chromes.put(webDriver.getSessionId().toString(), myChrome);
                 log.warn("create a chrome " + webDriver.getSessionId().toString() + " 总容量 = " + CAPACITY + ", 当前容量" + chromes.size());
@@ -283,7 +283,7 @@ public class WebDriverManagerSelenoid extends BaseWebDriverManager {
                 try {
                     RemoteWebDriver webDriver = new RemoteWebDriver(new URL(seleniumHubUrl), chromeOptions);
                     webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS).pageLoadTimeout(20, TimeUnit.SECONDS).setScriptTimeout(20, TimeUnit.SECONDS);
-                    MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + (chromeTimeout - 10) * 1000L);
+                    MyChrome myChrome = new MyChrome(webDriver, null, System.currentTimeMillis() + chromeTimeout * 1000L);
                     chromes.put(webDriver.getSessionId().toString(), myChrome);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
