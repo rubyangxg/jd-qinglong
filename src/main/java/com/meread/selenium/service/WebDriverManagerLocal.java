@@ -79,23 +79,23 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         Set<Integer> systemChromes = getSystemChromes();
         log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
 
-//        if (systemChromes.size() > servicePorts.size()) {
-//            systemChromes.removeAll(servicePorts);
-//            for (Integer lajiPort : systemChromes) {
-//                log.info("kill " + lajiPort);
+        if (systemChromes.size() > servicePorts.size()) {
+            systemChromes.removeAll(servicePorts);
+            for (Integer lajiPort : systemChromes) {
+                log.info("kill " + lajiPort);
+                try {
+                    new RemoteWebDriver(new URL("http://localhost:" + lajiPort), chromeOptions).quit();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+//                String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
 //                try {
-//                    new RemoteWebDriver(new URL("http://localhost:" + lajiPort), chromeOptions).quit();
-//                } catch (MalformedURLException e) {
+//                    Runtime.getRuntime().exec(cmd);
+//                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }
-////                String[] cmd = new String[]{"sh", "-c", "kill -9 $(lsof -n -i :" + lajiPort + " | awk '/LISTEN/{print $2}')"};
-////                try {
-////                    Runtime.getRuntime().exec(cmd);
-////                } catch (IOException e) {
-////                    e.printStackTrace();
-////                }
-//            }
-//        }
+            }
+        }
 
         //clean clients
         Iterator<Map.Entry<String, MyChromeClient>> it = clients.entrySet().iterator();
