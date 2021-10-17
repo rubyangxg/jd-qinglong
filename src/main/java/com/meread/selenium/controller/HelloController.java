@@ -282,7 +282,7 @@ public class HelloController {
         if (myChromeClient == null) {
             return 1;
         }
-        factory.releaseWebDriver(myChromeClient.getChromeSessionId(), false);
+        factory.releaseWebDriver(myChromeClient.getChromeSessionId(), true);
         return 1;
     }
 
