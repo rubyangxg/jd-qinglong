@@ -228,10 +228,10 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                     log.info("chrome剩余时间" + chromeRemain + " 配置的操作时限" + opTimeout);
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if (chromeRemain > opTimeout && !quit) {
-                        if (wsManager.getLastPageStatus().size() > 0) {
+                        if (wsManager.getLastPageStatus().size() > 0 && userTrackId != null) {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }
-                        if (wsManager.socketSessionPool.size() > 0) {
+                        if (wsManager.socketSessionPool.size() > 0 && userTrackId != null) {
                             wsManager.socketSessionPool.remove(userTrackId);
                         }
                         WebStorage webStorage = (WebStorage) new Augmenter().augment(myChrome.getWebDriver());
@@ -248,10 +248,10 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                         myChrome.getWebDriver().manage().deleteAllCookies();
                         log.info("clean chrome binding: " + sessionId);
                     } else {
-                        if (wsManager.getLastPageStatus().size() > 0) {
+                        if (wsManager.getLastPageStatus().size() > 0 && userTrackId != null) {
                             wsManager.getLastPageStatus().remove(userTrackId);
                         }
-                        if (wsManager.socketSessionPool.size() > 0) {
+                        if (wsManager.socketSessionPool.size() > 0 && userTrackId != null) {
                             wsManager.socketSessionPool.remove(userTrackId);
                         }
                         iterator.remove();
