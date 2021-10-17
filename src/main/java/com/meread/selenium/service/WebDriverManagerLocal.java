@@ -77,8 +77,10 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
         }
 
         Set<Integer> systemChromes = getSystemChromes();
-        log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
 
+        if (systemChromes.size() > servicePorts.size()) {
+            log.info("servicePorts " + servicePorts.size() + " systemPorts " + systemChromes.size());
+        }
 //        if (systemChromes.size() > servicePorts.size()) {
 //            systemChromes.removeAll(servicePorts);
 //            for (Integer lajiPort : systemChromes) {
@@ -130,6 +132,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     }
 
     private void quit(MyChrome chrome) {
+        log.info("quit " + chrome.getChromeSessionId());
         try {
             chrome.getWebDriver().quit();
         } catch (Exception e) {
