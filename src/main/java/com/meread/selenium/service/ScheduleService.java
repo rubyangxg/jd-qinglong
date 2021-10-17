@@ -24,11 +24,6 @@ public class ScheduleService {
     @Autowired
     private JDService jdService;
 
-    protected volatile boolean stopSchedule = false;
-    protected volatile boolean initSuccess = false;
-    protected volatile boolean runningSchedule = false;
-
-
     /**
      * 和grid同步chrome状态，清理失效的session，并移除本地缓存
      */
