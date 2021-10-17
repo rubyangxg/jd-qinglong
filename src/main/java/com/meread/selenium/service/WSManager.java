@@ -74,20 +74,23 @@ public class WSManager implements DisposableBean {
     public void heartbeat() {
         runningSchedule = true;
         if (!stopSchedule) {
+
+            Set<String> onlineUserTrackIds = socketSessionPool.keySet();
+            for (MyChrome chrome : driverManager.getChromes().values()) {
+                if (chrome.getUserTrackId() != null && !onlineUserTrackIds.contains(chrome.getUserTrackId())) {
+                    driverManager.releaseWebDriver(chrome.getChromeSessionId(),false);
+                }
+            }
+            for (MyChromeClient client : driverManager.getClients().values()) {
+                if (client.getUserTrackId() != null && !onlineUserTrackIds.contains(client.getUserTrackId())) {
+                    driverManager.releaseWebDriver(client.getChromeSessionId(),false);
+                }
+            }
+
             doPushScreen();
         }
         runningSchedule = false;
-        Set<String> onlineUserTrackIds = socketSessionPool.keySet();
-        for (MyChrome chrome : driverManager.getChromes().values()) {
-            if (chrome.getUserTrackId() != null && !onlineUserTrackIds.contains(chrome.getUserTrackId())) {
-                driverManager.releaseWebDriver(chrome.getChromeSessionId(),false);
-            }
-        }
-        for (MyChromeClient client : driverManager.getClients().values()) {
-            if (client.getUserTrackId() != null && !onlineUserTrackIds.contains(client.getUserTrackId())) {
-                driverManager.releaseWebDriver(client.getChromeSessionId(),false);
-            }
-        }
+
     }
 
     private void doPushScreen() {
