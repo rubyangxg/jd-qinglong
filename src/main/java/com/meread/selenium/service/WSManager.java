@@ -76,15 +76,20 @@ public class WSManager implements DisposableBean {
         if (!stopSchedule) {
 
             Set<String> onlineUserTrackIds = socketSessionPool.keySet();
+            Set<String> removeChromeSessionIds = new HashSet<>();
             for (MyChrome chrome : driverManager.getChromes().values()) {
                 if (chrome.getUserTrackId() != null && !onlineUserTrackIds.contains(chrome.getUserTrackId())) {
-                    driverManager.releaseWebDriver(chrome.getChromeSessionId(),false);
+                    removeChromeSessionIds.add(chrome.getChromeSessionId());
                 }
             }
             for (MyChromeClient client : driverManager.getClients().values()) {
                 if (client.getUserTrackId() != null && !onlineUserTrackIds.contains(client.getUserTrackId())) {
-                    driverManager.releaseWebDriver(client.getChromeSessionId(),false);
+                    removeChromeSessionIds.add(client.getChromeSessionId());
                 }
+            }
+
+            for (String s : removeChromeSessionIds) {
+                driverManager.releaseWebDriver(s,false);
             }
 
             doPushScreen();
