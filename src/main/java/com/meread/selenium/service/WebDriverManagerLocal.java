@@ -22,8 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -226,10 +224,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
                             clientExpireTime = client.getExpireTime();
                         }
                     }
-                    if (clientExpireTime <= 0) {
-                        continue;
-                    }
-                    long chromeRemain = (chromeExpireTime - clientExpireTime) / 1000;
+                    long chromeRemain = clientExpireTime <= 0 ? 0 : (chromeExpireTime - clientExpireTime) / 1000;
                     log.info("chrome剩余时间" + chromeRemain + " 配置的操作时限" + opTimeout);
                     //chrome的存活时间不够一个opTime时间，则chrome不退出，只清理客户端引用
                     if (chromeRemain > opTimeout && !quit) {
@@ -394,7 +389,7 @@ public class WebDriverManagerLocal extends BaseWebDriverManager {
     @Override
     public void close() {
         for (MyChrome myChrome : chromes.values()) {
-            myChrome.getWebDriver().quit();
+            quit(myChrome);
         }
     }
 }
