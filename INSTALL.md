@@ -11,23 +11,23 @@ wget -O env.properties https://raw.githubusercontent.com/rubyangxg/jd-qinglong/m
 ```
 wget -O env.properties https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
 ```
-3. 下载rubyangxg/jd-qinglong镜像，**_注意arm的请把1.3替换为arm_**
+3. 下载rubyangxg/jd-qinglong镜像，**_注意arm的请把1.4替换为arm_**
 ```
-sudo docker pull rubyangxg/jd-qinglong:1.3
+sudo docker pull rubyangxg/jd-qinglong:1.4
 ```
-4. 启动，其中env.properties中的SE_NODE_MAX_SESSIONS=8请根据机器配置改，一般一个chrome进程占用150M **_注意这是1条命令，全部复制执行_** ，**_注意arm的请把1.3替换为arm_**
+4. 启动，其中env.properties中的SE_NODE_MAX_SESSIONS=8请根据机器配置改，一般一个chrome进程占用150M **_注意这是1条命令，全部复制执行_** ，**_注意arm的请把1.4替换为arm_**
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \ 
 -v [你的路径]/env.properties:/env.properties:ro \ 
 -v [你的路径]/go-cqhttp:/go-cqhttp \
-rubyangxg/jd-qinglong:1.3
+rubyangxg/jd-qinglong:1.4
 ```
-例如：**_注意这是1条命令，全部复制执行_**，**_注意arm的请把1.3替换为arm_**
+例如：**_注意这是1条命令，全部复制执行_**，**_注意arm的请把1.4替换为arm_**
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
 -v "$(pwd)"/env.properties:/env.properties:ro \
 -v "$(pwd)"/go-cqhttp:/go-cqhttp \
-rubyangxg/jd-qinglong:1.3
+rubyangxg/jd-qinglong:1.4
 ``` 
 或者编写docker-compose.yml
 ```
@@ -43,7 +43,7 @@ services:
         volumes:
             - ./env.properties:/env.properties:ro
             - ./go-cqhttp:/go-cqhttp
-        image: rubyangxg/jd-qinglong:1.3
+        image: rubyangxg/jd-qinglong:1.4
 ```
 然后在docker-compose.yml目录下执行命令
 ```
@@ -93,6 +93,6 @@ docker restart webapp
 ### 更新教程：
 ```
 docker rm -f webapp
-docker rmi rubyangxg/jd-qinglong:1.3
+docker rmi rubyangxg/jd-qinglong:1.4
 ```
 **上面两条命令执行完毕后，重新运行启动命令(安装教程第4步)**
