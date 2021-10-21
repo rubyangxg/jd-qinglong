@@ -22,24 +22,6 @@
 * 只支持青龙2.9+，2.8可能会出现无法上传问题。
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
-## 更新历史
-* 2021-10-10 1.3版本新增支持arm，只在oracle-arm(4-24)测试通过。回归原始chromedriver，不依赖selenoid等其他镜像，无需挂载/var/run/docker.sock
-* 2021-10-08 修复已知bug，修复资源回收慢问题，采用新的ws协议与chrome交互，速度更快，增加扫码登录，增加bot监控群聊
-* 2021-09-28 增加qq面板交互，自定义标题，自定义公告栏吗，重构代码
-* 2021-09-25 解决配置资源数低，或其他情况下启动后显示无青龙配置bug，如果都正常就不需要更新。更新命令看[INSTALL.md](INSTALL.md)
-* 2021-09-21 优化资源回收创建流程，优化资源404时间过长
-* 2021-09-18 新增推送功能，配置同青龙，请查看[env.template.properties](https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties)
-
-[comment]: <> (* 2021-09-17 解决验证码输入后登录按钮无效问题，请升级成allinone镜像)
-
-[comment]: <> (* 2021-09-17 推出allinone镜像，无需其他依赖，升级的话只修改docker-compose.yml即可)
-
-[comment]: <> (* 2021-09-16 bug fix 解决了卡验证码问题，请务必pull最新镜像)
-
-[comment]: <> (*            增加实验功能：支持配置最多上传ck容量)
-
-[comment]: <> (* 2021-09-15 更新上传多青龙支持，最多5个，升级后请仔细阅读 [env.template.properties]&#40;https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties&#41; 里面的注释)
-
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
