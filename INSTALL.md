@@ -36,14 +36,6 @@ docker exec -it webapp sh
 cd /QLScript2
 npm install
 ```
-**_注意arm的用这个_**
-```
-sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
--e "SPRING_PROFILES_ACTIVE=arm"
--v [你的路径]/env.properties:/env.properties:ro \
--v [你的路径]/go-cqhttp:/go-cqhttp \
-rubyangxg/jd-qinglong:1.7
-```
 例如：**_注意这是1条命令，全部复制执行，注意\后面不要有空格_**，
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
