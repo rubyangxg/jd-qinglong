@@ -25,7 +25,7 @@ rubyangxg/jd-qinglong:1.7
 **_注意arm的用这个_**
 ```
 sudo docker run -d -p 5701:8080 --name=webapp --privileged=true \
--e "SPRING_PROFILES_ACTIVE=arm"
+-e "SPRING_PROFILES_ACTIVE=arm" \
 -v [你的路径]/env.properties:/env.properties:ro \
 -v [你的路径]/go-cqhttp:/go-cqhttp \
 rubyangxg/jd-qinglong:1.7
