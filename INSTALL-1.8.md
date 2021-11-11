@@ -34,6 +34,7 @@ QL_CHOOSE_TYPE=2
    * 增加了-p 8100:8100，左边的8100可自定义，需要开外网访问，用于网页上登录adbot，登录的用户名密码参见上方AD_ADMIN_USERNAME和AD_ADMIN_PASSWORD。不使用adbot的，无需映射8100端口
    * 挂载env.properties:ro改为env.properties:rw，用于之后做配置热生效。
    * 机器人实现替代~~go-cqhttp~~，统一为adbot，启动命令**_不要挂载go-cqhttp_**, 请仔细甄别。
+   * 如果复制出来的命令\后面有空格，请去掉
 ```
 sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
 -v [你的路径]/env.properties:/env.properties:rw \
