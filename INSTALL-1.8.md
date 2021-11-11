@@ -35,8 +35,8 @@ QL_CHOOSE_TYPE=2
    * 挂载env.properties:ro改为env.properties:rw，用于之后做配置热生效。
    * 机器人实现替代~~go-cqhttp~~，统一为adbot，启动命令**_不要挂载go-cqhttp_**, 请仔细甄别。
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \ 
--v [你的路径]/env.properties:/env.properties:rw \ 
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
+-v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
 rubyangxg/jd-qinglong:1.8
 ```
