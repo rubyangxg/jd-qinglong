@@ -36,6 +36,10 @@ QL_CHOOSE_TYPE=2
    * 机器人实现替代~~go-cqhttp~~，统一为adbot，启动命令**_不要挂载go-cqhttp_**, 请仔细甄别。
    * 如果复制出来的命令\后面有空格，请去掉
 ```
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v [你的路径]/env.properties:/env.properties:rw -v [你的路径]/adbot:/adbot rubyangxg/jd-qinglong:1.8
+```
+或者
+```
 sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
