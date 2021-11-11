@@ -3,7 +3,7 @@
 ```
 sudo docker pull rubyangxg/jd-qinglong:1.8
 ```
-2. 新名字adbot(阿东机器人,阿这个字有点像狗)，env.properties必须增加如下设置：
+2. 新名字adbot(阿东机器人,阿这个字有点像狗)，env.properties必须增加如下设置，不使用adbot，请留空：
 ```
 #########adbot管理平台用户名密码，请务必改为自己的#########
 AD_ADMIN_USERNAME=admin
