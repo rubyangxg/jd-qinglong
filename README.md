@@ -25,8 +25,8 @@
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
-* 1.8升级教程: [INSTALL-1.8.md](INSTALL-1.8.md)
-* 1.7安装教程: [INSTALL-1.7.md](INSTALL-1.7.md)
+* 1.7升级1.8教程: [INSTALL-1.8.md](INSTALL-1.8.upgrade.md)
+* 1.8安装教程: [INSTALL-1.8.md](INSTALL-1.8.md)
 * 问题反馈移步: [TG交流群](https://t.me/joinchat/3JfrwNPoHFY2MGNl)
 
 ## 特别声明:
