@@ -21,14 +21,14 @@ sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v 
 ```
 或者
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
 rubyangxg/jd-qinglong:1.8
 ```
 arm的启动有所不同，请仔细甄别
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
 -e "SPRING_PROFILES_ACTIVE=arm" \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
@@ -36,7 +36,7 @@ rubyangxg/jd-qinglong:1.8
 ```
 例子：**_注意这是1条命令，全部复制执行，注意\后面不要有空格_**，
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true \
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true --restart always \
 -v "$(pwd)"/env.properties:/env.properties:rw \
 -v "$(pwd)"/adbot:/adbot \
 rubyangxg/jd-qinglong:1.8
