@@ -69,7 +69,10 @@ docker-compose up -d
     
 7. **恭喜你安装成功。好用的话给我点个star吧！**
 ### 更新教程：
+### 进入你的安装目录：
 ```
+cd jd-qinglong
 docker rm -f webapp && docker rmi rubyangxg/jd-qinglong && docker pull rubyangxg/jd-qinglong
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 ```
 **上面两条命令执行完毕后，重新运行启动命令(安装教程第4步)**
