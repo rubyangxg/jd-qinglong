@@ -69,7 +69,7 @@ docker-compose up -d
     
 7. **恭喜你安装成功。好用的话给我点个star吧！**
 ### 更新教程：
-### 进入你的安装目录：
+#### 进入你的安装目录：
 ```
 cd jd-qinglong
 docker rm -f webapp && docker rmi rubyangxg/jd-qinglong && docker pull rubyangxg/jd-qinglong
