@@ -215,6 +215,7 @@ while [ 1 ]; do
   read input
   if [ -z "${input}" ]; then
     input=$dir
+    break
   fi
   dir=$input
 done
