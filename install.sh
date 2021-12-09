@@ -240,6 +240,7 @@ if [ ! -d $dir ]; then
 fi
 
 cd $dir || exit
+rm -f adbot
 
 file=env.properties
 if [ ! -f "$file" ]; then
