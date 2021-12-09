@@ -209,11 +209,21 @@ EOF
   rm -fr build.log
 fi
 
-if [ ! -d "jd-qinglong" ]; then
-  mkdir jd-qinglong
+dir='jd-qinglong'
+echo "请指定保存数据的目录，已存在的请指定名字，回车默认jd-qinglong"
+while [ 1 ]; do
+  read input
+  if [ -z "${input}" ]; then
+    input=$dir
+  fi
+  dir=$input
+done
+
+if [ ! -d $dir ]; then
+  mkdir $dir
 fi
 
-cd jd-qinglong || exit
+cd $dir || exit
 
 file=env.properties
 if [ ! -f "$file" ]; then
