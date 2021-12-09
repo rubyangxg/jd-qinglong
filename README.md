@@ -22,6 +22,10 @@
 * 只支持青龙2.9+，2.8可能会出现无法上传问题。
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
+## 一键安装(centos7+,ubuntu18+,debian9+)
+```
+bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
+```
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
 * **群晖**安装参考源码路径下的 **jd-qinglong-群晖安装教程.pdf**
