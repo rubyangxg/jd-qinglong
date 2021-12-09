@@ -23,6 +23,7 @@
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
 ## 一键安装(centos7+,ubuntu18+,debian9+)(切换root执行)
+**<font color=red>已经安装过的，请在jd-qinglong同级目录下执行</font>，新安装的执行后会生成jd-qinglong文件夹**
 ```
 bash <(curl -s -L https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
 ```
