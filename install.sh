@@ -58,17 +58,17 @@ TIME() {
 if [[ "$(. /etc/os-release && echo "$ID")" == "centos" ]]; then
   export Aptget="yum"
   yum -y update
-  yum install -y sudo wget curl
+  yum install -y sudo wget curl psmisc
   export XITONG="cent_os"
 elif [[ "$(. /etc/os-release && echo "$ID")" == "ubuntu" ]]; then
   export Aptget="apt-get"
   apt-get -y update
-  apt-get install -y sudo wget curl
+  apt-get install -y sudo wget curl psmisc
   export XITONG="ubuntu_os"
 elif [[ "$(. /etc/os-release && echo "$ID")" == "debian" ]]; then
   export Aptget="apt"
   apt-get -y update
-  apt-get install -y sudo wget curl
+  apt-get install -y sudo wget curl psmisc
   export XITONG="debian_os"
 else
   echo
@@ -241,6 +241,8 @@ fi
 
 cd $dir || exit
 
+rm -f adbot/adbot
+
 file=env.properties
 if [ ! -f "$file" ]; then
   wget -O env.properties https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/env.template.properties
@@ -378,6 +380,7 @@ echo "阿东隐藏管理端口(内部使用，不要暴露外网)$ad_port2"
 sed -i "s#^username=.*#username=$username#g" ./start-adbot.sh
 sed -i "s#^password=.*#password=$password#g" ./start-adbot.sh
 sed -i "s#^port=.*#port=$port#g" ./start-adbot.sh
+
 chmod +x ./start-adbot.sh
 bash ./start-adbot.sh restart
 
@@ -408,6 +411,8 @@ done
 if [ $hasError1 == 1 -o $hasError2 == 1 ]; then
   echo "出错了，请联系作者，查看日志docker logs -f webapp"
 else
+  sed -i '/^ADONG.URL.*/d' ../env.properties
+  sed -i '$aADONG.URL=http://localhost:'$ad_port1'' ../env.properties
   echo "恭喜你安装完成，阿东网页：http://localhost:$ad_port1，阿东机器人登录入口：http://localhost:$port，外部访问请打开防火墙并且开放 $ad_port1 和 $port 端口！"
 fi
 
