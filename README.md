@@ -24,8 +24,13 @@
 
 ## 一键安装(centos7+,ubuntu18+,debian9+)(切换root执行)
 **已经安装过的，请在jd-qinglong同级目录下执行，新安装的执行后会生成jd-qinglong文件夹**
+国外用：
 ```
 bash <(curl -s -L https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
+```
+国内用：
+```
+bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
 ```
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
