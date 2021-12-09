@@ -24,7 +24,7 @@
 
 ## 一键安装(centos7+,ubuntu18+,debian9+)(切换root执行)
 ```
-bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
+bash <(curl -s -L https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
 ```
 ## 如何安装
 * [源码地址](https://github.com/rubyangxg/jd-qinglong)
