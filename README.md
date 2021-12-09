@@ -22,7 +22,7 @@
 * 只支持青龙2.9+，2.8可能会出现无法上传问题。
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
-## 一键安装(centos7+,ubuntu18+,debian9+)
+## 一键安装(centos7+,ubuntu18+,debian9+)(切换root执行)
 ```
 bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
 ```
