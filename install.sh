@@ -199,6 +199,7 @@ EOF
     TIME g "docker安装成功，正在启动docker，请稍后..."
     sudo systemctl restart docker
     sudo systemctl start docker
+    sudo systemctl enable docker.service
     sleep 12
     TIME y ""
     TIME g "测试docker拉取镜像是否成功"
