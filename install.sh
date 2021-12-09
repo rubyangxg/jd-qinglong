@@ -1,15 +1,33 @@
 #!/usr/bin/env bash
 stty erase ^H
-function getFreePort() {
-  BASE_PORT=$1
-  INCREMENT=1
-  port=$BASE_PORT
-  isfree=$(netstat -taln | grep $port)
-  while [[ -n "$isfree" ]]; do
-    port=$((port + INCREMENT))
-    isfree=$(netstat -taln | grep $port)
-  done
-  return $port
+PORT=0
+#判断当前端口是否被占用，没被占用返回0，反之1
+function Listening {
+   TCPListeningnum=`netstat -an | grep ":$1 " | awk '$1 == "tcp" && $NF == "LISTEN" {print $0}' | wc -l`
+   UDPListeningnum=`netstat -an | grep ":$1 " | awk '$1 == "udp" && $NF == "0.0.0.0:*" {print $0}' | wc -l`
+   (( Listeningnum = TCPListeningnum + UDPListeningnum ))
+   if [ $Listeningnum == 0 ]; then
+       echo "0"
+   else
+       echo "1"
+   fi
+}
+
+#指定区间随机数
+function random_range {
+   shuf -i $1-$2 -n1
+}
+
+#得到随机端口
+function get_random_port {
+   templ=0
+   while [ $PORT == 0 ]; do
+       temp1=`random_range $1 $2`
+       if [ `Listening $temp1` == 0 ] ; then
+              PORT=$temp1
+       fi
+   done
+   echo "port=$PORT"
 }
 
 TIME() {
@@ -243,7 +261,8 @@ while [ 1 ]; do
   if [ $input -gt 5700 -a $input -lt 65536 ]; then
     grep_port=$(netstat -tlpn | grep "\b$input\b")
     if [ -n "$grep_port" ]; then
-      ad_port1=$(getFreePort $ad_port1)
+      get_random_port 5701 5800
+      ad_port1=$PORT
       echo -e "端口 $input 已被占用，生成随机端口$ad_port1，配置成功\n"
     else
       echo -e "端口 $input 未被使用，配置成功\n"
@@ -265,7 +284,8 @@ while [ 1 ]; do
   if [ $input -gt 5701 -a $input -lt 65536 ]; then
     grep_port=$(netstat -tlpn | grep "\b$input\b")
     if [ -n "$grep_port" ]; then
-      ad_port2=$(getFreePort $ad_port2)
+      get_random_port 5702 5800
+      ad_port2=$PORT
       echo -e "端口 $input 已被占用，生成随机端口$ad_port2，配置成功\n"
     else
       echo -e "端口 $input 未被使用，配置成功\n"
@@ -324,6 +344,8 @@ while [ 1 ]; do
   fi
 done
 
+killall adbot
+
 port=8100
 echo "请设置机器人管理页面登录端口：(数字8100~65535)，回车默认8100"
 while [ 1 ]; do
@@ -334,7 +356,8 @@ while [ 1 ]; do
   if [ $input -gt 8099 -a $input -lt 65536 ]; then
     grep_port=$(netstat -tlpn | grep "\b$input\b")
     if [ -n "$grep_port" ]; then
-      port=$(getFreePort $port)
+      get_random_port 8100 8200
+      port=$PORT
       echo -e "端口 $input 已被占用，生成随机端口$port，配置成功\n"
     else
       echo -e "端口 $input 未被使用，配置成功\n"
