@@ -380,6 +380,7 @@ echo "阿东隐藏管理端口(内部使用，不要暴露外网)$ad_port2"
 sed -i "s#^username=.*#username=$username#g" ./start-adbot.sh
 sed -i "s#^password=.*#password=$password#g" ./start-adbot.sh
 sed -i "s#^port=.*#port=$port#g" ./start-adbot.sh
+
 chmod +x ./start-adbot.sh
 bash ./start-adbot.sh restart
 
@@ -410,6 +411,8 @@ done
 if [ $hasError1 == 1 -o $hasError2 == 1 ]; then
   echo "出错了，请联系作者，查看日志docker logs -f webapp"
 else
+  sed -i '/^ADONG.URL.*/d' ../env.properties
+  sed -i '$aADONG.URL=http://localhost:'$ad_port1'' ../env.properties
   echo "恭喜你安装完成，阿东网页：http://localhost:$ad_port1，阿东机器人登录入口：http://localhost:$port，外部访问请打开防火墙并且开放 $ad_port1 和 $port 端口！"
 fi
 
