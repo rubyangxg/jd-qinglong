@@ -211,14 +211,12 @@ fi
 
 dir='jd-qinglong'
 echo "请指定保存数据的目录，已存在的请指定名字，回车默认jd-qinglong"
-while [ 1 ]; do
-  read input
-  if [ -z "${input}" ]; then
-    input=$dir
-    break
-  fi
-  dir=$input
-done
+read input
+if [ -z "${input}" ]; then
+  input=$dir
+
+fi
+dir=$input
 
 if [ ! -d $dir ]; then
   mkdir $dir
