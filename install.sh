@@ -269,9 +269,6 @@ while [ 1 ]; do
   fi
 done
 
-json='{"server_groups":[{"name":"webapp","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port1'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}},{"name":"webapp_admin","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port2'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}}]}'
-echo $json >./adbot/gmc_config.json
-
 docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 
 while [ 1 ]; do
@@ -284,6 +281,9 @@ while [ 1 ]; do
     sleep 1s
   fi
 done
+
+json='{"server_groups":[{"name":"webapp","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port1'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}},{"name":"webapp_admin","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port2'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}}]}'
+echo $json >./adbot/gmc_config.json
 
 cd adbot || exit
 chmod +x adbot
@@ -379,5 +379,7 @@ if [ $hasError1 == 1 -o $hasError2 == 1 ]; then
 else
   echo "恭喜你安装完成，阿东网页：http://localhost:$ad_port1，阿东机器人登录入口：http://localhost:$port，外部访问请打开防火墙并且开放 $ad_port1 和 $port 端口！"
 fi
+
+#bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
 #sed -e '0,/localhost:[0-9]\+/ s/localhost:[0-9]\+/localhost:1245/' ./adbot/gmc_config.json
 #tac ./adbot/gmc_config.json | sed -e '0,/localhost:[0-9]\+/{s/localhost:[0-9]\+/localhost:1245/}' | tac | tee a.json
