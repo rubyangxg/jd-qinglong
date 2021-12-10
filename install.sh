@@ -2,32 +2,37 @@
 stty erase ^H
 PORT=0
 #判断当前端口是否被占用，没被占用返回0，反之1
-function Listening {
-   TCPListeningnum=`netstat -an | grep ":$1 " | awk '$1 == "tcp" && $NF == "LISTEN" {print $0}' | wc -l`
-   UDPListeningnum=`netstat -an | grep ":$1 " | awk '$1 == "udp" && $NF == "0.0.0.0:*" {print $0}' | wc -l`
-   (( Listeningnum = TCPListeningnum + UDPListeningnum ))
-   if [ $Listeningnum == 0 ]; then
-       echo "0"
-   else
-       echo "1"
-   fi
+function Listening() {
+  TCPListeningnum=$(netstat -an | grep ":$1 " | awk '$1 == "tcp" && $NF == "LISTEN" {print $0}' | wc -l)
+  UDPListeningnum=$(netstat -an | grep ":$1 " | awk '$1 == "udp" && $NF == "0.0.0.0:*" {print $0}' | wc -l)
+  ((Listeningnum = TCPListeningnum + UDPListeningnum))
+  if [ $Listeningnum == 0 ]; then
+    echo "0"
+  else
+    echo "1"
+  fi
 }
 
+case $(uname -m) in
+x86_64) is_x86=1 ;;
+aarch64) is_x86=0 ;;
+esac
+
 #指定区间随机数
-function random_range {
-   shuf -i $1-$2 -n1
+function random_range() {
+  shuf -i $1-$2 -n1
 }
 
 #得到随机端口
-function get_random_port {
-   templ=0
-   while [ $PORT == 0 ]; do
-       temp1=`random_range $1 $2`
-       if [ `Listening $temp1` == 0 ] ; then
-              PORT=$temp1
-       fi
-   done
-   echo "port=$PORT"
+function get_random_port() {
+  templ=0
+  while [ $PORT == 0 ]; do
+    temp1=$(random_range $1 $2)
+    if [ $(Listening $temp1) == 0 ]; then
+      PORT=$temp1
+    fi
+  done
+  echo "port=$PORT"
 }
 
 TIME() {
@@ -58,17 +63,17 @@ TIME() {
 if [[ "$(. /etc/os-release && echo "$ID")" == "centos" ]]; then
   export Aptget="yum"
   yum -y update
-  yum install -y sudo wget curl psmisc net-tools
+  yum install -y sudo wget curl psmisc
   export XITONG="cent_os"
 elif [[ "$(. /etc/os-release && echo "$ID")" == "ubuntu" ]]; then
   export Aptget="apt-get"
   apt-get -y update
-  apt-get install -y sudo wget curl psmisc net-tools
+  apt-get install -y sudo wget curl psmisc
   export XITONG="ubuntu_os"
 elif [[ "$(. /etc/os-release && echo "$ID")" == "debian" ]]; then
   export Aptget="apt"
   apt-get -y update
-  apt-get install -y sudo wget curl psmisc net-tools
+  apt-get install -y sudo wget curl psmisc
   export XITONG="debian_os"
 else
   echo
@@ -136,23 +141,38 @@ if [ $ignore_install_docker == 0 ]; then
     sudo yum install -y containerd.io
   fi
   if [[ ${XITONG} == "ubuntu_os" ]]; then
-    sudo apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
-    curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
-    if [[ $? -ne 0 ]]; then
+    if [ $is_x86 == 1 ]; then
+      sudo apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
       curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+      if [[ $? -ne 0 ]]; then
+        curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+      fi
+      sudo apt-key fingerprint 0EBFCD88
+      if [[ $(sudo apt-key fingerprint 0EBFCD88 | grep -c "0EBF CD88") == '0' ]]; then
+        TIME r "密匙验证出错，或者没下载到密匙了，请检查网络，或者源有问题"
+        sleep 5
+        exit 1
+        sleep 5
+      fi
+      sudo add-apt-repository -y "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
+      sudo apt-get update
+      sudo apt-get install -y docker-ce
+      sudo apt-get install -y docker-ce-cli
+      sudo apt-get install -y containerd.io
+    else
+      sudo apt-get update
+      sudo apt-get install -y \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg -f --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      sudo apt-get update
+      sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     fi
-    sudo apt-key fingerprint 0EBFCD88
-    if [[ $(sudo apt-key fingerprint 0EBFCD88 | grep -c "0EBF CD88") == '0' ]]; then
-      TIME r "密匙验证出错，或者没下载到密匙了，请检查网络，或者源有问题"
-      sleep 5
-      exit 1
-      sleep 5
-    fi
-    sudo add-apt-repository -y "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get update
-    sudo apt-get install -y docker-ce
-    sudo apt-get install -y docker-ce-cli
-    sudo apt-get install -y containerd.io
   fi
   if [[ ${XITONG} == "debian_os" ]]; then
     sudo apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
@@ -252,7 +272,11 @@ else
 fi
 
 docker rm -f webapp
-docker pull rubyangxg/jd-qinglong
+if [ $is_x86 == 1 ]; then
+  docker pull rubyangxg/jd-qinglong
+else
+  docker pull rubyangxg/jd-qinglong:arm
+fi
 
 ad_port1=5701
 echo "请设置阿东网页登录端口：(数字80~65535)，回车默认5701"
@@ -277,30 +301,34 @@ while [ 1 ]; do
   fi
 done
 
-ad_port2=9527
-#echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
-#while [ 1 ]; do
-#  read input
-#  if [ -z "${input}" ]; then
-#    input=5702
-#  fi
-#  if [ $input -gt 5701 -a $input -lt 65536 ]; then
-#    grep_port=$(netstat -tlpn | grep "\b$input\b")
-#    if [ -n "$grep_port" ]; then
-#      get_random_port 5702 5800
-#      ad_port2=$PORT
-#      echo -e "端口 $input 已被占用，生成随机端口$ad_port2，配置成功\n"
-#    else
-#      echo -e "端口 $input 未被使用，配置成功\n"
-#      ad_port2=$input
-#    fi
-#    break
-#  else
-#    echo "别瞎搞，请输入端口：(数字5702~65535)"
-#  fi
-#done
+ad_port2=5702
+echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
+while [ 1 ]; do
+  read input
+  if [ -z "${input}" ]; then
+    input=5702
+  fi
+  if [ $input -gt 5701 -a $input -lt 65536 ]; then
+    grep_port=$(netstat -tlpn | grep "\b$input\b")
+    if [ -n "$grep_port" ]; then
+      get_random_port 5702 5800
+      ad_port2=$PORT
+      echo -e "端口 $input 已被占用，生成随机端口$ad_port2，配置成功\n"
+    else
+      echo -e "端口 $input 未被使用，配置成功\n"
+      ad_port2=$input
+    fi
+    break
+  else
+    echo "别瞎搞，请输入端口：(数字5702~65535)"
+  fi
+done
 
-docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+if [ $is_x86 == 1 ]; then
+  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+else
+  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong:arm
+fi
 
 while [ 1 ]; do
   if [ -f "./adbot/adbot" ]; then
