@@ -302,27 +302,27 @@ while [ 1 ]; do
 done
 
 ad_port2=5702
-echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
-while [ 1 ]; do
-  read input
-  if [ -z "${input}" ]; then
-    input=5702
-  fi
-  if [ $input -gt 5701 -a $input -lt 65536 ]; then
-    grep_port=$(netstat -tlpn | grep "\b$input\b")
-    if [ -n "$grep_port" ]; then
-      get_random_port 5702 5800
-      ad_port2=$PORT
-      echo -e "端口 $input 已被占用，生成随机端口$ad_port2，配置成功\n"
-    else
-      echo -e "端口 $input 未被使用，配置成功\n"
-      ad_port2=$input
-    fi
-    break
-  else
-    echo "别瞎搞，请输入端口：(数字5702~65535)"
-  fi
-done
+#echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
+#while [ 1 ]; do
+#  read input
+#  if [ -z "${input}" ]; then
+#    input=5702
+#  fi
+#  if [ $input -gt 5701 -a $input -lt 65536 ]; then
+#    grep_port=$(netstat -tlpn | grep "\b$input\b")
+#    if [ -n "$grep_port" ]; then
+#      get_random_port 5702 5800
+#      ad_port2=$PORT
+#      echo -e "端口 $input 已被占用，生成随机端口$ad_port2，配置成功\n"
+#    else
+#      echo -e "端口 $input 未被使用，配置成功\n"
+#      ad_port2=$input
+#    fi
+#    break
+#  else
+#    echo "别瞎搞，请输入端口：(数字5702~65535)"
+#  fi
+#done
 
 if [ $is_x86 == 1 ]; then
   docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
