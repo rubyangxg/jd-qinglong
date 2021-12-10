@@ -255,13 +255,13 @@ docker rm -f webapp
 docker pull rubyangxg/jd-qinglong
 
 ad_port1=5701
-echo "请设置阿东网页登录端口：(数字5701~65535)，回车默认5701"
+echo "请设置阿东网页登录端口：(数字80~65535)，回车默认5701"
 while [ 1 ]; do
   read input
   if [ -z "${input}" ]; then
     input=5701
   fi
-  if [ $input -gt 5700 -a $input -lt 65536 ]; then
+  if [ $input -gt 79 -a $input -lt 65536 ]; then
     grep_port=$(netstat -tlpn | grep "\b$input\b")
     if [ -n "$grep_port" ]; then
       get_random_port 5701 5800
@@ -273,7 +273,7 @@ while [ 1 ]; do
     fi
     break
   else
-    echo "别瞎搞，请输入端口：(数字5701~65535)"
+    echo "别瞎搞，请输入端口：(数字80~65535)"
   fi
 done
 
@@ -350,13 +350,13 @@ done
 killall adbot
 
 port=8100
-echo "请设置机器人管理页面登录端口：(数字8100~65535)，回车默认8100"
+echo "请设置机器人管理页面登录端口：(数字80~65535)，回车默认8100"
 while [ 1 ]; do
   read input
   if [ -z "${input}" ]; then
     input=8100
   fi
-  if [ $input -gt 8099 -a $input -lt 65536 ]; then
+  if [ $input -gt 79 -a $input -lt 65536 ]; then
     grep_port=$(netstat -tlpn | grep "\b$input\b")
     if [ -n "$grep_port" ]; then
       get_random_port 8100 8200
@@ -368,7 +368,7 @@ while [ 1 ]; do
     fi
     break
   else
-    echo "别瞎搞，请输入端口：(数字8100~65535)"
+    echo "别瞎搞，请输入端口：(数字80~65535)"
   fi
 done
 
