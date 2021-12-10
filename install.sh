@@ -301,7 +301,7 @@ while [ 1 ]; do
   fi
 done
 
-ad_port2=5702
+ad_port2=9527
 #echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
 #while [ 1 ]; do
 #  read input
