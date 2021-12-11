@@ -441,9 +441,9 @@ bash ./start-adbot.sh restart
 
 hasError1=1
 for i in {1..10}; do
-  urlstatus=$(curl -s -m 5 -IL http://localhost:$ad_port1 | grep 200)
+  urlstatus=$(curl -s -m 5 -IL http://localhost:$ad_port1/ping | grep 200)
   if [ "$urlstatus" == "" ]; then
-    echo "检查是否可访问阿东页面...第 $i 次(共10次)"
+    echo "检查是否可访问阿东页面...第 $i 次(共10次)，如果机器太慢可能会检查超时，请自行确认服务正常。"
     sleep 5s
   else
     hasError1=0
@@ -456,7 +456,7 @@ for i in {1..10}; do
   urlstatus=$(curl -u $username:$password -s -m 5 -IL http://localhost:$port | grep 200)
   if [ "$urlstatus" == "" ]; then
     echo "检查是否可访问机器人管理页面...第 $i 次(共10次)"
-    sleep 5s
+    sleep 6s
   else
     hasError2=0
     break
