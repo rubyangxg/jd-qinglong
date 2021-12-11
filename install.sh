@@ -79,7 +79,7 @@ elif [[ "$(. /etc/os-release && echo "$ID")" == "ubuntu" ]]; then
   apt-get -y update
   apt-get install -y sudo wget curl psmisc net-tools
   export XITONG="ubuntu_os"
-elif [[ "$(. /etc/os-release && echo "$ID")" == "debian" ]]; then
+elif [[ "$(. /etc/os-release && echo "$ID")" == "debian" || "$(. /etc/os-release && echo "$ID")" == "Deepin" ]]; then
   export Aptget="apt"
   apt-get -y update
   apt-get install -y sudo wget curl psmisc net-tools
