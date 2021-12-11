@@ -22,7 +22,8 @@
 * 只支持青龙2.9+，2.8可能会出现无法上传问题。
 * 本项目可以不依赖青龙运行，获取的CK需网页上手工复制
 
-## 一键安装(centos7+,ubuntu18+,debian9+,群晖,甲骨文arm(需要ubuntu))(切换root执行)
+## 一键安装(centos7+,ubuntu18+,debian9+,群晖,甲骨文arm需要ubuntu)
+## (请事先切换root执行，并安装curl)
 **已经安装过的，请在jd-qinglong同级目录下执行，新安装的执行后会生成jd-qinglong文件夹**
 
 国外用：
