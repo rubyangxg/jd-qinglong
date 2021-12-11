@@ -18,6 +18,11 @@ x86_64) is_x86=1 ;;
 aarch64) is_x86=0 ;;
 esac
 
+synology=0
+if [[ $(uname -a) == *synology* ]]; then
+  synology=1
+fi
+
 #指定区间随机数
 function random_range() {
   shuf -i $1-$2 -n1
@@ -60,7 +65,11 @@ TIME() {
   exit 1
 }
 
-if [[ "$(. /etc/os-release && echo "$ID")" == "centos" ]]; then
+if [[ $synology == 1 ]]; then
+  echo
+  TIME y "你是群晖nas"
+  echo
+elif [[ "$(. /etc/os-release && echo "$ID")" == "centos" ]]; then
   export Aptget="yum"
   yum -y update
   yum install -y sudo wget curl psmisc net-tools
@@ -85,47 +94,52 @@ fi
 ignore_install_docker=0
 if [[ $(docker --version | grep -c "version") -ge '1' ]]; then
   echo
-  TIME y "检测到docker存在，是否重新安装?"
-  echo
-  TIME g "重新安装会把您现有的所有容器及镜像全部删除，请慎重!"
-  echo
-  while :; do
-    read -p " [输入[ N/n ]回车跳过安装docker，输入[ Y/y ]回车重新安装docker]： " ANDK
-    case $ANDK in
-    [Yy])
-      TIME g "正在御载老版本docker"
-      export CHONGXIN="YES"
-      docker stop $(docker ps -a -q)
-      docker rm $(docker ps -a -q)
-      docker rmi $(docker images -q)
-      sudo "${Aptget}" remove -y docker docker-engine docker.io containerd runc
-      sudo "${Aptget}" remove -y docker
-      sudo "${Aptget}" remove -y docker-ce
-      sudo "${Aptget}" remove -y docker-ce-cli
-      sudo "${Aptget}" remove -y docker-ce-rootless-extras
-      sudo "${Aptget}" remove -y docker-scan-plugin
-      sudo "${Aptget}" remove -y --auto-remove docker
-      sudo rm -rf /var/lib/docker
-      sudo rm -rf /etc/docker
-      sudo rm -rf /lib/systemd/system/{docker.service,docker.socket}
-      rm /var/lib/dpkg/info/$nomdupaquet* -f
-      break
-      ;;
-    [Nn])
-      echo
-      TIME r "跳过安装docker!"
-      echo
-      sleep 1
-      ignore_install_docker=1
-      break
-      ;;
-    *)
-      echo
-      TIME b "提示：请输入正确的选择!"
-      echo
-      ;;
-    esac
-  done
+  if [[ $synology == 1 ]]; then
+    TIME y "已安装docker，进行下一步"
+    ignore_install_docker=1
+  else
+    TIME y "检测到docker存在，是否重新安装?"
+    echo
+    TIME g "重新安装会把您现有的所有容器及镜像全部删除，请慎重!"
+    echo
+    while :; do
+      read -p " [输入[ N/n ]回车跳过安装docker，输入[ Y/y ]回车重新安装docker]： " ANDK
+      case $ANDK in
+      [Yy])
+        TIME g "正在御载老版本docker"
+        export CHONGXIN="YES"
+        docker stop $(docker ps -a -q)
+        docker rm $(docker ps -a -q)
+        docker rmi $(docker images -q)
+        sudo "${Aptget}" remove -y docker docker-engine docker.io containerd runc
+        sudo "${Aptget}" remove -y docker
+        sudo "${Aptget}" remove -y docker-ce
+        sudo "${Aptget}" remove -y docker-ce-cli
+        sudo "${Aptget}" remove -y docker-ce-rootless-extras
+        sudo "${Aptget}" remove -y docker-scan-plugin
+        sudo "${Aptget}" remove -y --auto-remove docker
+        sudo rm -rf /var/lib/docker
+        sudo rm -rf /etc/docker
+        sudo rm -rf /lib/systemd/system/{docker.service,docker.socket}
+        rm /var/lib/dpkg/info/$nomdupaquet* -f
+        break
+        ;;
+      [Nn])
+        echo
+        TIME r "跳过安装docker!"
+        echo
+        sleep 1
+        ignore_install_docker=1
+        break
+        ;;
+      *)
+        echo
+        TIME b "提示：请输入正确的选择!"
+        echo
+        ;;
+      esac
+    done
+  fi
 fi
 
 if [ $ignore_install_docker == 0 ]; then
@@ -162,14 +176,14 @@ if [ $ignore_install_docker == 0 ]; then
     else
       sudo apt-get update
       sudo apt-get install -y \
-          ca-certificates \
-          curl \
-          gnupg \
-          lsb-release
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg -f --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
       echo \
         "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
       sudo apt-get update
       sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     fi
@@ -249,7 +263,7 @@ EOF
 fi
 
 dir='jd-qinglong'
-echo "请指定保存数据的目录，已存在的请指定名字，回车默认jd-qinglong"
+TIME y "请指定保存数据的目录，已存在的请指定名字，回车默认jd-qinglong"
 read input
 if [ -z "${input}" ]; then
   input=$dir
@@ -271,15 +285,15 @@ else
   echo "env.properties已存在"
 fi
 
-docker rm -f webapp
+sudo docker rm -f webapp
 if [ $is_x86 == 1 ]; then
-  docker pull rubyangxg/jd-qinglong
+  sudo docker pull rubyangxg/jd-qinglong
 else
-  docker pull rubyangxg/jd-qinglong:arm
+  sudo docker pull rubyangxg/jd-qinglong:arm
 fi
 
 ad_port1=5701
-echo "请设置阿东网页登录端口：(数字80~65535)，回车默认5701"
+TIME y "请设置阿东网页登录端口：(数字80~65535)，回车默认5701"
 while [ 1 ]; do
   read input
   if [ -z "${input}" ]; then
@@ -297,11 +311,17 @@ while [ 1 ]; do
     fi
     break
   else
-    echo "别瞎搞，请输入端口：(数字80~65535)"
+    TIME r "别瞎搞，请输入端口：(数字80~65535)"
   fi
 done
 
 ad_port2=9527
+grep_port=$(netstat -tlpn | grep "\b$ad_port2\b")
+if [ -n "$grep_port" ]; then
+  get_random_port 9527 9600
+  ad_port2=$PORT
+  TIME -e "端口 9527 已被占用，生成随机端口$ad_port2，配置成功\n"
+fi
 #echo "请设置阿东网页管理(内部使用)端口：(数字5702~65535)，回车默认5702"
 #while [ 1 ]; do
 #  read input
@@ -324,11 +344,17 @@ ad_port2=9527
 #  fi
 #done
 
+adbotDir="$(pwd)"/adbot
+if [ $synology == 1 ]; then
+  if [ ! -d $adbotDir ]; then
+    mkdir $adbotDir
+  fi
+fi
+
 if [ $is_x86 == 1 ]; then
   docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 else
-  echo "哇靠，arm哦"
-  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp -e "SPRING_PROFILES_ACTIVE=arm" --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong:arm
+  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong:arm
 fi
 
 while [ 1 ]; do
