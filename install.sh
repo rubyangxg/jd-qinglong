@@ -352,9 +352,9 @@ if [ $synology == 1 ]; then
 fi
 
 if [ $is_x86 == 1 ]; then
-  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp -e TZ=Asia/Shanghai --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot --restart always rubyangxg/jd-qinglong
 else
-  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp  -e "SPRING_PROFILES_ACTIVE=arm" --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong:arm
+  docker run -d -p $ad_port1:8080 -p $ad_port2:8090 --name=webapp -e TZ=Asia/Shanghai -e "SPRING_PROFILES_ACTIVE=arm" --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot --restart always rubyangxg/jd-qinglong:arm
 fi
 
 while [ 1 ]; do
