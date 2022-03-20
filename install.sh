@@ -368,8 +368,49 @@ while [ 1 ]; do
   fi
 done
 
-json='{"server_groups":[{"name":"webapp","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port1'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}},{"name":"webapp_admin","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port2'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}}]}'
-echo $json >./adbot/gmc_config.json
+json1=$(cat <<- EOF
+{
+        "name": "webapp",
+        "disabled": false,
+        "json": false,
+        "urls": [
+          "ws://localhost:$ad_port1/ws/cq/"
+        ],
+        "event_filter": [],
+        "regex_filter": "",
+        "regex_replace": "",
+        "extra_header": {
+          "User-Agent": [
+            "GMC"
+          ]
+        }
+      }
+EOF
+)
+json2=$(cat <<- EOF
+{
+        "name": "webapp_admin",
+        "disabled": false,
+        "json": false,
+        "urls": [
+          "ws://localhost:$ad_port2/ws/cq/"
+        ],
+        "event_filter": [],
+        "regex_filter": "",
+        "regex_replace": "",
+        "extra_header": {
+          "User-Agent": [
+            "GMC"
+          ]
+        }
+      }
+EOF
+)
+if [ ! -d "./adbot/plugins" ]; then
+  mkdir /adbot/plugins
+fi
+echo $json1 >./adbot/plugins/webapp.json
+echo $json2 >./adbot/plugins/webapp_admin.json
 
 cd adbot || exit
 chmod +x adbot
