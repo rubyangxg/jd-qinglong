@@ -507,8 +507,10 @@ done
 if [ $hasError1 == 1 -o $hasError2 == 1 ]; then
   echo "出错了，请联系作者，查看日志docker logs -f webapp"
 else
-  sed -i '/^ADONG.URL.*/d' ../env.properties
-  sed -i '$aADONG.URL=http://localhost:'$ad_port1'' ../env.properties
+  if [ ! -f "$file" ]; then
+    sed -i '/^ADONG.URL.*/d' ../env.properties
+    sed -i '$aADONG.URL=http://localhost:'$ad_port1'' ../env.properties
+  fi
   echo "恭喜你安装完成，阿东网页：http://localhost:$ad_port1，阿东机器人登录入口：http://localhost:$port，外部访问请打开防火墙并且开放 $ad_port1 和 $port 端口！"
 fi
 
