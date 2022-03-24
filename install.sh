@@ -287,9 +287,9 @@ fi
 
 sudo docker rm -f webapp
 if [ $is_x86 == 1 ]; then
-  sudo docker pull rubyangxg/jd-qinglong
+  sudo docker pull docker.io/rubyangxg/jd-qinglong:latest
 else
-  sudo docker pull rubyangxg/jd-qinglong:arm
+  sudo docker pull docker.io/rubyangxg/jd-qinglong:arm
 fi
 
 ad_port1=5701
