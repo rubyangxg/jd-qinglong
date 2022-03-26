@@ -3,9 +3,9 @@
 * 以防万一，**升级前请务必备份go-cqhttp目录中的ql.db到其他文件夹，go-cqhttp文件夹不要删**
 * 以防万一，**升级前请务必备份go-cqhttp目录中的ql.db到其他文件夹，go-cqhttp文件夹不要删**
     
-1. 镜像版本号升级为1.9 **_注意arm的请把1.9替换为arm_**
+1. 镜像版本号升级为2.0 **_注意arm的请把2.0替换为arm_**
 ```
-sudo docker pull rubyangxg/jd-qinglong:1.9
+sudo docker pull rubyangxg/jd-qinglong:2.0
 ```
 2. 机器人新名字adbot(阿东机器人,阿这个字有点像狗)，env.properties必须增加如下设置：
 ```
@@ -36,14 +36,14 @@ QL_CHOOSE_TYPE=2
    * 机器人实现替代~~go-cqhttp~~，统一为adbot，启动命令**_不要挂载go-cqhttp_**, 请仔细甄别。
    * 如果复制出来的命令\后面有空格，请去掉
 ```
-sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true -v [你的路径]/env.properties:/env.properties:rw -v [你的路径]/adbot:/adbot rubyangxg/jd-qinglong:1.9
+sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true -v [你的路径]/env.properties:/env.properties:rw -v [你的路径]/adbot:/adbot rubyangxg/jd-qinglong:2.0
 ```
 或者
 ```
 sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
-rubyangxg/jd-qinglong:1.9
+rubyangxg/jd-qinglong:2.0
 ```
 arm的启动有所不同，请仔细甄别
 ```
@@ -51,14 +51,14 @@ sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --r
 -e "SPRING_PROFILES_ACTIVE=arm" \
 -v [你的路径]/env.properties:/env.properties:rw \
 -v [你的路径]/adbot:/adbot \
-rubyangxg/jd-qinglong:1.9
+rubyangxg/jd-qinglong:2.0
 ```
 例如：**_注意这是1条命令，全部复制执行，注意\后面不要有空格_**，
 ```
 sudo docker run -d -p 5701:8080 -p 9527:8090 --name=webapp --privileged=true --restart always \
 -v "$(pwd)"/env.properties:/env.properties:rw \
 -v "$(pwd)"/adbot:/adbot \
-rubyangxg/jd-qinglong:1.9
+rubyangxg/jd-qinglong:2.0
 ``` 
 或者编写docker-compose.yml
 ```
@@ -73,7 +73,7 @@ services:
         volumes:
             - ./env.properties:/env.properties:rw
             - ./adbot:/adbot
-        image: rubyangxg/jd-qinglong:1.9
+        image: rubyangxg/jd-qinglong:2.0
 ```
 然后在docker-compose.yml目录下执行命令
 ```
@@ -88,7 +88,7 @@ docker-compose up -d
 ### 更新教程：
 ```
 docker rm -f webapp
-docker rmi rubyangxg/jd-qinglong:1.9
+docker rmi rubyangxg/jd-qinglong:2.0
 ```
 ```
 docker exec -it webapp guide
