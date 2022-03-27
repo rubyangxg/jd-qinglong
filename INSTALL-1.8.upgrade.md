@@ -88,7 +88,7 @@ docker-compose up -d
 ### 更新教程：
 ```
 docker rm -f webapp
-docker rmi rubyangxg/jd-qinglong:1.9
+docker rmi rubyangxg/jd-qinglong:2.0
 ```
 ```
 docker exec -it webapp guide
