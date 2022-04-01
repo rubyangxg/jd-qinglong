@@ -287,9 +287,9 @@ fi
 
 sudo docker rm -f webapp
 if [ $is_x86 == 1 ]; then
-  sudo docker pull docker.io/rubyangxg/jd-qinglong:latest
+  sudo docker pull rubyangxg/jd-qinglong
 else
-  sudo docker pull docker.io/rubyangxg/jd-qinglong:arm
+  sudo docker pull rubyangxg/jd-qinglong:arm
 fi
 
 ad_port1=5701
@@ -368,49 +368,8 @@ while [ 1 ]; do
   fi
 done
 
-json1=$(cat <<- EOF
-{
-        "name": "webapp",
-        "disabled": false,
-        "json": false,
-        "urls": [
-          "ws://localhost:$ad_port1/ws/cq/"
-        ],
-        "event_filter": [],
-        "regex_filter": "",
-        "regex_replace": "",
-        "extra_header": {
-          "User-Agent": [
-            "GMC"
-          ]
-        }
-      }
-EOF
-)
-json2=$(cat <<- EOF
-{
-        "name": "webapp_admin",
-        "disabled": false,
-        "json": false,
-        "urls": [
-          "ws://localhost:$ad_port2/ws/cq/"
-        ],
-        "event_filter": [],
-        "regex_filter": "",
-        "regex_replace": "",
-        "extra_header": {
-          "User-Agent": [
-            "GMC"
-          ]
-        }
-      }
-EOF
-)
-if [ ! -d "./adbot/plugins" ]; then
-  mkdir /adbot/plugins
-fi
-echo $json1 >./adbot/plugins/webapp.json
-echo $json2 >./adbot/plugins/webapp_admin.json
+json='{"server_groups":[{"name":"webapp","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port1'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}},{"name":"webapp_admin","disabled":false,"json":false,"urls":["ws://localhost:'$ad_port2'/ws/cq/"],"event_filter":[],"regex_filter":"","regex_replace":"","extra_header":{"User-Agent":["GMC"]}}]}'
+echo $json >./adbot/gmc_config.json
 
 cd adbot || exit
 chmod +x adbot
@@ -510,6 +469,3 @@ else
   echo "恭喜你安装完成，阿东网页：http://localhost:$ad_port1，阿东机器人登录入口：http://localhost:$port，外部访问请打开防火墙并且开放 $ad_port1 和 $port 端口！"
 fi
 
-#bash <(curl -s -L https://ghproxy.com/https://raw.githubusercontent.com/rubyangxg/jd-qinglong/master/install.sh)
-#sed -e '0,/localhost:[0-9]\+/ s/localhost:[0-9]\+/localhost:1245/' ./adbot/gmc_config.json
-#tac ./adbot/gmc_config.json | sed -e '0,/localhost:[0-9]\+/{s/localhost:[0-9]\+/localhost:1245/}' | tac | tee a.json
