@@ -285,6 +285,15 @@ else
   echo "env.properties已存在"
 fi
 
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+    {
+      "registry-mirrors": [
+        "https://mirror.ccs.tencentyun.com"
+      ]
+    }
+EOF
+
 sudo docker rm -f webapp
 if [ $is_x86 == 1 ]; then
   sudo docker pull rubyangxg/jd-qinglong
