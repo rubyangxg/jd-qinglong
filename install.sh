@@ -222,8 +222,7 @@ if [ $ignore_install_docker == 0 ]; then
     # 2.编写配置文件
     sudo tee /etc/docker/daemon.json <<-'EOF'
       {
-        "registry-mirrors": ["http://hub-mirror.c.163.com",
-          "https://docker.mirrors.ustc.edu.cn",
+        "registry-mirrors": [
           "https://mirror.ccs.tencentyun.com"
         ]
       }
