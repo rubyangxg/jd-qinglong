@@ -416,7 +416,7 @@ json2=$(cat <<- EOF
 EOF
 )
 if [ ! -d "./adbot/plugins" ]; then
-  mkdir /adbot/plugins
+    mkdir -p ./adbot/plugins
 fi
 echo $json1 >./adbot/plugins/webapp.json
 echo $json2 >./adbot/plugins/webapp_admin.json
