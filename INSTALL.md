@@ -17,7 +17,7 @@ sudo docker pull rubyangxg/jd-qinglong
 ```
 4. 启动，其中env.properties中的SE_NODE_MAX_SESSIONS=8请根据机器配置改，机器要求最少1h2g，推荐2h4g **_注意这是1条命令，全部复制执行_**
 ```
-sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
+sudo docker run -d -p 5701:8080 -p 8100:8100 --name=webapp --restart always --privileged=true -v "$(pwd)"/env.properties:/env.properties:rw -v "$(pwd)"/adbot:/adbot rubyangxg/jd-qinglong
 ```
 或者
 ```
